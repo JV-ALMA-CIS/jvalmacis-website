@@ -15,6 +15,7 @@ import 'pages/certificates_page.dart';
 import 'pages/privacy_policy_page.dart';
 import 'pages/cookies_page.dart';
 import 'pages/terms_page.dart';
+import 'pages/delete_account_page.dart';
 import 'pages/map_page.dart';
 import 'detail/construction/construction_detail.dart';
 import 'detail/agribusiness/agribusiness_detail.dart';
@@ -141,6 +142,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const CookiesPage());
             case '/terms':
             return MaterialPageRoute(builder: (_) => const TermsPage());
+          case '/delete-account':
+            return MaterialPageRoute( builder: (_) => const DeleteAccountPage());
           case '/map':
             return MaterialPageRoute(builder: (_) => const MapPage(address: ''));
           case '/construction-detail':

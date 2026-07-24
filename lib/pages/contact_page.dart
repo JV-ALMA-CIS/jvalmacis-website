@@ -34,6 +34,7 @@ class _ContactPageState extends State<ContactPage> {
     super.dispose();
   }
 
+  /// Submit contact form - Saves to Firestore and triggers email notification
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -41,15 +42,59 @@ class _ContactPageState extends State<ContactPage> {
       });
 
       try {
-        await FirebaseFirestore.instance.collection('contacts').add({
-          'name': _nameController.text,
-          'email': _emailController.text,
-          'phone': _phoneController.text,
-          'subject': _subjectController.text,
-          'message': _messageController.text,
+        // 1. Save the inquiry to the contacts collection
+        final contactData = {
+          'name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'subject': _subjectController.text.trim(),
+          'message': _messageController.text.trim(),
           'timestamp': FieldValue.serverTimestamp(),
+          'status': 'new',
+        };
+
+        await FirebaseFirestore.instance.collection('contacts').add(contactData);
+
+        // 2. Trigger email notification via firestore-send-email extension
+        final emailSubject = 'New Contact Inquiry: ${_subjectController.text.trim()}';
+
+        final emailHtml = '''
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px;">
+            <h2 style="color: #0F172A;">New Contact Form Submission</h2>
+            <p><strong>Date:</strong> ${DateTime.now().toString()}</p>
+            
+            <hr style="border: 1px solid #E2E8F0;">
+            
+            <p><strong>Name:</strong> ${_nameController.text.trim()}</p>
+            <p><strong>Email:</strong> ${_emailController.text.trim()}</p>
+            <p><strong>Phone:</strong> ${_phoneController.text.trim()}</p>
+            <p><strong>Subject:</strong> ${_subjectController.text.trim()}</p>
+            
+            <h3 style="color: #0F172A; margin-top: 20px;">Message:</h3>
+            <p style="white-space: pre-wrap; background-color: #F8FAFC; padding: 12px; border-radius: 6px;">
+              ${_messageController.text.trim().replaceAll('\n', '<br>')}
+            </p>
+            
+            <hr style="border: 1px solid #E2E8F0; margin-top: 20px;">
+            <small style="color: #64748B;">
+              This message was submitted through the Jvalmacis website contact form.
+            </small>
+          </div>
+        ''';
+
+        await FirebaseFirestore.instance.collection('mail').add({
+          'to': [
+            'hr@jvalmacis.co.ke',        // ← CHANGE TO HR'S ACTUAL EMAIL
+            'info@jvalmacis.co.ke',      // ← Add your company email here
+          ],
+          'message': {
+            'subject': emailSubject,
+            'html': emailHtml,
+          },
+          'replyTo': _emailController.text.trim(), // Allows HR to reply directly
         });
 
+        // Success feedback
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -58,6 +103,7 @@ class _ContactPageState extends State<ContactPage> {
             ),
           );
 
+          // Clear form fields
           _nameController.clear();
           _emailController.clear();
           _phoneController.clear();
@@ -68,7 +114,10 @@ class _ContactPageState extends State<ContactPage> {
         developer.log('ContactPage: Form submission error: $e', name: 'ContactPage');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to send message: $e')),
+            const SnackBar(
+              content: Text('Failed to send message. Please try again later.'),
+              backgroundColor: Colors.redAccent,
+            ),
           );
         }
       } finally {
@@ -81,24 +130,23 @@ class _ContactPageState extends State<ContactPage> {
     }
   }
 
+  // ==================== Existing Helper Methods ====================
+
   Future<void> _launchURL(String url) async {
     try {
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-        developer.log('ContactPage: Launched URL: $url', name: 'ContactPage');
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Cannot launch $url')),
-          );
-        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Cannot launch $url')),
+        );
       }
     } catch (e) {
       developer.log('ContactPage: URL launch error: $e', name: 'ContactPage');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error launching URL: $e')),
+          const SnackBar(content: Text('Error launching URL')),
         );
       }
     }
@@ -109,19 +157,16 @@ class _ContactPageState extends State<ContactPage> {
       final uri = Uri.parse('tel:${Config.companyPhone.replaceAll(' ', '')}');
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-        developer.log('ContactPage: Launched phone: ${Config.companyPhone}', name: 'ContactPage');
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cannot launch phone: ${Config.companyPhone}')),
-          );
-        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot launch phone')),
+        );
       }
     } catch (e) {
       developer.log('ContactPage: Phone launch error: $e', name: 'ContactPage');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error launching phone: $e')),
+          const SnackBar(content: Text('Error launching phone')),
         );
       }
     }
@@ -129,12 +174,10 @@ class _ContactPageState extends State<ContactPage> {
 
   Future<void> _launchEmail() async {
     try {
-      // Log Config.companyEmail for debugging
-      developer.log('ContactPage: Attempting to launch email with: ${Config.companyEmail}', name: 'ContactPage');
-      // Fallback email if Config.companyEmail is invalid
       final email = Config.companyEmail.isNotEmpty && Config.companyEmail.contains('@')
           ? Config.companyEmail
-          : 'support@jvalmacis.co.ke'; // Fallback email
+          : 'support@jvalmacis.co.ke';
+
       if (email.isEmpty || !email.contains('@')) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -143,22 +186,20 @@ class _ContactPageState extends State<ContactPage> {
         }
         return;
       }
+
       final uri = Uri.parse('mailto:$email');
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-        developer.log('ContactPage: Launched email: $email', name: 'ContactPage');
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Cannot launch email: $email')),
-          );
-        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot launch email')),
+        );
       }
     } catch (e) {
       developer.log('ContactPage: Email launch error: $e', name: 'ContactPage');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error launching email: $e')),
+          const SnackBar(content: Text('Error launching email')),
         );
       }
     }
@@ -177,6 +218,7 @@ class _ContactPageState extends State<ContactPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Hero Header
             ClipRRect(
               child: Container(
                 width: double.infinity,
@@ -192,25 +234,20 @@ class _ContactPageState extends State<ContactPage> {
                   horizontal: screenWidth * 0.04,
                 ),
                 child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Contact Us',
-                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              fontSize: isMobile ? 24 : 32,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                  child: Text(
+                    'Contact Us',
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          fontSize: isMobile ? 24 : 32,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
             ),
+
+            // Main Content
             Padding(
               padding: EdgeInsets.symmetric(
                 vertical: screenHeight * 0.06,
@@ -223,7 +260,7 @@ class _ContactPageState extends State<ContactPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildForm(context, screenWidth, screenHeight, isMobile, isTablet),
-                          SizedBox(height: screenHeight * 0.03),
+                          const SizedBox(height: 24),
                           _buildContactInfo(context, isMobile),
                         ],
                       )
@@ -231,13 +268,14 @@ class _ContactPageState extends State<ContactPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(child: _buildForm(context, screenWidth, screenHeight, isMobile, isTablet)),
-                          SizedBox(width: screenWidth * 0.03),
+                          const SizedBox(width: 32),
                           Expanded(child: _buildContactInfo(context, isMobile)),
                         ],
                       ),
               ),
             ),
-            SizedBox(height: screenHeight * 0.03),
+
+            const SizedBox(height: 32),
             const Footer(),
           ],
         ),
@@ -245,6 +283,7 @@ class _ContactPageState extends State<ContactPage> {
     );
   }
 
+  // ====================== Contact Info Section ======================
   Widget _buildContactInfo(BuildContext context, bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,32 +295,33 @@ class _ContactPageState extends State<ContactPage> {
                 color: const Color(0xFF111827),
                 fontWeight: FontWeight.bold,
               ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 16),
+
         _buildContactInfoCard(
           icon: LucideIcons.mapPin,
           title: 'HQ Office',
           content: 'Kingara Heights, Nairobi, Kenya',
           onTap: () => _openMap('Kingara Heights, Nairobi, Kenya'),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+
         _buildContactInfoCard(
           icon: LucideIcons.mapPin,
           title: 'Branch Office',
           content: 'Manipur Plaza, Mombasa, Kenya',
           onTap: () => _openMap('Manipur Plaza, Mombasa, Kenya'),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+
         _buildContactInfoCard(
           icon: LucideIcons.phone,
           title: 'Phone',
           content: Config.companyPhone,
           onTap: _launchPhone,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+
         _buildContactInfoCard(
           icon: LucideIcons.mail,
           title: 'Email',
@@ -289,6 +329,7 @@ class _ContactPageState extends State<ContactPage> {
           onTap: _launchEmail,
         ),
         const SizedBox(height: 32),
+
         Text(
           'Follow Us',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -296,22 +337,14 @@ class _ContactPageState extends State<ContactPage> {
                 color: const Color(0xFF111827),
                 fontWeight: FontWeight.bold,
               ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+
         Wrap(
           spacing: 16,
           children: [
-            _buildSocialButton(
-              icon: LucideIcons.linkedin,
-              onTap: () => _launchURL(Config.linkedinUrl),
-            ),
-            _buildSocialButton(
-              icon: LucideIcons.instagram,
-              onTap: () => _launchURL(Config.instagramUrl),
-            ),
+            _buildSocialButton(icon: LucideIcons.linkedin, onTap: () => _launchURL(Config.linkedinUrl)),
+            _buildSocialButton(icon: LucideIcons.instagram, onTap: () => _launchURL(Config.instagramUrl)),
           ],
         ),
       ],
@@ -342,11 +375,7 @@ class _ContactPageState extends State<ContactPage> {
                 color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: Icon(icon, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -364,20 +393,13 @@ class _ContactPageState extends State<ContactPage> {
                   const SizedBox(height: 4),
                   Text(
                     content,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF0F172A),
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Color(0xFF0F172A)),
                   ),
                 ],
               ),
             ),
             if (onTap != null)
-              const Icon(
-                LucideIcons.externalLink,
-                size: 16,
-                color: Color(0xFF64748B),
-              ),
+              const Icon(LucideIcons.externalLink, size: 16, color: Color(0xFF64748B)),
           ],
         ),
       ),
@@ -397,11 +419,7 @@ class _ContactPageState extends State<ContactPage> {
           color: const Color(0xFF1E293B),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 20,
-        ),
+        child: Icon(icon, color: Colors.white, size: 20),
       ),
     );
   }
@@ -413,7 +431,10 @@ class _ContactPageState extends State<ContactPage> {
       color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: screenHeight * 0.03, horizontal: screenWidth * 0.03),
+        padding: EdgeInsets.symmetric(
+          vertical: screenHeight * 0.03,
+          horizontal: screenWidth * 0.03,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -427,11 +448,9 @@ class _ContactPageState extends State<ContactPage> {
                       color: const Color(0xFF111827),
                       fontWeight: FontWeight.bold,
                     ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
               SizedBox(height: screenHeight * 0.03),
+
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
@@ -440,14 +459,10 @@ class _ContactPageState extends State<ContactPage> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your full name';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your full name' : null,
               ),
               SizedBox(height: screenHeight * 0.02),
+
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -457,16 +472,13 @@ class _ContactPageState extends State<ContactPage> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email address';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Please enter a valid email address';
-                  }
+                  if (value == null || value.isEmpty) return 'Please enter your email address';
+                  if (!value.contains('@')) return 'Please enter a valid email address';
                   return null;
                 },
               ),
               SizedBox(height: screenHeight * 0.02),
+
               TextFormField(
                 controller: _phoneController,
                 decoration: InputDecoration(
@@ -475,14 +487,10 @@ class _ContactPageState extends State<ContactPage> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
               ),
               SizedBox(height: screenHeight * 0.02),
+
               TextFormField(
                 controller: _subjectController,
                 decoration: InputDecoration(
@@ -491,36 +499,28 @@ class _ContactPageState extends State<ContactPage> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a subject';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter a subject' : null,
               ),
               SizedBox(height: screenHeight * 0.02),
+
               TextFormField(
                 controller: _messageController,
-                maxLines: 4,
+                maxLines: 5,
                 decoration: InputDecoration(
                   labelText: 'Message',
                   hintText: 'Enter your message',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your message';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your message' : null,
               ),
               SizedBox(height: screenHeight * 0.03),
+
               SizedBox(
                 width: double.infinity,
                 child: CustomButton(
                   text: _isSubmitting ? 'Sending...' : 'Send Message',
-                  onPressed: _isSubmitting ? () {} : () => _submitForm(),
+                  onPressed: _isSubmitting ? () {} : _submitForm,
                   isLarge: true,
                 ),
               ),
@@ -532,8 +532,8 @@ class _ContactPageState extends State<ContactPage> {
   }
 
   Future<void> _openMap(String address) async {
-    String query = Uri.encodeComponent(address);
-    String googleUrl = "https://www.google.com/maps/search/?api=1&query=$query";
+    final query = Uri.encodeComponent(address);
+    final googleUrl = "https://www.google.com/maps/search/?api=1&query=$query";
     _launchURL(googleUrl);
   }
 }

@@ -337,6 +337,13 @@ class _FooterState extends State<Footer> {
                                   isMobile: isMobile,
                                   buttonKey: 'termsOfService',
                                 ),
+                                _buildFooterLink(
+                                  context,
+                                  text: 'Delete Account',
+                                  route: '/delete-account',
+                                  isMobile: isMobile,
+                                  buttonKey: 'deleteAccount',
+                                ),
                               ],
                             ),
                           ] else
@@ -373,6 +380,13 @@ class _FooterState extends State<Footer> {
                                   isMobile: isMobile,
                                   buttonKey: 'termsOfService',
                                 ),
+                                _buildFooterLink(
+                                   context,
+                                   text: 'Delete Account',
+                                   route: '/delete-account',
+                                   isMobile: isMobile,
+                                   buttonKey: 'deleteAccount',
+                            ),
                                 IconButton(
                                   icon: const Icon(LucideIcons.arrowUp, color: Colors.white, size: 20),
                                   onPressed: () {

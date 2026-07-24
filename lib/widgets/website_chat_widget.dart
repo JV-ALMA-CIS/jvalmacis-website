@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'website_chat_service.dart';
 
 // ─── Colours ───────────────────────────────────────────────────────────────
-const Color _brandDark   = Color(0xFF1E293B);   // Deep navy
-const Color _brandAccent = Color(0xFF0F766E);   // Teal (used in header & accents)
+const Color _brandDark   = Color(0xFF1E293B);
+const Color _brandAccent = Color(0xFF0F766E);
 const Color _brandLight  = Color(0xFFF1F5F9);
 
-const Color _bubbleUser  = Color(0xFF1E293B);   // Dark user bubble
-const Color _bubbleBot   = Color(0xFFF8FAFC);   // Light bot bubble
+const Color _bubbleUser  = Color(0xFF1E293B);
+const Color _bubbleBot   = Color(0xFFF8FAFC);
 const Color _textUser    = Colors.white;
 const Color _textBot     = Color(0xFF1E293B);
 
@@ -19,11 +19,21 @@ const Color _fabBackground = Colors.white;
 const Color _fabTextColor  = Color(0xFF1E293B);
 const Color _fabBorderColor = Color(0xFFE2E8F0);
 
+// Text Cleaner
+String cleanAiResponse(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .replaceAll(RegExp(r'\*+'), '')
+      .replaceAll(RegExp(r'#+\s*'), '')
+      .replaceAll(RegExp(r'_{2,}'), '')
+      .replaceAll(RegExp(r'/{2,}'), '')
+      .replaceAll(RegExp(r'^[-•*]\s*', multiLine: true), '')
+      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .trim();
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
-//  WebsiteChatFab — White "Chat with us" design
-// ═══════════════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════════════
-//  WebsiteChatFab — Corrected Final Version
+//  WebsiteChatFab — Visible on ALL screen sizes
 // ═══════════════════════════════════════════════════════════════════════════
 
 class WebsiteChatFab extends StatefulWidget {
@@ -37,8 +47,12 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
     with SingleTickerProviderStateMixin {
   bool _chatOpen = false;
   OverlayEntry? _overlayEntry;
+
   late final AnimationController _pulseCtrl;
   bool _hasPulsed = false;
+
+  Offset _offset = const Offset(20, 100);
+  bool _isDragging = false;
 
   @override
   void initState() {
@@ -47,6 +61,7 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
+
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted && !_hasPulsed) {
         _pulseCtrl.repeat(reverse: true);
@@ -84,6 +99,7 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
 
   void _showOverlay() {
     final overlay = Overlay.of(context);
+
     _overlayEntry = OverlayEntry(
       builder: (ctx) => _ChatOverlay(
         onClose: () {
@@ -97,9 +113,53 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
 
   @override
   Widget build(BuildContext context) {
-    // We use a custom Material button instead of FloatingActionButton.extended
-    // so that the speech-bubble icon can float above the FAB pill with no
-    // border line ever intersecting it.
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    if (!isMobile) {
+      // Desktop & Tablet - Fixed position
+      return Align(
+        alignment: Alignment.bottomRight,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 24, bottom: 80),
+          child: _buildFabContent(),
+        ),
+      );
+    }
+
+    // Mobile - Draggable
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 16, bottom: 80),
+        child: Transform.translate(
+          offset: _offset,
+          child: GestureDetector(
+            onPanStart: (_) => setState(() => _isDragging = true),
+            onPanUpdate: (details) {
+              setState(() {
+                _offset += details.delta;
+                final size = MediaQuery.of(context).size;
+                _offset = Offset(
+                  _offset.dx.clamp(10.0, size.width - 170),
+                  _offset.dy.clamp(20.0, size.height - 100),
+                );
+              });
+            },
+            onPanEnd: (_) => setState(() => _isDragging = false),
+            child: AbsorbPointer(
+              absorbing: _isDragging,
+              child: GestureDetector(
+                onTap: _toggleChat,
+                child: _buildFabContent(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFabContent() {
     return AnimatedBuilder(
       animation: _pulseCtrl,
       builder: (context, child) {
@@ -108,8 +168,7 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
           alignment: Alignment.bottomCenter,
           clipBehavior: Clip.none,
           children: [
-            // Pulse ring
-            if (!_hasPulsed && pulse > 0)
+            if (!_hasPulsed && pulse > 0 && !_isDragging)
               Positioned(
                 bottom: 0,
                 child: Container(
@@ -121,10 +180,6 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
                   ),
                 ),
               ),
-
-            // ── The FAB pill + icon group, stacked as siblings ──────────
-            // The pill is the BOTTOM layer; the icon is ABOVE it in the
-            // Stack, so no border can ever cut through the icon.
             child!,
           ],
         );
@@ -133,48 +188,36 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
         clipBehavior: Clip.none,
         alignment: Alignment.bottomCenter,
         children: [
-          // ── FAB pill ─────────────────────────────────────────────────
           Material(
             color: _fabBackground,
-            elevation: 5,
+            elevation: 6,
             shadowColor: Colors.black26,
             borderRadius: BorderRadius.circular(30),
-            child: InkWell(
-              onTap: _toggleChat,
-              borderRadius: BorderRadius.circular(30),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: _fabBorderColor, width: 1.5),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Space on left so text is centred under icon
-                    SizedBox(width: 4),
-                    Text(
-                      "Chat with us",
-                      style: TextStyle(
-                        fontSize: 14.8,
-                        fontWeight: FontWeight.w600,
-                        color: _fabTextColor,
-                      ),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: _fabBorderColor, width: 1.5),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(width: 4),
+                  Text(
+                    "Chat with us",
+                    style: TextStyle(
+                      fontSize: 14.8,
+                      fontWeight: FontWeight.w600,
+                      color: _fabTextColor,
                     ),
-                    SizedBox(width: 5),
-                    Text("👋", style: TextStyle(fontSize: 16)),
-                    // Space on right to balance the icon that floats above
-                    SizedBox(width: 34),
-                  ],
-                ),
+                  ),
+                  SizedBox(width: 5),
+                  Text("👋", style: TextStyle(fontSize: 16)),
+                  SizedBox(width: 34),
+                ],
               ),
             ),
           ),
-
-          // ── Speech-bubble icon — sits ABOVE the pill in paint order ──
-          // Positioned so the ear tip aligns with "with us" text area.
-          // Because it is a Stack sibling (not a child of the pill),
-          // the pill border is completely irrelevant to it.
           const Positioned(
             top: -18,
             right: 10,
@@ -185,17 +228,8 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
     );
   }
 }
-// ═══════════════════════════════════════════════════════════════════════════
-//  The rest of the file remains the same (only colours fixed)
-// ═══════════════════════════════════════════════════════════════════════════
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  _SpeechBubbleIcon
-//  Outer light ring → dark filled inner circle → small ear at bottom-left
-//  → 3 white dots centred inside.
-//  Fully self-contained CustomPainter — no external borders or icons.
-// ═══════════════════════════════════════════════════════════════════════════
-
+// Speech Bubble Icon
 class _SpeechBubbleIcon extends StatelessWidget {
   const _SpeechBubbleIcon();
 
@@ -211,56 +245,48 @@ class _SpeechBubbleIcon extends StatelessWidget {
 class _SpeechBubblePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final w  = size.width;
-    final h  = size.height;
+    final w = size.width;
+    final h = size.height;
     final cx = w / 2;
-    final cy = h / 2 - 3; // shift centre up slightly to leave room for ear
+    final cy = h / 2 - 3;
 
-    // Radii
-    const outerR = 21.0; // outer ring
-    const innerR = 16.0; // filled dark circle
-    const earW   = 6.0;  // ear half-width
-    const earH   = 7.0;  // ear height below circle
+    const outerR = 21.0;
+    const innerR = 16.0;
+    const earW = 6.0;
+    const earH = 7.0;
 
-    // ── Shadow ────────────────────────────────────────────────────────────
     final shadowPath = _buildFullPath(cx, cy, innerR, earW, earH);
     canvas.drawShadow(shadowPath, Colors.black45, 4, false);
 
-    // ── Outer ring (light border) ─────────────────────────────────────────
     final ringPaint = Paint()
-      ..color = const Color(0xFFCBD5E1)   // slate-200 — subtle light ring
+      ..color = const Color(0xFFCBD5E1)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(cx, cy), outerR, ringPaint);
 
-    // ── Inner filled dark circle + ear (merged) ───────────────────────────
     final fillPaint = Paint()
       ..color = const Color(0xFF1E293B)
       ..style = PaintingStyle.fill;
     canvas.drawPath(_buildFullPath(cx, cy, innerR, earW, earH), fillPaint);
 
-    // ── 3 white dots centred inside the dark circle ───────────────────────
     final dotPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
 
     const dotR = 2.5;
-    const gap  = 5.6;
+    const gap = 5.6;
 
     canvas.drawCircle(Offset(cx - gap, cy), dotR, dotPaint);
-    canvas.drawCircle(Offset(cx,       cy), dotR, dotPaint);
+    canvas.drawCircle(Offset(cx, cy), dotR, dotPaint);
     canvas.drawCircle(Offset(cx + gap, cy), dotR, dotPaint);
   }
 
-  /// Builds the merged path: filled circle + small ear triangle at bottom-left.
-  Path _buildFullPath(
-      double cx, double cy, double r, double earW, double earH) {
+  Path _buildFullPath(double cx, double cy, double r, double earW, double earH) {
     final circle = Path()..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r));
 
-    // Ear: a small triangle that pokes below-left of the circle
     final ear = Path()
-      ..moveTo(cx - earW,          cy + r * 0.55)
+      ..moveTo(cx - earW, cy + r * 0.55)
       ..lineTo(cx - earW - earW * 0.4, cy + r + earH)
-      ..lineTo(cx + earW * 0.2,   cy + r * 0.85)
+      ..lineTo(cx + earW * 0.2, cy + r * 0.85)
       ..close();
 
     return Path.combine(PathOperation.union, circle, ear);
@@ -270,18 +296,19 @@ class _SpeechBubblePainter extends CustomPainter {
   bool shouldRepaint(_SpeechBubblePainter old) => false;
 }
 
+// Chat Overlay & Panel (unchanged)
 class _ChatOverlay extends StatelessWidget {
   final VoidCallback onClose;
   const _ChatOverlay({required this.onClose});
 
   @override
   Widget build(BuildContext context) {
-    final size     = MediaQuery.of(context).size;
+    final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
-    final panelW   = isMobile ? size.width - 32.0 : 360.0;
-    final panelH   = isMobile ? 460.0 : 500.0;
-    final right    = isMobile ? 16.0 : 24.0;
-    const bottom   = 80.0 + 16.0;
+    final panelW = isMobile ? size.width - 32.0 : 360.0;
+    final panelH = isMobile ? 460.0 : 500.0;
+    final right = isMobile ? 16.0 : 24.0;
+    const bottom = 80.0 + 16.0;
 
     return Positioned(
       right: right,
@@ -306,17 +333,16 @@ class _ChatPanel extends StatefulWidget {
   State<_ChatPanel> createState() => _ChatPanelState();
 }
 
-class _ChatPanelState extends State<_ChatPanel>
-    with SingleTickerProviderStateMixin {
-  final _service    = const WebsiteChatService();
-  final _inputCtrl  = TextEditingController();
+class _ChatPanelState extends State<_ChatPanel> with SingleTickerProviderStateMixin {
+  final _service = const WebsiteChatService();
+  final _inputCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
-  final _focusNode  = FocusNode();
+  final _focusNode = FocusNode();
   final List<ChatMessage> _history = [];
   bool _isTyping = false;
 
   late final AnimationController _slideCtrl;
-  late final Animation<Offset>   _slideAnim;
+  late final Animation<Offset> _slideAnim;
 
   final List<String> _suggestions = [
     'What services do you offer?',
@@ -385,9 +411,10 @@ class _ChatPanelState extends State<_ChatPanel>
     if (mounted) {
       setState(() {
         _isTyping = false;
+        final cleanReply = cleanAiResponse(reply ?? "I'm having trouble connecting right now. Please email us at support@jvalmacis.co.ke.");
         _history.add(ChatMessage(
           role: 'assistant',
-          text: reply ?? "I'm having trouble connecting right now. Please email us at support@jvalmacis.co.ke.",
+          text: cleanReply,
           timestamp: DateTime.now(),
         ));
       });
@@ -423,9 +450,7 @@ class _ChatPanelState extends State<_ChatPanel>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_brandDark, Color(0xFF334155)],
-        ),
+        gradient: LinearGradient(colors: [_brandDark, Color(0xFF334155)]),
       ),
       child: Row(
         children: [
@@ -455,7 +480,8 @@ class _ChatPanelState extends State<_ChatPanel>
             ),
           ),
           Container(
-            width: 8, height: 8,
+            width: 8,
+            height: 8,
             decoration: const BoxDecoration(color: Color(0xFF4ADE80), shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
@@ -474,11 +500,6 @@ class _ChatPanelState extends State<_ChatPanel>
       ),
     );
   }
-
-  // ... (the rest of _buildMessages, _buildWelcome, _buildBubble, _buildTypingIndicator, 
-  // _buildSuggestions, _buildInput, and _TypingDots remain exactly the same as your original file)
-
-  // I'll keep them short here for brevity — just copy them from your previous version
 
   Widget _buildMessages() {
     if (_history.isEmpty) return _buildWelcome();
@@ -528,6 +549,8 @@ class _ChatPanelState extends State<_ChatPanel>
 
   Widget _buildBubble(ChatMessage msg) {
     final isUser = msg.role == 'user';
+    final displayText = isUser ? msg.text : cleanAiResponse(msg.text);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -536,7 +559,8 @@ class _ChatPanelState extends State<_ChatPanel>
         children: [
           if (!isUser) ...[
             Container(
-              width: 28, height: 28,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(color: _brandAccent, borderRadius: BorderRadius.circular(8)),
               child: const Icon(Icons.support_agent_rounded, color: Colors.white, size: 16),
             ),
@@ -548,14 +572,14 @@ class _ChatPanelState extends State<_ChatPanel>
               decoration: BoxDecoration(
                 color: isUser ? _bubbleUser : _bubbleBot,
                 borderRadius: BorderRadius.only(
-                  topLeft:     const Radius.circular(14),
-                  topRight:    const Radius.circular(14),
-                  bottomLeft:  Radius.circular(isUser ? 14 : 3),
+                  topLeft: const Radius.circular(14),
+                  topRight: const Radius.circular(14),
+                  bottomLeft: Radius.circular(isUser ? 14 : 3),
                   bottomRight: Radius.circular(isUser ? 3 : 14),
                 ),
               ),
               child: Text(
-                msg.text,
+                displayText,
                 style: TextStyle(
                   fontSize: 13,
                   color: isUser ? _textUser : _textBot,
@@ -576,7 +600,8 @@ class _ChatPanelState extends State<_ChatPanel>
       child: Row(
         children: [
           Container(
-            width: 28, height: 28,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(color: _brandAccent, borderRadius: BorderRadius.circular(8)),
             child: const Icon(Icons.support_agent_rounded, color: Colors.white, size: 16),
           ),
@@ -584,7 +609,7 @@ class _ChatPanelState extends State<_ChatPanel>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(color: _bubbleBot, borderRadius: BorderRadius.circular(14)),
-            child: _TypingDots(),
+            child: const _TypingDots(),
           ),
         ],
       ),
@@ -690,25 +715,28 @@ class _ChatPanelState extends State<_ChatPanel>
   }
 }
 
-// Animated typing dots (unchanged)
 class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+
   @override
   State<_TypingDots> createState() => _TypingDotsState();
 }
 
 class _TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin {
   late final List<AnimationController> _ctrls;
-  late final List<Animation<double>>   _anims;
+  late final List<Animation<double>> _anims;
 
   @override
   void initState() {
     super.initState();
     _ctrls = List.generate(3, (i) => AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 600),
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
     ));
     _anims = _ctrls.map((c) => Tween<double>(begin: 0, end: -5).animate(
       CurvedAnimation(parent: c, curve: Curves.easeInOut),
     )).toList();
+
     for (int i = 0; i < 3; i++) {
       Future.delayed(Duration(milliseconds: i * 160), () {
         if (mounted) _ctrls[i].repeat(reverse: true);
@@ -718,7 +746,9 @@ class _TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin 
 
   @override
   void dispose() {
-    for (final c in _ctrls) c.dispose();
+    for (final c in _ctrls) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -731,7 +761,8 @@ class _TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin 
         builder: (_, __) => Transform.translate(
           offset: Offset(0, _anims[i].value),
           child: Container(
-            width: 6, height: 6,
+            width: 6,
+            height: 6,
             margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
             decoration: const BoxDecoration(
               color: Color(0xFF94A3B8),

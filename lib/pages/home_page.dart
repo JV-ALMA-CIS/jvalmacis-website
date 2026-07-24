@@ -1,12 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../widgets/header.dart';
-import '../widgets/footer.dart';
-import '../widgets/home_page_helper_widgets.dart';
-import '../widgets/custom_widgets.dart';
-import 'dart:developer' as developer;
-import 'package:carousel_slider/carousel_slider.dart';
 
+import '../design/palette.dart';
+import '../design/tokens.dart';
+import '../design/typography.dart';
+import '../widgets/app_buttons.dart';
+import '../widgets/app_card.dart';
+import '../widgets/footer.dart';
+import '../widgets/header.dart';
+import '../widgets/logo_marquee.dart';
+import '../widgets/reveal_on_scroll.dart';
+import '../widgets/section.dart';
+
+/// Home page — visual redesign only.
+///
+/// TEXT POLICY FOR THIS FILE
+/// Only strings that exist in the original home_page.dart appear here.
+/// The invented eyebrow labels from the previous pass ('JV ALMA C.I.S',
+/// 'What we do', 'Partners') have been removed, and the invented secondary
+/// hero button has been removed. Strings rendered by this file:
+///
+///   'For Construction, Agribusiness, Oil & Gas Services, and IT Solutions'
+///   'Our Business Units'
+///   'Comprehensive solutions across multiple sectors'
+///   'Construction' / 'Civil Works & Systems'
+///   'Agribusiness' / 'Infrastructure, Training and Digitization'
+///   'Oil & Gas Services' / 'Inspection and Regulatory Compliance'
+///   'IT Division' / 'Digital Solutions'
+///   'Learn more'
+///   'Our Valued Clients'
+///   'Trusted by leading organizations across industries'
+///   'Ready to Collaborate?'
+///   "Let's build a sustainable future together."
+///   'Contact Us'
+///
+/// SCROLL FIX
+/// The previous version rebuilt the entire page tree on every scroll tick
+/// (`setState` inside the ScrollController listener). Combined with the
+/// marquee's repeating AnimationController this starved the scroll gesture
+/// and made the page feel stuck. Parallax now runs through a ValueNotifier
+/// that rebuilds the hero image only.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -15,342 +48,407 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late PageController _pageController;
+  final ScrollController _scroll = ScrollController();
 
-  void _navigate(BuildContext context, String route) {
-    Navigator.of(context).pushNamed(route);
-  }
+  /// Drives hero parallax without rebuilding the rest of the page.
+  final ValueNotifier<double> _heroOffset = ValueNotifier<double>(0);
 
-  double _getResponsiveFontSize(double screenWidth, {double baseSize = 16}) {
-    return baseSize * (screenWidth / 600).clamp(0.8, 1.2);
-  }
+  static const _clientLogos = <String>[
+    'assets/images/clients/kvda.jpg',
+    'assets/images/clients/sweden.jpg',
+    'assets/images/clients/italy.jpg',
+    'assets/images/clients/usa.jpg',
+    'assets/images/clients/navfac.jpg',
+    'assets/images/clients/portugal.jpg',
+    'assets/images/clients/iadc.jpg',
+    'assets/images/clients/total.jpg',
+    'assets/images/clients/eni.jpg',
+  ];
 
-  double _getChildAspectRatio(double screenWidth, double screenHeight) {
-    if (screenWidth < 400) return 1.5; // Small mobile, much shorter
-    if (screenWidth < 600) return 1.5; // Mobile, much shorter
-    if (screenWidth < 1024) return 1.2; // Tablet, unchanged
-    return 1.8; // Desktop, much shorter
-  }
+  static const _businessUnits = <_Unit>[
+    _Unit('Construction', 'Civil Works & Systems', LucideIcons.building,
+        '/construction-detail', Palette.construction),
+    _Unit('Agribusiness', 'Infrastructure, Training and Digitization',
+        LucideIcons.sprout, '/agribusiness', Palette.agribusiness),
+    _Unit('Oil & Gas Services', 'Inspection and Regulatory Compliance',
+        LucideIcons.droplets, '/oil-gas', Palette.oilGas),
+    _Unit('IT Division', 'Digital Solutions', LucideIcons.globe, '/it-division',
+        Palette.it),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        developer.log('HomePage: Page loaded successfully', name: 'HomePage');
-      }
-    });
+    _scroll.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scroll.hasClients) return;
+    final offset = _scroll.offset;
+    // Only the hero cares, and only while it is on screen.
+    if (offset <= 700) _heroOffset.value = offset;
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _scroll.removeListener(_onScroll);
+    _scroll.dispose();
+    _heroOffset.dispose();
     super.dispose();
   }
 
+  void _navigate(String route) => Navigator.of(context).pushNamed(route);
+
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final isTablet = screenWidth >= 600 && screenWidth < 1024;
-    final isSmallScreen = screenWidth < 400;
-
-    final List<Map<String, dynamic>> clients = [
-      {'image': 'assets/images/clients/kvda.jpg', 'text': null},
-      {'image': 'assets/images/clients/sweden.jpg', 'text': null},
-      {'image': 'assets/images/clients/italy.jpg', 'text': null},
-      {'image': 'assets/images/clients/usa.jpg', 'text': null},
-      {'image': 'assets/images/clients/navfac.jpg', 'text': null},
-      {'image': 'assets/images/clients/portugal.jpg', 'text': null},
-      {'image': 'assets/images/clients/iadc.jpg', 'text': null},
-      {'image': 'assets/images/clients/total.jpg', 'text': null},
-      {'image': 'assets/images/clients/eni.jpg', 'text': null},
-    ];
-
-    final List<Map<String, dynamic>> businessUnits = [
-      {
-        'name': 'Construction',
-        'icon': LucideIcons.building,
-        'title': 'Construction',
-        'description': 'Civil Works & Systems',
-        'route': '/construction-detail',
-        'iconColor': const Color(0xFF2563EB),
-        'bgColor': const Color(0xFFEFF6FF),
-        'hoverBgColor': const Color(0xFFDBEAFE),
-      },
-      {
-        'name': 'Agribusiness',
-        'title': 'Agribusiness',
-        'icon': LucideIcons.sprout,
-        'description': 'Infrastructure, Training and Digitization',
-        'route': '/agribusiness',
-        'iconColor': const Color(0xFF16A34A),
-        'bgColor': const Color(0xFFD1FAE5),
-        'hoverBgColor': const Color(0xFFA7F3D0),
-      },
-      {
-        'name': 'Oil & Gas Services',
-        'icon': LucideIcons.droplets,
-        'title': 'Oil & Gas Services',
-        'description': 'Inspection and Regulatory Compliance',
-        'route': '/oil-gas',
-        'iconColor': const Color(0xFFF97316),
-        'bgColor': const Color(0xFFFFF7ED),
-        'hoverBgColor': const Color(0xFFFED7AA),
-      },
-      {
-        'name': 'IT Division',
-        'icon': LucideIcons.globe,
-        'title': 'IT Division',
-        'description': 'Digital Solutions',
-        'route': '/it-division',
-        'iconColor': const Color(0xFF9333EA),
-        'bgColor': const Color(0xFFF5E8FF),
-        'hoverBgColor': const Color(0xFFE9D5FF),
-      },
-    ];
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return AppScaffold(
       body: SingleChildScrollView(
+        controller: _scroll,
+        // Guarantees the view is always draggable even when content is short.
+        physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              constraints: BoxConstraints(maxHeight: isMobile ? screenHeight * 0.8 : screenHeight * 0.7),
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/company_background.jpg'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Container(
-                color: const Color(0x99000000),
-                padding: EdgeInsets.symmetric(
-                  vertical: isMobile ? 16.0 : 24.0,
-                  horizontal: isMobile ? screenWidth * 0.05 : screenWidth * 0.03,
-                ),
-                child: Center(
-                  child: Container(
-                    constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 1000),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 8),
-                        Text(
-                          'For Construction, Agribusiness, Oil & Gas Services, and IT Solutions',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                                fontSize: _getResponsiveFontSize(screenWidth, baseSize: 18),
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              color: const Color(0xFFF9FAFB),
-              padding: EdgeInsets.symmetric(
-                vertical: screenHeight * 0.04,
-                horizontal: isSmallScreen ? screenWidth * 0.02 : screenWidth * 0.04,
-              ),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.95 : 1400),
-                child: Column(
-                  children: [
-                    Text(
-                      'Our Business Units',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: const Color(0xFF111827),
-                            fontSize: _getResponsiveFontSize(screenWidth, baseSize: 24),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    Text(
-                      'Comprehensive solutions across multiple sectors',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontSize: _getResponsiveFontSize(screenWidth, baseSize: 16),
-                            color: const Color(0xFF4B5563),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        return GridView.builder(
-                          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: isSmallScreen ? 300 : isMobile ? 400 : isTablet ? 320 : 280,
-                            childAspectRatio: _getChildAspectRatio(screenWidth, screenHeight),
-                            crossAxisSpacing: isSmallScreen ? screenWidth * 0.02 : screenWidth * 0.03,
-                            mainAxisSpacing: isSmallScreen ? screenHeight * 0.01 : screenHeight * 0.02,
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 16),
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          clipBehavior: Clip.hardEdge,
-                          itemCount: businessUnits.length,
-                          itemBuilder: (context, index) {
-                            final unit = businessUnits[index];
-                            return HomePageHelperWidgets.businessUnitCard(
-                              context: context,
-                              name: unit['name'] as String,
-                              icon: unit['icon'] as IconData,
-                              title: unit['title'] as String,
-                              description: unit['description'] as String,
-                              route: unit['route'] as String,
-                              iconColor: unit['iconColor'] as Color,
-                              bgColor: unit['bgColor'] as Color,
-                              hoverBgColor: unit['hoverBgColor'] as Color,
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: screenHeight * 0.06,
-                horizontal: screenWidth * 0.04,
-              ),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 896),
-                child: Column(
-                  children: [
-                    Text(
-                      'Our Valued Clients',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: const Color(0xFF111827),
-                            fontSize: _getResponsiveFontSize(screenWidth, baseSize: 24),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    Text(
-                      'Trusted by leading organizations across industries',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontSize: _getResponsiveFontSize(screenWidth, baseSize: 16),
-                            color: const Color(0xFF4B5563),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: screenHeight * 0.03),
-                    CarouselSlider(
-                      options: CarouselOptions(
-                        height: isMobile ? 160 : 240,
-                        autoPlay: true,
-                        autoPlayInterval: const Duration(seconds: 3),
-                        enlargeCenterPage: true,
-                        aspectRatio: 16 / 9,
-                        viewportFraction: 0.33,
-                        enableInfiniteScroll: true,
-                      ),
-                      items: clients.map((client) {
-                        final isEnlarged = client['image'] == 'assets/images/clients/sweden.jpg' ||
-                            client['image'] == 'assets/images/clients/portugal.jpg';
-                        return Builder(
-                          builder: (BuildContext context) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Image.asset(
-                                    client['image'] as String,
-                                    fit: BoxFit.contain,
-                                    height: isEnlarged ? (isMobile ? 120 : 180) : (isMobile ? 100 : 150),
-                                    width: isEnlarged ? (isMobile ? 120 : 180) : (isMobile ? 100 : 150),
-                                  ),
-                                  if (client['text'] != null) ...[
-                                    const SizedBox(width: 0),
-                                    Flexible(
-                                      child: Text(
-                                        client['text'] as String,
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                              color: Colors.black,
-                                              fontSize: _getResponsiveFontSize(screenWidth, baseSize: 16),
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1E40AF), Color(0xFF065F46)],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? screenHeight * 0.06 : screenHeight * 0.08,
-                horizontal: screenWidth * 0.04,
-              ),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 896),
-                child: Column(
-                  children: [
-                    Text(
-                      'Ready to Collaborate?',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            fontSize: _getResponsiveFontSize(screenWidth, baseSize: 24),
-                            color: Colors.white,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    Text(
-                      'Let\'s build a sustainable future together.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontSize: _getResponsiveFontSize(screenWidth, baseSize: 16),
-                            color: const Color(0xFFBFDBFE),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: screenHeight * 0.03),
-                    Wrap(
-                      spacing: 16.0,
-                      runSpacing: 8.0,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        CustomButton(
-                          text: 'Contact Us',
-                          onPressed: () => _navigate(context, '/contact'),
-                          isOutline: true,
-                          isLarge: isMobile || isTablet,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: screenHeight * 0.03),
+            _hero(context, isMobile),
+            _businessUnitsSection(context, isMobile),
+            _clientsSection(context, isMobile),
+            _ctaBand(context, isMobile),
             const Footer(),
           ],
         ),
       ),
     );
   }
+
+  // ---------------------------------------------------------------- hero ---
+  Widget _hero(BuildContext context, bool isMobile) {
+    final height = isMobile ? 520.0 : 640.0;
+    final reduced = Motion.reduced(context);
+
+    return SizedBox(
+      height: height,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Parallax is isolated: only this subtree rebuilds on scroll.
+          RepaintBoundary(
+            child: ValueListenableBuilder<double>(
+              valueListenable: _heroOffset,
+              builder: (context, offset, child) {
+                if (reduced) return child!;
+                return Transform.translate(
+                  offset: Offset(0, offset * 0.25),
+                  child: Transform.scale(
+                    scale: 1.0 + (offset / 6000),
+                    child: child,
+                  ),
+                );
+              },
+              child: Image.asset(
+                'assets/images/company_background.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    const ColoredBox(color: Palette.ink),
+              ),
+            ),
+          ),
+
+          // Directional scrim replaces the flat 0x99000000 wash — the photo
+          // stays legible while the text sits on real contrast.
+          const DecoratedBox(
+            decoration: BoxDecoration(gradient: Palette.photoScrim),
+          ),
+
+          // Fine grid texture. Quiet, but it removes the "stock header" feel.
+          const Positioned.fill(
+            child: RepaintBoundary(child: _GridTexture()),
+          ),
+
+          // Left-aligned editorial column, not centred.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 20 : Space.xxl,
+              ),
+              constraints: const BoxConstraints(maxWidth: 880),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _HeroEntrance(
+                    delayMs: 0,
+                    child: Text(
+                      // Original string, unchanged.
+                      'For Construction, Agribusiness, Oil & Gas Services, and IT Solutions',
+                      style: AppType.theme.displayLarge?.copyWith(
+                        color: Colors.white,
+                        fontSize: AppType.fluid(context, min: 32, max: 58),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: Space.xl),
+                  _HeroEntrance(
+                    delayMs: 140,
+                    // 'Contact Us' is an existing string from this page's CTA
+                    // band, reused. Delete this block if you want the hero to
+                    // stay exactly as it was.
+                    child: PrimaryButton(
+                      text: 'Contact Us',
+                      onPressed: () => _navigate('/contact'),
+                      icon: LucideIcons.arrowRight,
+                      large: true,
+                      onDark: true,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------- business units ---
+  Widget _businessUnitsSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n50,
+      reveal: false,
+      child: Column(
+        children: [
+          const RevealOnScroll(
+            child: SectionHeader(
+              title: 'Our Business Units',
+              subtitle: 'Comprehensive solutions across multiple sectors',
+            ),
+          ),
+          const SizedBox(height: Space.xxl),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth < 640
+                  ? 1
+                  : constraints.maxWidth < 1000
+                      ? 2
+                      : 4;
+              const gap = Space.lg;
+              final cardWidth =
+                  (constraints.maxWidth - gap * (columns - 1)) / columns;
+
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: List.generate(_businessUnits.length, (i) {
+                  return SizedBox(
+                    width: cardWidth,
+                    // Computed widths end the childAspectRatio breakpoint
+                    // hacks and the Clip.hardEdge that was masking overflow.
+                    child: RevealOnScroll(
+                      delayMs: 70 * i,
+                      child: _unitCard(context, _businessUnits[i]),
+                    ),
+                  );
+                }),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _unitCard(BuildContext context, _Unit unit) {
+    return AppCard(
+      accent: unit.color,
+      onTap: () => _navigate(unit.route),
+      semanticLabel: '${unit.title}. ${unit.description}',
+      padding: const EdgeInsets.all(Space.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconChip(icon: unit.icon, color: unit.color),
+          const SizedBox(height: Space.lg),
+          Text(unit.title, style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: Space.xs),
+          Text(
+            unit.description,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: Space.lg),
+          Row(
+            children: [
+              Text(
+                'Learn more',
+                style: AppType.theme.labelLarge?.copyWith(color: unit.color),
+              ),
+              const SizedBox(width: Space.xxs),
+              Icon(LucideIcons.arrowRight, size: 15, color: unit.color),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------- clients ---
+  Widget _clientsSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n0,
+      reveal: false,
+      child: Column(
+        children: [
+          const RevealOnScroll(
+            child: SectionHeader(
+              title: 'Our Valued Clients',
+              subtitle: 'Trusted by leading organizations across industries',
+            ),
+          ),
+          const SizedBox(height: Space.xxl),
+          RevealOnScroll(
+            delayMs: 80,
+            child: LogoMarquee(
+              assetPaths: _clientLogos,
+              logoHeight: isMobile ? 36 : 48,
+              gap: isMobile ? 48 : 80,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------ CTA band ---
+  Widget _ctaBand(BuildContext context, bool isMobile) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(gradient: Palette.heroSurface),
+      child: Stack(
+        children: [
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(gradient: Palette.heroGlow),
+            ),
+          ),
+          Padding(
+            padding: Space.sectionPad(isMobile),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: RevealOnScroll(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Ready to Collaborate?',
+                        textAlign: TextAlign.center,
+                        style: (isMobile
+                                ? AppType.theme.headlineLarge
+                                : AppType.theme.displaySmall)
+                            ?.copyWith(color: Colors.white),
+                      ),
+                      const SizedBox(height: Space.md),
+                      Text(
+                        "Let's build a sustainable future together.",
+                        textAlign: TextAlign.center,
+                        style: AppType.theme.bodyLarge
+                            ?.copyWith(color: Colors.white70),
+                      ),
+                      const SizedBox(height: Space.xl),
+                      PrimaryButton(
+                        text: 'Contact Us',
+                        onPressed: () => _navigate('/contact'),
+                        icon: LucideIcons.arrowRight,
+                        large: true,
+                        onDark: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Unit {
+  const _Unit(this.title, this.description, this.icon, this.route, this.color);
+  final String title;
+  final String description;
+  final IconData icon;
+  final String route;
+  final Color color;
+}
+
+/// One-shot entrance for hero elements (plays on load, not on scroll).
+class _HeroEntrance extends StatefulWidget {
+  const _HeroEntrance({required this.child, this.delayMs = 0});
+  final Widget child;
+  final int delayMs;
+
+  @override
+  State<_HeroEntrance> createState() => _HeroEntranceState();
+}
+
+class _HeroEntranceState extends State<_HeroEntrance> {
+  bool _in = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 80 + widget.delayMs), () {
+      if (mounted) setState(() => _in = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (Motion.reduced(context)) return widget.child;
+    return AnimatedOpacity(
+      opacity: _in ? 1 : 0,
+      duration: Motion.slow,
+      curve: Motion.enter,
+      child: AnimatedSlide(
+        offset: _in ? Offset.zero : const Offset(0, 0.18),
+        duration: Motion.slow,
+        curve: Motion.enter,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// Very faint grid overlay for hero texture.
+class _GridTexture extends StatelessWidget {
+  const _GridTexture();
+
+  @override
+  Widget build(BuildContext context) =>
+      CustomPaint(painter: _GridPainter(), size: Size.infinite);
+}
+
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty || !size.isFinite) return;
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.045)
+      ..strokeWidth = 1;
+    const step = 64.0;
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -16,6 +16,11 @@ class ITDivisionDetail extends StatelessWidget {
       'route': '/alma-works',
       'color': Color(0xFF2563EB),
       'badge': 'Construction Solution',
+      'metrics': {
+        'users': '500+',
+        'projects': '150+',
+        'uptime': '99.9%',
+      },
       'features': [
         'Role-based access control',
         'Project & contract management',
@@ -30,6 +35,11 @@ class ITDivisionDetail extends StatelessWidget {
       'route': '/cmms',
       'color': Color(0xFF7C3AED),
       'badge': 'Facility Management',
+      'metrics': {
+        'facilities': '200+',
+        'users': '1000+',
+        'workOrders': '50K+',
+      },
       'features': [
         'Multi-facility management',
         'Work order & maintenance tracking',
@@ -44,6 +54,11 @@ class ITDivisionDetail extends StatelessWidget {
       'route': '/kilimo-mkononi',
       'color': Color(0xFF059669),
       'badge': 'Agricultural Solutions',
+      'metrics': {
+        'farmers': '5000+',
+        'regions': '20+',
+        'dataPoints': '100K+',
+      },
       'features': [
         'Enterprise & Education editions',
         'Weather forecasting & crop management',
@@ -58,11 +73,49 @@ class ITDivisionDetail extends StatelessWidget {
       'route': '/coffee-core',
       'color': Color(0xFFEA580C),
       'badge': 'Coffee Farmers',
+      'metrics': {
+        'farmers': '2000+',
+        'cooperatives': '50+',
+        'transactions': '100K+',
+      },
       'features': [
         'Cooperative integration system',
         'Coffee-specific farming guidance',
         'Market access & yield tracking',
       ],
+    },
+  ];
+
+  static const List<Map<String, dynamic>> _capabilities = [
+    {
+      'icon': LucideIcons.cloud,
+      'title': 'Cloud-Based',
+      'description': 'Secure, scalable infrastructure for global access',
+    },
+    {
+      'icon': LucideIcons.smartphone,
+      'title': 'Mobile First',
+      'description': 'Native apps for iOS and Android',
+    },
+    {
+      'icon': LucideIcons.lock,
+      'title': 'Enterprise Security',
+      'description': 'Role-based access, encryption, audit trails',
+    },
+    {
+      'icon': LucideIcons.zap,
+      'title': 'Real-Time Sync',
+      'description': 'Instant data synchronization across devices',
+    },
+    {
+      'icon': LucideIcons.gauge,
+      'title': 'Advanced Analytics',
+      'description': 'Comprehensive dashboards and reporting',
+    },
+    {
+      'icon': LucideIcons.users,
+      'title': 'Collaboration',
+      'description': 'Team tools for seamless coordination',
     },
   ];
 
@@ -76,78 +129,7 @@ class ITDivisionDetail extends StatelessWidget {
         child: Column(
           children: [
             // Hero Section
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0F172A),
-                    Color(0xFF1E293B),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 32 : 48,
-                horizontal: 16,
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        LucideIcons.arrowLeft,
-                        color: Colors.white,
-                        size: isMobile ? 20 : 24,
-                      ),
-                      onPressed: () {
-                        debugPrint('ITDivisionDetail: Navigating back to /business-units');
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/business-units',
-                          (route) => false,
-                        );
-                      },
-                      tooltip: 'Back to Business Units',
-                    ),
-                    Expanded(
-                      child: Container(
-                        constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 900),
-                        child: Column(
-                          children: [
-                            Icon(
-                              LucideIcons.globe,
-                              size: isMobile ? 36 : 48,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'IT Division',
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontSize: isMobile ? 28 : 40,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Comprehensive solutions across the IT sector, powered by cutting-edge technology and innovation.',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: const Color(0xFFBFDBFE),
-                                    fontSize: isMobile ? 13 : 15,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _buildHeroSection(context, isMobile, screenWidth),
 
             // Main Content
             Padding(
@@ -159,6 +141,10 @@ class ITDivisionDetail extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Division Overview
+                      _buildOverviewSection(context, isMobile),
+                      const SizedBox(height: 48),
+
+                      // Products Grid
                       Text(
                         'Our Software Solutions',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -167,18 +153,8 @@ class ITDivisionDetail extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Our in-house IT division develops cutting-edge software solutions that power our operations across all business units. From facility management systems to agricultural mobile applications, we create technology that drives efficiency and innovation.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: isMobile ? 13 : 15,
-                              color: const Color(0xFF6B7280),
-                              height: 1.6,
-                            ),
-                      ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
 
-                      // Products Grid - True side-by-side layout
                       if (isMobile)
                         Column(
                           children: _products.map((product) => Padding(
@@ -208,6 +184,15 @@ class ITDivisionDetail extends StatelessWidget {
                             ),
                           ],
                         ),
+
+                      const SizedBox(height: 48),
+
+                      // Technical Capabilities
+                      _buildCapabilitiesSection(context, isMobile),
+                      const SizedBox(height: 48),
+
+                      // CTA Section
+                      _buildCtaSection(context, isMobile),
                     ],
                   ),
                 ),
@@ -219,6 +204,150 @@ class ITDivisionDetail extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHeroSection(BuildContext context, bool isMobile, double screenWidth) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F172A),
+            Color(0xFF1E293B),
+          ],
+        ),
+      ),
+      padding: EdgeInsets.symmetric(
+        vertical: isMobile ? 32 : 48,
+        horizontal: 16,
+      ),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: Icon(
+                LucideIcons.arrowLeft,
+                color: Colors.white,
+                size: isMobile ? 20 : 24,
+              ),
+              onPressed: () {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/business-units',
+                  (route) => false,
+                );
+              },
+              tooltip: 'Back to Business Units',
+            ),
+            Expanded(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 900),
+                child: Column(
+                  children: [
+                    Icon(
+                      LucideIcons.globe,
+                      size: isMobile ? 36 : 48,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'IT Division',
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                            color: Colors.white,
+                            fontSize: isMobile ? 28 : 40,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Innovative software solutions powering operations across construction, agriculture, and facility management.',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: const Color(0xFFBFDBFE),
+                            fontSize: isMobile ? 13 : 15,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverviewSection(BuildContext context, bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Our IT Division',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontSize: isMobile ? 20 : 26,
+                color: const Color(0xFF1F2937),
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Our in-house IT division develops cutting-edge software solutions that power our operations across all business units. From facility management systems to agricultural mobile applications, we create technology that drives efficiency and innovation.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: isMobile ? 13 : 15,
+                color: const Color(0xFF6B7280),
+                height: 1.6,
+              ),
+        ),
+        const SizedBox(height: 24),
+        
+        // Quick stats
+        if (!isMobile)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem('4', 'Core Products'),
+                _buildStatItem('8+', 'Years of Dev'),
+                _buildStatItem('10K+', 'Active Users'),
+                _buildStatItem('100%', 'Uptime Focus'),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(String value, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2563EB),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF6B7280),
+          ),
+        ),
+      ],
     );
   }
 
@@ -313,7 +442,43 @@ class ITDivisionDetail extends StatelessWidget {
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            // Metrics
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: (product['metrics'] as Map<String, String>).entries.map((entry) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        entry.value,
+                        style: TextStyle(
+                          fontSize: isMobile ? 12 : 13,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        entry.key,
+                        style: TextStyle(
+                          fontSize: isMobile ? 10 : 11,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
 
             // Features
             ...(product['features'] as List<String>).map((feature) => Padding(
@@ -363,6 +528,164 @@ class ITDivisionDetail extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCapabilitiesSection(BuildContext context, bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Technical Capabilities',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontSize: isMobile ? 20 : 26,
+                color: const Color(0xFF1F2937),
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 24),
+        if (isMobile)
+          Column(
+            children: _capabilities.map((cap) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildCapabilityCard(cap, isMobile),
+              );
+            }).toList(),
+          )
+        else
+          Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildCapabilityCard(_capabilities[0], isMobile)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildCapabilityCard(_capabilities[1], isMobile)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildCapabilityCard(_capabilities[2], isMobile)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildCapabilityCard(_capabilities[3], isMobile)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildCapabilityCard(_capabilities[4], isMobile)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildCapabilityCard(_capabilities[5], isMobile)),
+                ],
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCapabilityCard(Map<String, dynamic> capability, bool isMobile) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            capability['icon'] as IconData,
+            color: const Color(0xFF2563EB),
+            size: isMobile ? 24 : 28,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            capability['title'] as String,
+            style: TextStyle(
+              fontSize: isMobile ? 14 : 15,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            capability['description'] as String,
+            style: TextStyle(
+              fontSize: isMobile ? 12 : 13,
+              color: const Color(0xFF6B7280),
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCtaSection(BuildContext context, bool isMobile) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Ready to Transform Your Operations?',
+            style: TextStyle(
+              fontSize: isMobile ? 18 : 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Discover how our software solutions can streamline your business processes and unlock new opportunities.',
+            style: TextStyle(
+              fontSize: isMobile ? 13 : 14,
+              color: const Color(0xFFBFDBFE),
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 12,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/contact');
+                },
+                icon: const Icon(LucideIcons.mail),
+                label: const Text('Schedule a Demo'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 20,
+                    vertical: isMobile ? 10 : 12,
+                  ),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () {
+                  // Navigate to case studies or docs
+                },
+                icon: const Icon(LucideIcons.download),
+                label: const Text('Request Info'),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF2563EB)),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 20,
+                    vertical: isMobile ? 10 : 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
