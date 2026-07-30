@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/header.dart';
 import '../../widgets/responsive_utils.dart';
+import '../../widgets/app_buttons.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/section.dart';
+import '../../widgets/reveal_on_scroll.dart';
+import '../../design/palette.dart';
+import '../../design/tokens.dart';
 
 class ITDivisionDetail extends StatelessWidget {
   const ITDivisionDetail({super.key});
@@ -14,13 +20,9 @@ class ITDivisionDetail extends StatelessWidget {
       'subtitle': 'Construction Management Software',
       'description': 'Proprietary construction management platform designed for sensitive construction operations with comprehensive role-based security.',
       'route': '/alma-works',
-      'color': Color(0xFF2563EB),
+      'color': Palette.construction,
       'badge': 'Construction Solution',
-      'metrics': {
-        'users': '500+',
-        'projects': '150+',
-        'uptime': '99.9%',
-      },
+      
       'features': [
         'Role-based access control',
         'Project & contract management',
@@ -33,13 +35,9 @@ class ITDivisionDetail extends StatelessWidget {
       'subtitle': 'Facility Management Platform',
       'description': 'Comprehensive facility management software with secure role-based access for multiple facility types and complete audit trails.',
       'route': '/cmms',
-      'color': Color(0xFF7C3AED),
+      'color': Palette.it,
       'badge': 'Facility Management',
-      'metrics': {
-        'facilities': '200+',
-        'users': '1000+',
-        'workOrders': '50K+',
-      },
+      
       'features': [
         'Multi-facility management',
         'Work order & maintenance tracking',
@@ -52,13 +50,9 @@ class ITDivisionDetail extends StatelessWidget {
       'subtitle': 'Agricultural Platform Suite',
       'description': 'Comprehensive agricultural platform with Enterprise and Education editions helping thousands of farmers across Kenya.',
       'route': '/kilimo-mkononi',
-      'color': Color(0xFF059669),
+      'color': Palette.success,
       'badge': 'Agricultural Solutions',
-      'metrics': {
-        'farmers': '5000+',
-        'regions': '20+',
-        'dataPoints': '100K+',
-      },
+      
       'features': [
         'Enterprise & Education editions',
         'Weather forecasting & crop management',
@@ -71,13 +65,9 @@ class ITDivisionDetail extends StatelessWidget {
       'subtitle': 'Coffee Farmers Network',
       'description': 'Dedicated platform connecting coffee farmers with cooperatives for better market access, pricing, and quality control.',
       'route': '/coffee-core',
-      'color': Color(0xFFEA580C),
+      'color': Palette.oilGas,
       'badge': 'Coffee Farmers',
-      'metrics': {
-        'farmers': '2000+',
-        'cooperatives': '50+',
-        'transactions': '100K+',
-      },
+      
       'features': [
         'Cooperative integration system',
         'Coffee-specific farming guidance',
@@ -131,75 +121,18 @@ class ITDivisionDetail extends StatelessWidget {
             // Hero Section
             _buildHeroSection(context, isMobile, screenWidth),
 
-            // Main Content
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: isMobile ? 24 : 40),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Division Overview
-                      _buildOverviewSection(context, isMobile),
-                      const SizedBox(height: 48),
+            // Division Overview
+            _buildOverviewSection(context, isMobile),
 
-                      // Products Grid
-                      Text(
-                        'Our Software Solutions',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: isMobile ? 20 : 26,
-                              color: const Color(0xFF1F2937),
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 24),
+            // Products Grid
+            _buildProductsSection(context, isMobile),
 
-                      if (isMobile)
-                        Column(
-                          children: _products.map((product) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _buildProductCard(context, product, isMobile),
-                          )).toList(),
-                        )
-                      else
-                        Column(
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(child: _buildProductCard(context, _products[0], isMobile)),
-                                const SizedBox(width: 16),
-                                Expanded(child: _buildProductCard(context, _products[1], isMobile)),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(child: _buildProductCard(context, _products[2], isMobile)),
-                                const SizedBox(width: 16),
-                                Expanded(child: _buildProductCard(context, _products[3], isMobile)),
-                              ],
-                            ),
-                          ],
-                        ),
+            // Technical Capabilities
+            _buildCapabilitiesSection(context, isMobile),
 
-                      const SizedBox(height: 48),
+            // CTA Section
+            _buildCtaSection(context, isMobile),
 
-                      // Technical Capabilities
-                      _buildCapabilitiesSection(context, isMobile),
-                      const SizedBox(height: 48),
-
-                      // CTA Section
-                      _buildCtaSection(context, isMobile),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            SizedBox(height: MediaQuery.of(context).size.height * 0.03),
             const Footer(),
           ],
         ),
@@ -209,20 +142,8 @@ class ITDivisionDetail extends StatelessWidget {
 
   Widget _buildHeroSection(BuildContext context, bool isMobile, double screenWidth) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-          ],
-        ),
-      ),
-      padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 32 : 48,
-        horizontal: 16,
-      ),
+      decoration: const BoxDecoration(gradient: Palette.heroSurface),
+      padding: Space.sectionPad(isMobile),
       child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -230,7 +151,7 @@ class ITDivisionDetail extends StatelessWidget {
             IconButton(
               icon: Icon(
                 LucideIcons.arrowLeft,
-                color: Colors.white,
+                color: Palette.n0,
                 size: isMobile ? 20 : 24,
               ),
               onPressed: () {
@@ -250,25 +171,21 @@ class ITDivisionDetail extends StatelessWidget {
                     Icon(
                       LucideIcons.globe,
                       size: isMobile ? 36 : 48,
-                      color: Colors.white,
+                      color: Palette.n0,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: Space.sm),
                     Text(
                       'IT Division',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: Colors.white,
-                            fontSize: isMobile ? 28 : 40,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: (isMobile
+                              ? Theme.of(context).textTheme.headlineLarge
+                              : Theme.of(context).textTheme.displaySmall)
+                          ?.copyWith(color: Palette.n0),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: Space.sm),
                     Text(
                       'Innovative software solutions powering operations across construction, agriculture, and facility management.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: const Color(0xFFBFDBFE),
-                            fontSize: isMobile ? 13 : 15,
-                          ),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -282,174 +199,179 @@ class ITDivisionDetail extends StatelessWidget {
   }
 
   Widget _buildOverviewSection(BuildContext context, bool isMobile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Our IT Division',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 20 : 26,
-                color: const Color(0xFF1F2937),
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Our in-house IT division develops cutting-edge software solutions that power our operations across all business units. From facility management systems to agricultural mobile applications, we create technology that drives efficiency and innovation.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: isMobile ? 13 : 15,
-                color: const Color(0xFF6B7280),
-                height: 1.6,
-              ),
-        ),
-        const SizedBox(height: 24),
-        
-        // Quick stats
-        if (!isMobile)
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem('4', 'Core Products'),
-                _buildStatItem('8+', 'Years of Dev'),
-                _buildStatItem('10K+', 'Active Users'),
-                _buildStatItem('100%', 'Uptime Focus'),
-              ],
-            ),
+    return SectionWrapper(
+      topRule: Palette.it,
+      background: Palette.n0,
+      child: Column(
+        children: [
+          const SectionHeader(
+            title: 'Our IT Division',
+            subtitle: 'Our in-house IT division develops cutting-edge software solutions that power our operations across all business units. From facility management systems to agricultural mobile applications, we create technology that drives efficiency and innovation.',
+            accent: Palette.it,
           ),
-      ],
+          if (!isMobile) ...[
+            const SizedBox(height: Space.xl),
+            /*const AppCard(
+              interactive: false,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatItem(context, '4', 'Core Products'),
+                  _buildStatItem(context, '8+', 'Years of Dev'),
+                  _buildStatItem(context, '10K+', 'Active Users'),
+                  _buildStatItem(context, '100%', 'Uptime Focus'),
+                ],
+              ),
+            ),*/
+          ],
+        ],
+      ),
     );
   }
 
-  Widget _buildStatItem(String value, String label) {
+  /*Widget _buildStatItem(BuildContext context, String value, String label) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2563EB),
-          ),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Palette.it),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: Space.xxs),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Color(0xFF6B7280),
-          ),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
+    );
+  }*/
+
+  Widget _buildProductsSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Column(
+        children: [
+          const SectionHeader(
+            title: 'Our Software Solutions',
+            accent: Palette.it,
+          ),
+          const SizedBox(height: Space.xl),
+          if (isMobile)
+            Column(
+              children: _products.asMap().entries.map((entry) => Padding(
+                padding: const EdgeInsets.only(bottom: Space.md),
+                child: RevealOnScroll(
+                  delayMs: 60 * entry.key,
+                  child: _buildProductCard(context, entry.value, isMobile),
+                ),
+              )).toList(),
+            )
+          else
+            Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: RevealOnScroll(
+                        delayMs: 0,
+                        child: _buildProductCard(context, _products[0], isMobile),
+                      ),
+                    ),
+                    const SizedBox(width: Space.md),
+                    Expanded(
+                      child: RevealOnScroll(
+                        delayMs: 60,
+                        child: _buildProductCard(context, _products[1], isMobile),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Space.md),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: RevealOnScroll(
+                        delayMs: 120,
+                        child: _buildProductCard(context, _products[2], isMobile),
+                      ),
+                    ),
+                    const SizedBox(width: Space.md),
+                    Expanded(
+                      child: RevealOnScroll(
+                        delayMs: 180,
+                        child: _buildProductCard(context, _products[3], isMobile),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 
   Widget _buildProductCard(BuildContext context, Map<String, dynamic> product, bool isMobile) {
     final color = product['color'] as Color;
-    return InkWell(
+    return AppCard(
+      accent: color,
       onTap: () {
         Navigator.pushNamed(context, product['route'] as String);
       },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Icon and Badge
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    product['icon'] as IconData,
-                    color: color,
-                    size: isMobile ? 24 : 28,
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Icon and Badge
+          Row(
+            children: [
+              IconChip(icon: product['icon'] as IconData, color: color),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xxs),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: Radii.chip,
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    product['badge'] as String,
-                    style: TextStyle(
-                      fontSize: isMobile ? 10 : 11,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
+                child: Text(
+                  product['badge'] as String,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Title
-            Text(
-              product['title'] as String,
-              style: TextStyle(
-                fontSize: isMobile ? 17 : 19,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1F2937),
               ),
-            ),
-            const SizedBox(height: 4),
+            ],
+          ),
+          const SizedBox(height: Space.md),
 
-            // Subtitle
-            Text(
-              product['subtitle'] as String,
-              style: TextStyle(
-                fontSize: isMobile ? 12 : 13,
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
+          // Title
+          Text(
+            product['title'] as String,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: Space.xxs),
 
-            // Description
-            Text(
-              product['description'] as String,
-              style: TextStyle(
-                fontSize: isMobile ? 12 : 13,
-                color: const Color(0xFF6B7280),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 12),
+          // Subtitle
+          Text(
+            product['subtitle'] as String,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(color: color),
+          ),
+          const SizedBox(height: Space.sm),
 
-            // Metrics
+          // Description
+          Text(
+            product['description'] as String,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: Space.sm),
+
+          // Metrics (optional — not every product entry defines these)
+          if ((product['metrics'] as Map<String, String>?)?.isNotEmpty ?? false) ...[
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(Space.sm),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: Radii.chip,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -459,165 +381,134 @@ class ITDivisionDetail extends StatelessWidget {
                     children: [
                       Text(
                         entry.value,
-                        style: TextStyle(
-                          fontSize: isMobile ? 12 : 13,
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: color),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         entry.key,
-                        style: TextStyle(
-                          fontSize: isMobile ? 10 : 11,
-                          color: const Color(0xFF6B7280),
-                        ),
+                        style: Theme.of(context).textTheme.labelSmall,
                       ),
                     ],
                   );
                 }).toList(),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: Space.sm),
+          ],
 
-            // Features
-            ...(product['features'] as List<String>).map((feature) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    LucideIcons.checkCircle2,
-                    size: 14,
-                    color: color,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      feature,
-                      style: TextStyle(
-                        fontSize: isMobile ? 11 : 12,
-                        color: const Color(0xFF4B5563),
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )),
-            const SizedBox(height: 16),
-
-            // Learn More Link
-            Row(
+          // Features
+          ...(product['features'] as List<String>).map((feature) => Padding(
+            padding: const EdgeInsets.only(bottom: Space.xs),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Learn more',
-                  style: TextStyle(
-                    fontSize: isMobile ? 13 : 14,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(width: 4),
                 Icon(
-                  LucideIcons.arrowRight,
-                  size: 16,
+                  LucideIcons.checkCircle2,
+                  size: 14,
                   color: color,
+                ),
+                const SizedBox(width: Space.xs),
+                Expanded(
+                  child: Text(
+                    feature,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
+          )),
+          const SizedBox(height: Space.md),
+
+          // Learn More Link
+          Row(
+            children: [
+              Text(
+                'Learn more',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(color: color),
+              ),
+              const SizedBox(width: Space.xxs),
+              Icon(
+                LucideIcons.arrowRight,
+                size: 16,
+                color: color,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildCapabilitiesSection(BuildContext context, bool isMobile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Technical Capabilities',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 20 : 26,
-                color: const Color(0xFF1F2937),
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 24),
-        if (isMobile)
-          Column(
-            children: _capabilities.map((cap) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildCapabilityCard(cap, isMobile),
-              );
-            }).toList(),
-          )
-        else
-          Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildCapabilityCard(_capabilities[0], isMobile)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildCapabilityCard(_capabilities[1], isMobile)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildCapabilityCard(_capabilities[2], isMobile)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildCapabilityCard(_capabilities[3], isMobile)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildCapabilityCard(_capabilities[4], isMobile)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildCapabilityCard(_capabilities[5], isMobile)),
-                ],
-              ),
-            ],
+    return SectionWrapper(
+      background: Palette.n0,
+      child: Column(
+        children: [
+          const SectionHeader(
+            title: 'Technical Capabilities',
+            accent: Palette.it,
           ),
-      ],
+          const SizedBox(height: Space.xl),
+          if (isMobile)
+            Column(
+              children: _capabilities.asMap().entries.map((entry) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: Space.sm),
+                  child: RevealOnScroll(
+                    delayMs: 60 * entry.key,
+                    child: _buildCapabilityCard(context, entry.value, isMobile),
+                  ),
+                );
+              }).toList(),
+            )
+          else
+            Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: RevealOnScroll(delayMs: 0, child: _buildCapabilityCard(context, _capabilities[0], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 60, child: _buildCapabilityCard(context, _capabilities[1], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 120, child: _buildCapabilityCard(context, _capabilities[2], isMobile))),
+                  ],
+                ),
+                const SizedBox(height: Space.sm),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: RevealOnScroll(delayMs: 180, child: _buildCapabilityCard(context, _capabilities[3], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 240, child: _buildCapabilityCard(context, _capabilities[4], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 300, child: _buildCapabilityCard(context, _capabilities[5], isMobile))),
+                  ],
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 
-  Widget _buildCapabilityCard(Map<String, dynamic> capability, bool isMobile) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
+  Widget _buildCapabilityCard(BuildContext context, Map<String, dynamic> capability, bool isMobile) {
+    return AppCard(
+      interactive: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            capability['icon'] as IconData,
-            color: const Color(0xFF2563EB),
-            size: isMobile ? 24 : 28,
-          ),
-          const SizedBox(height: 12),
+          IconChip(icon: capability['icon'] as IconData, color: Palette.it),
+          const SizedBox(height: Space.sm),
           Text(
             capability['title'] as String,
-            style: TextStyle(
-              fontSize: isMobile ? 14 : 15,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1F2937),
-            ),
+            style: Theme.of(context).textTheme.titleSmall,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: Space.xxs),
           Text(
             capability['description'] as String,
-            style: TextStyle(
-              fontSize: isMobile ? 12 : 13,
-              color: const Color(0xFF6B7280),
-              height: 1.4,
-            ),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
@@ -625,67 +516,52 @@ class ITDivisionDetail extends StatelessWidget {
   }
 
   Widget _buildCtaSection(BuildContext context, bool isMobile) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ready to Transform Your Operations?',
-            style: TextStyle(
-              fontSize: isMobile ? 18 : 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(Space.lg),
+        decoration: BoxDecoration(
+          color: Palette.ink,
+          borderRadius: Radii.card,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Ready to Transform Your Operations?',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Palette.n0),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Discover how our software solutions can streamline your business processes and unlock new opportunities.',
-            style: TextStyle(
-              fontSize: isMobile ? 13 : 14,
-              color: const Color(0xFFBFDBFE),
-              height: 1.5,
+            const SizedBox(height: Space.sm),
+            Text(
+              'Discover how our software solutions can streamline your business processes and unlock new opportunities.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
             ),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 12,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/contact');
-                },
-                icon: const Icon(LucideIcons.mail),
-                label: const Text('Schedule a Demo'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 16 : 20,
-                    vertical: isMobile ? 10 : 12,
-                  ),
+            const SizedBox(height: Space.lg),
+            Wrap(
+              spacing: Space.sm,
+              runSpacing: Space.sm,
+              children: [
+                PrimaryButton(
+                  text: 'Schedule a Demo',
+                  icon: LucideIcons.mail,
+                  onDark: true,
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/contact');
+                  },
                 ),
-              ),
-              OutlinedButton.icon(
-                onPressed: () {
-                  // Navigate to case studies or docs
-                },
-                icon: const Icon(LucideIcons.download),
-                label: const Text('Request Info'),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF2563EB)),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 16 : 20,
-                    vertical: isMobile ? 10 : 12,
-                  ),
+                SecondaryButton(
+                  text: 'Request Info',
+                  icon: LucideIcons.download,
+                  onDark: true,
+                  onPressed: () {
+                    // Navigate to case studies or docs
+                  },
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../design/palette.dart';
 import '../design/tokens.dart';
+import 'cms_image.dart';
 
 /// Continuous, constant-velocity logo marquee.
 ///
@@ -30,7 +31,6 @@ class LogoMarquee extends StatefulWidget {
 class _LogoMarqueeState extends State<LogoMarquee>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  bool _paused = false;
 
   // Each logo occupies a fixed cell so spacing stays perfectly even.
   double get _cellWidth => 150 + widget.gap;
@@ -65,14 +65,8 @@ class _LogoMarqueeState extends State<LogoMarquee>
     }
 
     return MouseRegion(
-      onEnter: (_) {
-        _controller.stop();
-        setState(() => _paused = true);
-      },
-      onExit: (_) {
-        _controller.repeat();
-        setState(() => _paused = false);
-      },
+      onEnter: (_) => _controller.stop(),
+      onExit: (_) => _controller.repeat(),
       child: ShaderMask(
         // Fade the edges so logos enter and leave softly instead of clipping.
         shaderCallback: (rect) => const LinearGradient(
@@ -90,22 +84,31 @@ class _LogoMarqueeState extends State<LogoMarquee>
         child: SizedBox(
           height: widget.logoHeight + Space.xl,
           child: ClipRect(
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                final dx = -_controller.value * _runWidth;
-                return Transform.translate(
-                  offset: Offset(dx, 0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    // Two runs back to back give a seamless loop.
-                    children: [
-                      ...widget.assetPaths.map(_cell),
-                      ...widget.assetPaths.map(_cell),
-                    ],
-                  ),
-                );
-              },
+            // The scrolling run is intentionally wider than the viewport —
+            // OverflowBox removes the ambient max-width constraint (from the
+            // section's ConstrainedBox) so the Row can lay out at its full
+            // natural width instead of asserting a RenderFlex overflow. The
+            // ClipRect above still clips the paint to the visible strip.
+            child: OverflowBox(
+              maxWidth: double.infinity,
+              alignment: Alignment.centerLeft,
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, _) {
+                  final dx = -_controller.value * _runWidth;
+                  return Transform.translate(
+                    offset: Offset(dx, 0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      // Two runs back to back give a seamless loop.
+                      children: [
+                        ...widget.assetPaths.map(_cell),
+                        ...widget.assetPaths.map(_cell),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -121,20 +124,19 @@ class _LogoMarqueeState extends State<LogoMarquee>
   Widget _logo(String path) => _MarqueeLogo(
         path: path,
         height: widget.logoHeight,
-        forceColour: _paused,
       );
 }
 
+/// Logos stay at full colour at all times — no greyscale/fade state.
+/// Hover reads as a small scale "pop" instead of a colour change.
 class _MarqueeLogo extends StatefulWidget {
   const _MarqueeLogo({
     required this.path,
     required this.height,
-    required this.forceColour,
   });
 
   final String path;
   final double height;
-  final bool forceColour;
 
   @override
   State<_MarqueeLogo> createState() => _MarqueeLogoState();
@@ -143,38 +145,28 @@ class _MarqueeLogo extends StatefulWidget {
 class _MarqueeLogoState extends State<_MarqueeLogo> {
   bool _hovered = false;
 
-  // Luminance matrix — standard greyscale conversion.
-  static const _greyscale = <double>[
-    0.2126, 0.7152, 0.0722, 0, 0, //
-    0.2126, 0.7152, 0.0722, 0, 0, //
-    0.2126, 0.7152, 0.0722, 0, 0, //
-    0, 0, 0, 1, 0, //
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final coloured = _hovered || widget.forceColour;
-
-    final image = Image.asset(
-      widget.path,
+    final image = SizedBox(
       height: widget.height,
-      fit: BoxFit.contain,
-      // Uniform height for every logo — no more per-logo special cases.
-      errorBuilder: (_, __, ___) => SizedBox(height: widget.height),
+      child: CmsImage(
+        source: widget.path,
+        fit: BoxFit.contain,
+        // Uniform height for every logo — no more per-logo special cases.
+        errorBuilder: (_, __, ___) => SizedBox(height: widget.height),
+      ),
     );
+
+    final reduced = Motion.reduced(context);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedOpacity(
-        opacity: coloured ? 1.0 : 0.65,
+      child: AnimatedScale(
+        scale: (_hovered && !reduced) ? 1.14 : 1.0,
         duration: Motion.fast,
-        child: coloured
-            ? image
-            : ColorFiltered(
-                colorFilter: const ColorFilter.matrix(_greyscale),
-                child: image,
-              ),
+        curve: Motion.hover,
+        child: image,
       ),
     );
   }

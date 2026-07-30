@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../widgets/header.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/responsive_utils.dart';
+import '../../design/palette.dart';
+import '../../design/tokens.dart';
+import '../../widgets/app_buttons.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/section.dart';
+import '../../widgets/reveal_on_scroll.dart';
 
 class KilimoMkononiEducationPage extends StatelessWidget {
   const KilimoMkononiEducationPage({super.key});
@@ -75,7 +81,7 @@ class KilimoMkononiEducationPage extends StatelessWidget {
     {
       'role': 'JV Admin',
       'icon': LucideIcons.shieldCheck,
-      'color': Color(0xFF7C3AED),
+      'color': Palette.it,
       'responsibilities': [
         'Approve and manage headteachers',
         'Oversee platform integrity',
@@ -86,7 +92,7 @@ class KilimoMkononiEducationPage extends StatelessWidget {
     {
       'role': 'Headteacher',
       'icon': LucideIcons.school,
-      'color': Color(0xFF2563EB),
+      'color': Palette.construction,
       'responsibilities': [
         'Register and verify school teachers',
         'Manage school-level settings',
@@ -97,7 +103,7 @@ class KilimoMkononiEducationPage extends StatelessWidget {
     {
       'role': 'Teacher',
       'icon': LucideIcons.userCheck,
-      'color': Color(0xFF059669),
+      'color': Palette.success,
       'responsibilities': [
         'Approve and manage students',
         'Create quizzes and simulations',
@@ -108,7 +114,7 @@ class KilimoMkononiEducationPage extends StatelessWidget {
     {
       'role': 'Student',
       'icon': LucideIcons.bookOpen,
-      'color': Color(0xFFEA580C),
+      'color': Palette.oilGas,
       'responsibilities': [
         'Complete assigned quizzes',
         'Participate in farm simulations',
@@ -150,20 +156,8 @@ class KilimoMkononiEducationPage extends StatelessWidget {
           children: [
             // Header Section
             Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF7C3AED),
-                    Color(0xFF2563EB),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 24 : 48,
-                horizontal: isMobile ? 8 : 16,
-              ),
+              decoration: const BoxDecoration(gradient: Palette.heroSurface),
+              padding: Space.sectionPad(isMobile),
               child: Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -171,7 +165,7 @@ class KilimoMkononiEducationPage extends StatelessWidget {
                     IconButton(
                       icon: Icon(
                         LucideIcons.arrowLeft,
-                        color: Colors.white,
+                        color: Palette.n0,
                         size: isMobile ? 20 : 24,
                       ),
                       onPressed: () {
@@ -187,19 +181,16 @@ class KilimoMkononiEducationPage extends StatelessWidget {
                           children: [
                             Text(
                               'Kilimo Mkononi Education',
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    fontSize: isMobile ? 24 : 32,
-                                    color: Colors.white,
-                                  ),
+                              style: (isMobile
+                                      ? Theme.of(context).textTheme.headlineLarge
+                                      : Theme.of(context).textTheme.displaySmall)
+                                  ?.copyWith(color: Palette.n0),
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: Space.xs),
                             Text(
                               'Safe, Interactive Agricultural Learning for Schools',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: isMobile ? 14 : 16,
-                                    color: const Color(0xFFDDD6FE),
-                                  ),
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -211,53 +202,32 @@ class KilimoMkononiEducationPage extends StatelessWidget {
               ),
             ),
 
-            // Main Content
-            Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 16 : 24,
-                horizontal: isMobile ? 12 : 16,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1280),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Introduction
-                    _buildIntroSection(context, isMobile),
-                    SizedBox(height: isMobile ? 24 : 32),
+            // Introduction
+            _buildIntroSection(context, isMobile),
 
-                    // Safety First Banner
-                    _buildSafetyBanner(context, isMobile),
-                    SizedBox(height: isMobile ? 24 : 32),
+            // Safety First Banner
+            _buildSafetyBanner(context, isMobile),
 
-                    // User Roles Section
-                    _buildUserRolesSection(context, isMobile, isTablet, screenWidth),
-                    SizedBox(height: isMobile ? 24 : 32),
+            // User Roles Section
+            _buildUserRolesSection(context, isMobile, isTablet, screenWidth),
 
-                    // Core Features
-                    _buildFeaturesSection(
-                      context,
-                      isMobile,
-                      isTablet,
-                      screenWidth,
-                      'Core Agricultural Features',
-                      _coreFeatures,
-                      const Color(0xFF059669),
-                    ),
-                    SizedBox(height: isMobile ? 24 : 32),
-
-                    // Education-Specific Features
-                    _buildEducationFeaturesSection(context, isMobile, isTablet, screenWidth),
-                    SizedBox(height: isMobile ? 24 : 32),
-
-                    // Coming Soon CTA
-                    _buildComingSoonCTA(context, isMobile),
-                  ],
-                ),
-              ),
+            // Core Features
+            _buildFeaturesSection(
+              context,
+              isMobile,
+              isTablet,
+              screenWidth,
+              'Core Agricultural Features',
+              _coreFeatures,
+              Palette.success,
             ),
 
-            SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+            // Education-Specific Features
+            _buildEducationFeaturesSection(context, isMobile, isTablet, screenWidth),
+
+            // Coming Soon CTA
+            _buildComingSoonCTA(context, isMobile),
+
             const Footer(),
           ],
         ),
@@ -266,127 +236,100 @@ class KilimoMkononiEducationPage extends StatelessWidget {
   }
 
   Widget _buildIntroSection(BuildContext context, bool isMobile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Empowering the Next Generation of Farmers',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: isMobile ? 20 : 28,
-                color: const Color(0xFF1F2937),
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Kilimo Mkononi Education brings agricultural learning to life through interactive tools, hands-on simulations, and a secure platform designed specifically for schools. With built-in student protection measures and engaging educational content, we\'re making agricultural education accessible, safe, and exciting for students across Kenya.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: isMobile ? 14 : 16,
-                color: const Color(0xFF4B5563),
-                height: 1.6,
-              ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSafetyBanner(BuildContext context, bool isMobile) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF86EFAC), width: 2),
-      ),
-      child: Row(
+    return SectionWrapper(
+      background: Palette.n0,
+      topRule: Palette.it,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              LucideIcons.shieldCheck,
-              color: Color(0xFF059669),
-              size: 32,
-            ),
+          const SectionHeader(
+            title: 'Empowering the Next Generation of Farmers',
+            align: TextAlign.start,
+            accent: Palette.it,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Student Safety First',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: isMobile ? 16 : 20,
-                        color: const Color(0xFF065F46),
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Our three-tier approval system ensures every user is verified by trusted educational authorities, protecting students from fraudulent accounts and inappropriate interactions.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: isMobile ? 12 : 14,
-                        color: const Color(0xFF047857),
-                      ),
-                ),
-              ],
-            ),
+          const SizedBox(height: Space.sm),
+          Text(
+            'Kilimo Mkononi Education brings agricultural learning to life through interactive tools, hands-on simulations, and a secure platform designed specifically for schools. With built-in student protection measures and engaging educational content, we\'re making agricultural education accessible, safe, and exciting for students across Kenya.',
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
         ],
       ),
     );
   }
 
+  Widget _buildSafetyBanner(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n50,
+      child: AppCard(
+        interactive: false,
+        accent: Palette.success,
+        child: Row(
+          children: [
+            const IconChip(icon: LucideIcons.shieldCheck, color: Palette.success, size: 32),
+            const SizedBox(width: Space.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Student Safety First',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Palette.success),
+                  ),
+                  const SizedBox(height: Space.xxs),
+                  Text(
+                    'Our three-tier approval system ensures every user is verified by trusted educational authorities, protecting students from fraudulent accounts and inappropriate interactions.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildUserRolesSection(BuildContext context, bool isMobile, bool isTablet, double screenWidth) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'How It Works: Verified Roles & Responsibilities',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: isMobile ? 18 : 24,
-                color: const Color(0xFF1F2937),
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Our platform uses a hierarchical approval system to ensure accountability and safety at every level.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF6B7280),
-              ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: _userRoles.map((role) {
-            return SizedBox(
-              width: isMobile
-                  ? double.infinity
-                  : isTablet
-                      ? (screenWidth - 48) / 2
-                      : (screenWidth - 64) / 4,
-              child: _buildRoleCard(
-                context,
-                isMobile,
-                role['role'] as String,
-                role['icon'] as IconData,
-                role['color'] as Color,
-                role['responsibilities'] as List<String>,
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+    return SectionWrapper(
+      background: Palette.n0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            title: 'How It Works: Verified Roles & Responsibilities',
+            subtitle: 'Our platform uses a hierarchical approval system to ensure accountability and safety at every level.',
+            align: TextAlign.start,
+            accent: Palette.it,
+          ),
+          const SizedBox(height: Space.md),
+          Wrap(
+            spacing: Space.md,
+            runSpacing: Space.md,
+            children: _userRoles.asMap().entries.map((entry) {
+              final index = entry.key;
+              final role = entry.value;
+              return SizedBox(
+                width: isMobile
+                    ? double.infinity
+                    : isTablet
+                        ? (screenWidth - 48) / 2
+                        : (screenWidth - 64) / 4,
+                child: RevealOnScroll(
+                  delayMs: 60 * index,
+                  child: _buildRoleCard(
+                    context,
+                    isMobile,
+                    role['role'] as String,
+                    role['icon'] as IconData,
+                    role['color'] as Color,
+                    role['responsibilities'] as List<String>,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -398,50 +341,28 @@ class KilimoMkononiEducationPage extends StatelessWidget {
     Color color,
     List<String> responsibilities,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
+      accent: color,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(width: 12),
+              IconChip(icon: icon, color: color, size: 24),
+              const SizedBox(width: Space.sm),
               Expanded(
                 child: Text(
                   role,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: isMobile ? 14 : 16,
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: color),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Space.sm),
           ...responsibilities.map((responsibility) {
             return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.only(bottom: Space.xs),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -450,14 +371,11 @@ class KilimoMkononiEducationPage extends StatelessWidget {
                     size: 14,
                     color: color,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Space.xs),
                   Expanded(
                     child: Text(
                       responsibility,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: isMobile ? 11 : 13,
-                            color: const Color(0xFF4B5563),
-                          ),
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
                 ],
@@ -478,61 +396,56 @@ class KilimoMkononiEducationPage extends StatelessWidget {
     List<Map<String, String>> features,
     Color accentColor,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: isMobile ? 18 : 24,
-                color: const Color(0xFF1F2937),
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: isMobile ? 8 : 12,
-          runSpacing: 12,
-          children: features.map((feature) {
-            return SizedBox(
-              width: isMobile ? screenWidth * 0.9 : screenWidth * (isTablet ? 0.45 : 0.3),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    size: 16,
-                    color: accentColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          feature['title']!,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: isMobile ? 12 : 14,
-                              ),
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(title: title, align: TextAlign.start, accent: Palette.it),
+          const SizedBox(height: Space.md),
+          Wrap(
+            spacing: isMobile ? Space.xs : Space.sm,
+            runSpacing: Space.sm,
+            children: features.asMap().entries.map((entry) {
+              final index = entry.key;
+              final feature = entry.value;
+              return SizedBox(
+                width: isMobile ? screenWidth * 0.9 : screenWidth * (isTablet ? 0.45 : 0.3),
+                child: RevealOnScroll(
+                  delayMs: 60 * index,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        LucideIcons.checkCircle2,
+                        size: 16,
+                        color: accentColor,
+                      ),
+                      const SizedBox(width: Space.xs),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              feature['title']!,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: Space.xxs),
+                            Text(
+                              feature['description']!,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          feature['description']!,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontSize: isMobile ? 11 : 13,
-                                color: const Color(0xFF6B7280),
-                              ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -542,47 +455,45 @@ class KilimoMkononiEducationPage extends StatelessWidget {
     bool isTablet,
     double screenWidth,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Educational Enhancements',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: isMobile ? 18 : 24,
-                color: const Color(0xFF1F2937),
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Purpose-built features that transform agricultural education into an engaging, interactive experience.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF6B7280),
-              ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: _educationFeatures.map((feature) {
-            return SizedBox(
-              width: isMobile
-                  ? double.infinity
-                  : isTablet
-                      ? (screenWidth - 48) / 2
-                      : (screenWidth - 64) / 3,
-              child: _buildEducationFeatureCard(
-                context,
-                isMobile,
-                feature['title'] as String,
-                _getIconData(feature['icon'] as String),
-                feature['description'] as String,
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+    return SectionWrapper(
+      background: Palette.n0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            title: 'Educational Enhancements',
+            subtitle: 'Purpose-built features that transform agricultural education into an engaging, interactive experience.',
+            align: TextAlign.start,
+            accent: Palette.it,
+          ),
+          const SizedBox(height: Space.md),
+          Wrap(
+            spacing: Space.md,
+            runSpacing: Space.md,
+            children: _educationFeatures.asMap().entries.map((entry) {
+              final index = entry.key;
+              final feature = entry.value;
+              return SizedBox(
+                width: isMobile
+                    ? double.infinity
+                    : isTablet
+                        ? (screenWidth - 48) / 2
+                        : (screenWidth - 64) / 3,
+                child: RevealOnScroll(
+                  delayMs: 60 * index,
+                  child: _buildEducationFeatureCard(
+                    context,
+                    isMobile,
+                    feature['title'] as String,
+                    _getIconData(feature['icon'] as String),
+                    feature['description'] as String,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -593,33 +504,22 @@ class KilimoMkononiEducationPage extends StatelessWidget {
     IconData icon,
     String description,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAF5FF),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE9D5FF)),
-      ),
+    return AppCard(
+      accent: Palette.it,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: const Color(0xFF7C3AED), size: 32),
-          const SizedBox(height: 12),
+          IconChip(icon: icon, color: Palette.it, size: 32),
+          const SizedBox(height: Space.sm),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: isMobile ? 14 : 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1F2937),
-                ),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: Space.xs),
           Text(
             description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: isMobile ? 11 : 13,
-                  color: const Color(0xFF6B7280),
-                ),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
@@ -627,84 +527,56 @@ class KilimoMkononiEducationPage extends StatelessWidget {
   }
 
   Widget _buildComingSoonCTA(BuildContext context, bool isMobile) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? 20 : 32),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF7C3AED),
-            Color(0xFF2563EB),
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(isMobile ? Space.lg : Space.xl),
+        decoration: BoxDecoration(
+          gradient: Palette.heroSurface,
+          borderRadius: BorderRadius.circular(Radii.xl),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              LucideIcons.rocket,
+              size: isMobile ? 48 : 64,
+              color: Palette.n0,
+            ),
+            const SizedBox(height: Space.md),
+            Text(
+              'Coming Soon to Schools',
+              style: (isMobile
+                      ? Theme.of(context).textTheme.headlineMedium
+                      : Theme.of(context).textTheme.headlineLarge)
+                  ?.copyWith(color: Palette.n0),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: Space.sm),
+            Text(
+              'Kilimo Mkononi Education is currently in development. We\'re working with schools to create the perfect agricultural learning platform.',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: Space.lg),
+            Text(
+              'Interested in bringing this to your school?',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Palette.n0, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: Space.sm),
+            PrimaryButton(
+              text: 'Contact Us',
+              icon: LucideIcons.mail,
+              onDark: true,
+              onPressed: () {
+                // Navigate to contact page
+                debugPrint('Navigating to contact page for Kilimo Mkononi Education');
+                Navigator.pushNamed(context, '/contact');
+              },
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            LucideIcons.rocket,
-            size: isMobile ? 48 : 64,
-            color: Colors.white,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Coming Soon to Schools',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: isMobile ? 20 : 28,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Kilimo Mkononi Education is currently in development. We\'re working with schools to create the perfect agricultural learning platform.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontSize: isMobile ? 14 : 16,
-                  color: const Color(0xFFDDD6FE),
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Interested in bringing this to your school?',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: isMobile ? 12 : 14,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () {
-              // Navigate to contact page
-              debugPrint('Navigating to contact page for Kilimo Mkononi Education');
-              Navigator.pushNamed(context, '/contact');
-            },
-            icon: const Icon(LucideIcons.mail, size: 20),
-            label: Text(
-              'Contact Us',
-              style: TextStyle(
-                fontSize: isMobile ? 14 : 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF7C3AED),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 12 : 16,
-                horizontal: 32,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,11 +1,18 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../widgets/header.dart';
 import '../widgets/footer.dart';
 import 'dart:developer' as developer;
 import 'package:url_launcher/url_launcher.dart';
+import '../design/palette.dart';
+import '../design/tokens.dart';
+import '../widgets/app_card.dart';
+import '../widgets/app_buttons.dart';
+import '../widgets/section.dart';
+import '../widgets/reveal_on_scroll.dart';
+import '../widgets/brand_icons.dart';
 
 class NewsPage extends StatefulWidget {
   const NewsPage({super.key});
@@ -52,37 +59,34 @@ class _NewsPageState extends State<NewsPage> {
                   maxHeight: MediaQuery.of(context).size.height * 0.9,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  color: Palette.n0,
+                  borderRadius: Radii.card,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(Space.md),
                       child: Text(
                         title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleLarge,
                         textAlign: TextAlign.center,
                       ),
                     ),
                     Flexible(
                       child: ClipRRect(
                         borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(12),
-                          bottomRight: Radius.circular(12),
+                          bottomLeft: Radius.circular(Radii.lg),
+                          bottomRight: Radius.circular(Radii.lg),
                         ),
                         child: Image.asset(
                           imageUrl,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) => Container(
                             height: 200,
-                            color: Colors.grey[200],
+                            color: Palette.n200,
                             child: const Center(
-                              child: Icon(LucideIcons.imageOff, color: Colors.grey),
+                              child: Icon(LucideIcons.imageOff, color: Palette.n400),
                             ),
                           ),
                         ),
@@ -92,16 +96,16 @@ class _NewsPageState extends State<NewsPage> {
                 ),
               ),
               Positioned(
-                top: 8,
-                right: 8,
+                top: Space.xs,
+                right: Space.xs,
                 child: IconButton(
                   icon: Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(Space.xxs),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                      color: Palette.n0,
+                      borderRadius: Radii.chip,
                     ),
-                    child: const Icon(LucideIcons.x, color: Colors.black),
+                    child: const Icon(LucideIcons.x, color: Palette.ink),
                   ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -116,7 +120,6 @@ class _NewsPageState extends State<NewsPage> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
 
@@ -127,7 +130,7 @@ class _NewsPageState extends State<NewsPage> {
         'excerpt': 'Transforming lives through agricultural innovation in West Pokot region',
         'date': 'Project Highlight',
         'category': 'Agriculture',
-        'color': const Color(0xFF059669),
+        'color': Palette.agribusiness,
       },
       {
         'image': 'assets/news/wei_wei_project.jpg',
@@ -135,7 +138,7 @@ class _NewsPageState extends State<NewsPage> {
         'excerpt': 'Empowering communities with sustainable irrigation infrastructure',
         'date': 'Infrastructure',
         'category': 'Development',
-        'color': const Color(0xFF2563EB),
+        'color': Palette.construction,
       },
       {
         'image': 'assets/news/italy_project.jpg',
@@ -143,7 +146,7 @@ class _NewsPageState extends State<NewsPage> {
         'excerpt': 'International collaboration bringing expertise to local agriculture',
         'date': 'Partnership',
         'category': 'Collaboration',
-        'color': const Color(0xFFDC2626),
+        'color': Palette.danger,
       },
       {
         'image': 'assets/news/news_3.jpg',
@@ -151,7 +154,7 @@ class _NewsPageState extends State<NewsPage> {
         'excerpt': 'Continued success stories from our agricultural development programs',
         'date': 'Impact Story',
         'category': 'Agriculture',
-        'color': const Color(0xFF7C3AED),
+        'color': Palette.it,
       },
       {
         'image': 'assets/news/gourmet_article.jpg',
@@ -159,7 +162,7 @@ class _NewsPageState extends State<NewsPage> {
         'excerpt': 'Technology, training and sustainable agriculture: the story of an Italian company building a development model in East Africa where innovation and social impact grow together.',
         'date': 'March 6, 2026',
         'category': 'Press',
-        'color': const Color(0xFF059669),
+        'color': Palette.agribusiness,
         'url': 'https://www.gourmetandtravelmagazine.com/2026/03/06/dallabruzzo-al-kenya-la-rivoluzione-digitale-che-sta-cambiando-lagricoltura-africana/',
         'source': 'Gourmet & Travel Magazine',
       },
@@ -169,7 +172,7 @@ class _NewsPageState extends State<NewsPage> {
         'excerpt': 'How a Pescara entrepreneur built a digital agribusiness model in Kenya, blending technology, sustainability, and social impact across East Africa.',
         'date': 'March 2026',
         'category': 'Press',
-        'color': const Color(0xFF2563EB),
+        'color': Palette.construction,
         'url': 'https://www.ilpescara.it/attualita/piergiorgio-di-carmine-jv-almacis-kenya-agricoltura-digitale.html',
         'source': 'Il Pescara',
       },
@@ -183,48 +186,36 @@ class _NewsPageState extends State<NewsPage> {
           children: [
             // Hero Section
             Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0F172A),
-                    Color(0xFF1E293B),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 32 : 48,
-                horizontal: isMobile ? 16 : 24,
-              ),
+              width: double.infinity,
+              decoration: const BoxDecoration(gradient: Palette.heroSurface),
+              padding: Space.sectionPad(isMobile),
               child: Center(
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.95 : 1200),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         LucideIcons.newspaper,
                         size: isMobile ? 40 : 56,
-                        color: const Color(0xFFF97316),
+                        color: Palette.n0,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: Space.md),
                       Text(
                         'News & Updates',
-                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              fontSize: isMobile ? 28 : 40,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: (isMobile
+                                ? Theme.of(context).textTheme.headlineLarge
+                                : Theme.of(context).textTheme.displaySmall)
+                            ?.copyWith(color: Palette.n0),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: isMobile ? 12 : 16),
+                      const SizedBox(height: Space.sm),
                       Text(
                         'Stay informed about JV ALMA C.I.S\'s latest achievements, project milestones, and industry insights',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontSize: isMobile ? 14 : 16,
-                              color: const Color(0xFFBFDBFE),
-                            ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.copyWith(color: Colors.white70),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -234,46 +225,31 @@ class _NewsPageState extends State<NewsPage> {
             ),
 
             // News Grid Section
-            Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 32 : 48,
-                horizontal: isMobile ? 16 : 24,
-              ),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.95 : 1200),
-                child: Column(
-                  children: [
-                    Text(
-                      'Latest Stories',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontSize: isMobile ? 24 : 32,
-                            color: const Color(0xFF111827),
-                            fontWeight: FontWeight.bold,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Highlights from our recent projects and initiatives',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: isMobile ? 13 : 15,
-                            color: const Color(0xFF6B7280),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: isMobile ? 24 : 40),
-                    
-                    // News Cards Grid
-                    Wrap(
-                      spacing: 24,
-                      runSpacing: 24,
-                      children: newsItems.map((item) {
-                        return SizedBox(
-                          width: isMobile
-                              ? double.infinity
-                              : isTablet
-                                  ? (screenWidth - 64) / 2
-                                  : (screenWidth - 96) / 2,
+            SectionWrapper(
+              background: Palette.n0,
+              child: Column(
+                children: [
+                  const SectionHeader(
+                    title: 'Latest Stories',
+                    subtitle: 'Highlights from our recent projects and initiatives',
+                  ),
+                  const SizedBox(height: Space.xxl),
+
+                  // News Cards Grid
+                  Wrap(
+                    spacing: Space.lg,
+                    runSpacing: Space.lg,
+                    children: newsItems.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final item = entry.value;
+                      return SizedBox(
+                        width: isMobile
+                            ? double.infinity
+                            : isTablet
+                                ? (screenWidth - 64) / 2
+                                : (screenWidth - 96) / 2,
+                        child: RevealOnScroll(
+                          delayMs: 60 * index,
                           child: _buildNewsCard(
                             context,
                             isMobile,
@@ -286,103 +262,63 @@ class _NewsPageState extends State<NewsPage> {
                             externalUrl: item['url'] as String?,
                             source: item['source'] as String?,
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
             ),
 
             // Stay Updated Section
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFFFF7ED),
-                    Color(0xFFFFEDD5),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 40 : 56,
-                horizontal: isMobile ? 16 : 24,
-              ),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.95 : 800),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(50),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x33F97316),
-                            blurRadius: 12,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+            SectionWrapper(
+              background: Palette.n50,
+              maxWidth: 800,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(Space.md),
+                    decoration: BoxDecoration(
+                      color: Palette.n0,
+                      borderRadius: Radii.chip,
+                      boxShadow: Elevation.card,
+                    ),
+                    child: Icon(
+                      LucideIcons.bell,
+                      size: isMobile ? 32 : 40,
+                      color: Palette.primary,
+                    ),
+                  ),
+                  const SizedBox(height: Space.lg),
+                  const SectionHeader(
+                    title: 'Stay Connected',
+                    subtitle:
+                        'Follow us on social media for real-time updates, behind-the-scenes content, and more stories from JV ALMA C.I.S',
+                  ),
+                  const SizedBox(height: Space.xl),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildSocialButton(
+                        context,
+                        'LinkedIn',
+                        BrandIcons.linkedin,
+                        () => _launchUrl('https://www.linkedin.com/company/jvalmacis/'),
                       ),
-                      child: Icon(
-                        LucideIcons.bell,
-                        size: isMobile ? 32 : 40,
-                        color: const Color(0xFFF97316),
+                      const SizedBox(width: Space.md),
+                      _buildSocialButton(
+                        context,
+                        'Instagram',
+                        BrandIcons.instagram,
+                        () => _launchUrl('https://www.instagram.com/jvalmacis/'),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Stay Connected',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontSize: isMobile ? 24 : 32,
-                            color: const Color(0xFF111827),
-                            fontWeight: FontWeight.bold,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Follow us on social media for real-time updates, behind-the-scenes content, and more stories from JV ALMA C.I.S',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontSize: isMobile ? 14 : 16,
-                            color: const Color(0xFF6B7280),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildSocialButton(
-                          context,
-                          isMobile,
-                          LucideIcons.linkedin,
-                          'LinkedIn',
-                          const Color(0xFF0A66C2),
-                          () => _launchUrl('https://www.linkedin.com/company/jvalmacis/'),
-                        ),
-                        const SizedBox(width: 16),
-                        _buildSocialButton(
-                          context,
-                          isMobile,
-                          LucideIcons.instagram,
-                          'Instagram',
-                          const Color(0xFFE4405F),
-                          () => _launchUrl('https://www.instagram.com/jvalmacis/'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
-            SizedBox(height: screenHeight * 0.03),
             const Footer(),
           ],
         ),
@@ -403,7 +339,7 @@ class _NewsPageState extends State<NewsPage> {
     String? source,
   }) {
     final bool isExternal = externalUrl != null && externalUrl.isNotEmpty;
-    return GestureDetector(
+    return AppCard(
       onTap: () {
         if (isExternal) {
           _launchUrl(externalUrl);
@@ -411,197 +347,152 @@ class _NewsPageState extends State<NewsPage> {
           _showImageDialog(imageUrl, title);
         }
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x14000000),
-              blurRadius: 20,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Section
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                  child: Image.asset(
-                    imageUrl,
+      accent: categoryColor,
+      padding: EdgeInsets.zero,
+      semanticLabel: title,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Image Section
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(Radii.lg)),
+                child: Image.asset(
+                  imageUrl,
+                  width: double.infinity,
+                  height: isMobile ? 200 : 240,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
                     width: double.infinity,
                     height: isMobile ? 200 : 240,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: double.infinity,
-                      height: isMobile ? 200 : 240,
-                      color: Colors.grey[200],
-                      child: const Center(
-                        child: Icon(LucideIcons.imageOff, color: Colors.grey, size: 48),
-                      ),
+                    color: Palette.n200,
+                    child: const Center(
+                      child: Icon(LucideIcons.imageOff, color: Palette.n400, size: 48),
                     ),
                   ),
                 ),
+              ),
+              Positioned(
+                top: Space.sm,
+                left: Space.sm,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xxs),
+                  decoration: BoxDecoration(
+                    color: categoryColor,
+                    borderRadius: Radii.chip,
+                  ),
+                  child: Text(
+                    category,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Palette.n0,
+                        ),
+                  ),
+                ),
+              ),
+              if (isExternal)
                 Positioned(
-                  top: 12,
-                  left: 12,
+                  top: Space.sm,
+                  right: Space.sm,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: Space.xs, vertical: Space.xxs),
                     decoration: BoxDecoration(
-                      color: categoryColor,
-                      borderRadius: BorderRadius.circular(20),
+                      color: Palette.n0.withValues(alpha: 0.9),
+                      borderRadius: Radii.chip,
                     ),
-                    child: Text(
-                      category,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(LucideIcons.externalLink, size: 12, color: categoryColor),
+                        const SizedBox(width: Space.xxs),
+                        Text(
+                          'External',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: categoryColor,
+                              ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                if (isExternal)
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(LucideIcons.externalLink, size: 12, color: categoryColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            'External',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: categoryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+            ],
+          ),
+
+          // Content Section
+          Padding(
+            padding: EdgeInsets.all(isMobile ? Space.md : Space.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.tag,
+                      size: 14,
+                      color: Palette.n400,
                     ),
-                  ),
+                    const SizedBox(width: Space.xxs + 2),
+                    Text(
+                      date,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Palette.n400,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Space.sm),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleLarge,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: Space.xs),
+                Text(
+                  excerpt,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Palette.n600,
+                        height: 1.5,
+                      ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: Space.md),
+                Row(
+                  children: [
+                    Text(
+                      isExternal ? 'Read Article' : 'View Article',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: categoryColor,
+                          ),
+                    ),
+                    const SizedBox(width: Space.xxs),
+                    Icon(
+                      isExternal ? LucideIcons.externalLink : LucideIcons.arrowRight,
+                      size: 16,
+                      color: categoryColor,
+                    ),
+                  ],
+                ),
               ],
             ),
-            
-            // Content Section
-            Padding(
-              padding: EdgeInsets.all(isMobile ? 16 : 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        LucideIcons.tag,
-                        size: 14,
-                        color: Color(0xFF9CA3AF),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        date,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontSize: 12,
-                              color: const Color(0xFF9CA3AF),
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontSize: isMobile ? 16 : 18,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF111827),
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    excerpt,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: isMobile ? 13 : 14,
-                          color: const Color(0xFF6B7280),
-                          height: 1.5,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Text(
-                        isExternal ? 'Read Article' : 'View Article',
-                        style: TextStyle(
-                          fontSize: isMobile ? 13 : 14,
-                          color: categoryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        isExternal ? LucideIcons.externalLink : LucideIcons.arrowRight,
-                        size: 16,
-                        color: categoryColor,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSocialButton(
     BuildContext context,
-    bool isMobile,
-    IconData icon,
     String label,
-    Color color,
+    IconData icon,
     VoidCallback onPressed,
   ) {
-    return ElevatedButton.icon(
+    return PrimaryButton(
+      text: label,
+      icon: icon,
       onPressed: onPressed,
-      icon: Icon(icon, size: isMobile ? 20 : 24),
-      label: Text(
-        label,
-        style: TextStyle(
-          fontSize: isMobile ? 14 : 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? 20 : 28,
-          vertical: isMobile ? 12 : 16,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        elevation: 4,
-      ),
     );
   }
 }

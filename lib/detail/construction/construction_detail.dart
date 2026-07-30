@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/header.dart';
+import '../../design/palette.dart';
+import '../../design/tokens.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/section.dart';
+import '../../widgets/reveal_on_scroll.dart';
 import '../it/cmms_page.dart';
 
 class ConstructionDetail extends StatelessWidget {
@@ -17,20 +22,9 @@ class ConstructionDetail extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0F172A),
-                    Color(0xFF1E293B),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 40 : 80,
-                horizontal: 16,
-              ),
+              width: double.infinity,
+              decoration: const BoxDecoration(gradient: Palette.heroSurface),
+              padding: Space.sectionPad(isMobile),
               child: Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -38,7 +32,7 @@ class ConstructionDetail extends StatelessWidget {
                     IconButton(
                       icon: Icon(
                         LucideIcons.arrowLeft,
-                        color: Colors.white,
+                        color: Palette.n0,
                         size: isMobile ? 20 : 24,
                       ),
                       onPressed: () {
@@ -58,17 +52,17 @@ class ConstructionDetail extends StatelessWidget {
                           children: [
                             Text(
                               'Construction & Facility Management',
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontSize: isMobile ? 24 : 32,
-                                  ),
+                              style: (isMobile
+                                      ? Theme.of(context).textTheme.headlineLarge
+                                      : Theme.of(context).textTheme.displaySmall)
+                                  ?.copyWith(color: Palette.n0),
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: Space.md),
                             Text(
                               'Comprehensive solutions across construction and facility management sectors, powered by cutting-edge technology and decades of expertise.',
                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: const Color(0xFFBFDBFE),
+                                    color: Colors.white70,
                                   ),
                               textAlign: TextAlign.center,
                             ),
@@ -80,24 +74,8 @@ class ConstructionDetail extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 16 : 24,
-                horizontal: isMobile ? 12 : 16,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1280),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildConstructionSection(context, screenWidth, isMobile),
-                    const SizedBox(height: 24),
-                    _buildFacilitySection(context, screenWidth, isMobile),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+            _buildConstructionSection(context, screenWidth, isMobile),
+            _buildFacilitySection(context, screenWidth, isMobile),
             const Footer(),
           ],
         ),
@@ -106,38 +84,23 @@ class ConstructionDetail extends StatelessWidget {
   }
 
   Widget _buildConstructionSection(BuildContext context, double screenWidth, bool isMobile) {
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      padding: EdgeInsets.all(isMobile ? 12 : 16),
+    return SectionWrapper(
+      background: Palette.n0,
+      topRule: Palette.construction,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  LucideIcons.building2,
-                  size: 28,
-                  color: Colors.blue[700],
-                ),
-              ),
-              const SizedBox(width: 12),
+              const IconChip(icon: LucideIcons.building2, color: Palette.construction),
+              const SizedBox(width: Space.sm),
               Text(
                 'Construction Services',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: isMobile ? 20 : 24,
-                      color: const Color(0xFF1F2937),
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Space.lg),
           _buildConstructionContent(context, screenWidth, isMobile),
         ],
       ),
@@ -233,78 +196,72 @@ class ConstructionDetail extends StatelessWidget {
       children: [
         Text(
           'Our construction services deliver large-scale infrastructure and specialized diplomatic missions across Kenya, ensuring precision, sustainability, and compliance with international standards.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF4B5563),
-              ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Space.lg),
         Text(
           'Key Features',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 14 : 16,
-                color: const Color(0xFF1F2937),
-              ),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Space.sm),
         Column(
-          children: features.map((feature) {
-            return Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.check,
-                    size: 14,
-                    color: Color(0xFF16A34A),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          feature['title']!,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: isMobile ? 12 : 14,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          feature['description']!,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontSize: isMobile ? 12 : 14,
-                              ),
-                        ),
-                      ],
+          children: features.asMap().entries.map((entry) {
+            final index = entry.key;
+            final feature = entry.value;
+            return RevealOnScroll(
+              delayMs: 60 * index,
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: Space.sm),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      LucideIcons.check,
+                      size: 14,
+                      color: Palette.success,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: Space.xs),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            feature['title']!,
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: Space.xxs),
+                          Text(
+                            feature['description']!,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Space.sm),
         Text(
           'Projects',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 14 : 16,
-                color: const Color(0xFF1F2937),
-              ),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Space.sm),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: projects.length,
           itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _ProjectCard(
-              project: projects[index],
-              isMobile: isMobile,
+            padding: const EdgeInsets.only(bottom: Space.sm),
+            child: RevealOnScroll(
+              delayMs: 60 * index,
+              child: _ProjectCard(
+                project: projects[index],
+                isMobile: isMobile,
+              ),
             ),
           ),
         ),
@@ -313,38 +270,22 @@ class ConstructionDetail extends StatelessWidget {
   }
 
   Widget _buildFacilitySection(BuildContext context, double screenWidth, bool isMobile) {
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      padding: EdgeInsets.all(isMobile ? 12 : 16),
+    return SectionWrapper(
+      background: Palette.n50,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.purple[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  LucideIcons.database,
-                  size: 28,
-                  color: Colors.purple[700],
-                ),
-              ),
-              const SizedBox(width: 12),
+              const IconChip(icon: LucideIcons.database, color: Palette.construction),
+              const SizedBox(width: Space.sm),
               Text(
                 'Facility Management Services',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: isMobile ? 20 : 24,
-                      color: const Color(0xFF1F2937),
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Space.lg),
           _buildFacilityContent(context, screenWidth, isMobile),
         ],
       ),
@@ -357,62 +298,41 @@ class ConstructionDetail extends StatelessWidget {
       children: [
         Text(
           'Facility management (FM) involves the coordination of space, infrastructure, and services to ensure that buildings and facilities operate efficiently and safely. It encompasses maintenance, operations, and strategic planning to support the core functions of an organization.\n\nOur approach integrates our proprietary NyumbaSmart - Computerized Maintenance Management System (CMMS), developed by our IT Division, to streamline these processes.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF4B5563),
-              ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: InkWell(
-            onTap: () {
-              debugPrint('FacilityManagementPage: Navigating to CMMSPage');
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const CmmsPage()));
-            },
-            child: Row(
-              children: [
-                Icon(
-                  LucideIcons.database,
-                  color: const Color(0xFF16A34A),
-                  size: isMobile ? 20 : 24,
+        const SizedBox(height: Space.sm),
+        AppCard(
+          onTap: () {
+            debugPrint('FacilityManagementPage: Navigating to CMMSPage');
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const CmmsPage()));
+          },
+          semanticLabel: 'NyumbaSmart - Computerized Maintenance Management System',
+          child: Row(
+            children: [
+              const IconChip(icon: LucideIcons.database, color: Palette.construction),
+              const SizedBox(width: Space.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'NyumbaSmart - Computerized Maintenance Management System (CMMS)',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: Space.xxs),
+                    Text(
+                      'Automate work orders, track assets, and schedule maintenance\nEnhance efficiency with our CMMS solution.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'NyumbaSmart - Computerized Maintenance Management System (CMMS)',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: isMobile ? 12 : 14,
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Automate work orders, track assets, and schedule maintenance\nEnhance efficiency with our CMMS solution.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: isMobile ? 11 : 13,
-                              color: const Color(0xFF4B5563),
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  LucideIcons.chevronRight,
-                  color: const Color(0xFF6B7280),
-                  size: isMobile ? 16 : 20,
-                ),
-              ],
-            ),
+              ),
+              Icon(
+                LucideIcons.chevronRight,
+                color: Palette.n500,
+                size: isMobile ? 16 : 20,
+              ),
+            ],
           ),
         ),
       ],
@@ -431,131 +351,119 @@ class _ProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: ExpansionTile(
-        title: Text(
-          project['title'],
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF2563EB),
-                fontSize: isMobile ? 12 : 14,
+    return AppCard(
+      interactive: false,
+      padding: EdgeInsets.zero,
+      accent: Palette.construction,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          title: Text(
+            project['title'],
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Palette.primary,
+                ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
+          tilePadding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xs),
+          childrenPadding: const EdgeInsets.all(Space.sm),
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.9,
               ),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 2,
-        ),
-        tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        childrenPadding: const EdgeInsets.all(12),
-        children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.9,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_shouldCenterImage(project))
-                  Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        (project['imagePaths'] as List<String>)[0],
-                        height: isMobile ? 200 : 300,
-                        width: isMobile ? 320 : 480,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_shouldCenterImage(project))
+                    Center(
+                      child: ClipRRect(
+                        borderRadius: Radii.card,
+                        child: Image.asset(
+                          (project['imagePaths'] as List<String>)[0],
                           height: isMobile ? 200 : 300,
                           width: isMobile ? 320 : 480,
-                          color: Colors.grey[200],
-                          child: const Center(
-                            child: Icon(LucideIcons.imageOff, color: Colors.grey),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            height: isMobile ? 200 : 300,
+                            width: isMobile ? 320 : 480,
+                            color: Palette.n200,
+                            child: const Center(
+                              child: Icon(LucideIcons.imageOff, color: Palette.n500),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  )
-                else
-                  SizedBox(
-                    height: isMobile ? 200 : 300,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: (project['imagePaths'] as List<String>).map((imagePath) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(
-                                imagePath,
-                                height: isMobile ? 200 : 300,
-                                width: isMobile ? 320 : 480,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Container(
+                    )
+                  else
+                    SizedBox(
+                      height: isMobile ? 200 : 300,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: (project['imagePaths'] as List<String>).map((imagePath) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: Space.xs),
+                              child: ClipRRect(
+                                borderRadius: Radii.card,
+                                child: Image.asset(
+                                  imagePath,
                                   height: isMobile ? 200 : 300,
                                   width: isMobile ? 320 : 480,
-                                  color: Colors.grey[200],
-                                  child: const Center(
-                                    child: Icon(LucideIcons.imageOff, color: Colors.grey),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    height: isMobile ? 200 : 300,
+                                    width: isMobile ? 320 : 480,
+                                    color: Palette.n200,
+                                    child: const Center(
+                                      child: Icon(LucideIcons.imageOff, color: Palette.n500),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
-                  ),
-                const SizedBox(height: 12),
-                Text(
-                  'Client: ${project['client']}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: isMobile ? 12 : 14,
-                        color: const Color(0xFF4B5563),
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Period: ${project['period']}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: isMobile ? 12 : 14,
-                        color: const Color(0xFF4B5563),
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  project['description'],
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: isMobile ? 12 : 14,
-                        color: const Color(0xFF4B5563),
-                      ),
-                ),
-                if (project['testimonial'] != '') ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: Space.sm),
                   Text(
-                    'Testimonial',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: isMobile ? 14 : 16,
-                          color: const Color(0xFF1F2937),
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    project['testimonial'],
+                    'Client: ${project['client']}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: isMobile ? 12 : 14,
-                          color: const Color(0xFF4B5563),
-                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
                         ),
                   ),
+                  const SizedBox(height: Space.xxs),
+                  Text(
+                    'Period: ${project['period']}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: Space.xs),
+                  Text(
+                    project['description'],
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  if (project['testimonial'] != '') ...[
+                    const SizedBox(height: Space.sm),
+                    Text(
+                      'Testimonial',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: Space.xxs),
+                    Text(
+                      project['testimonial'],
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

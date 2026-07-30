@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+import '../design/palette.dart';
 
 class MapPage extends StatefulWidget {
   final String address;
@@ -65,15 +66,22 @@ class MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Palette.n0,
       appBar: AppBar(
-        title: Text('Map: ${widget.address}'),
+        backgroundColor: Palette.n0,
+        foregroundColor: Palette.ink,
+        elevation: 0,
+        title: Text(
+          'Map: ${widget.address}',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
       ),
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
           if (_isLoading)
             const Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(color: Palette.primary),
             ),
         ],
       ),

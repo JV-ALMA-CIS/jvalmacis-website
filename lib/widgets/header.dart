@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import 'custom_widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'dart:developer' as developer;
 import 'website_chat_widget.dart';
+import '../admin/modules/site_settings/site_settings_model.dart';
+import '../admin/modules/site_settings/site_settings_provider.dart';
+import '../admin/shared/icon_key_registry.dart';
+import '../design/palette.dart';
+import '../design/tokens.dart';
+import 'app_buttons.dart';
+import 'cms_image.dart';
+import 'hoverable.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget body;
@@ -37,36 +44,26 @@ class AppScaffold extends StatelessWidget {
   }
 }
 
-class Header extends StatelessWidget {
+class Header extends ConsumerWidget {
   final VoidCallback onMenuPressed;
   final GlobalKey<ScaffoldState>? scaffoldKey;
 
   const Header({super.key, required this.onMenuPressed, this.scaffoldKey});
 
-  static const List<Map<String, String>> navigation = [
-    {'name': 'Home', 'href': '/'},
-    {'name': 'About Us', 'href': '/about'},
-    {'name': 'Business Units', 'href': '/business-units'},
-    {'name': 'News', 'href': '/news'},
-    {'name': 'Contact', 'href': '/contact'},
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(siteSettingsProvider).valueOrNull ?? defaultSiteSettings;
+    final navigation = settings.navigation.where((n) => n.showInHeader).toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+
     final screenWidth = MediaQuery.of(context).size.width.clamp(300.0, double.infinity);
     final isMobile = screenWidth < 768;
     final isTablet = screenWidth >= 768 && screenWidth < 1024;
 
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: Palette.n0,
+        boxShadow: Elevation.card,
       ),
       child: SafeArea(
         child: Container(
@@ -81,23 +78,25 @@ class Header extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Logo
-                Container(
-                  width: isMobile ? 120 : 150,
-                  height: isMobile ? 50 : 60,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: GestureDetector(
-                    onTap: () => _navigate(context, '/'),
-                    child: Image.asset(
-                      'assets/images/clients/jv.jpg',
+                Hoverable(
+                  onTap: () => _navigate(context, '/'),
+                  scale: 1.04,
+                  lift: -1,
+                  semanticLabel: 'JV ALMA C.I.S home',
+                  builder: (hovered) => SizedBox(
+                    width: isMobile ? 120 : 150,
+                    height: isMobile ? 50 : 60,
+                    child: CmsImage(
+                      source: settings.logoImageUrl.isNotEmpty
+                          ? settings.logoImageUrl
+                          : 'assets/images/clients/jv.jpg',
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         developer.log('Header: Image load error: $error', name: 'Header');
                         return Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E293B),
-                            borderRadius: BorderRadius.circular(8),
+                            color: Palette.ink,
+                            borderRadius: Radii.button,
                           ),
                           child: const Center(
                             child: Text(
@@ -120,25 +119,30 @@ class Header extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ...navigation.take(4).map((item) {
+                      ...navigation.map((item) {
                         return _NavItem(
-                          text: item['name']!,
-                          onTap: () => _navigate(context, item['href']!),
+                          text: item.label,
+                          onTap: () => _navigate(context, item.route),
                         );
                       }),
-                      const SizedBox(width: 16),
-                      CustomButton(
+                      const SizedBox(width: Space.md),
+                      SecondaryButton(
                         text: 'Contact Us',
                         onPressed: () => _navigate(context, '/contact'),
-                        isOutline: true,
                       ),
                     ],
                   ),
                 // Menu button for mobile and tablet
                 if (isMobile || isTablet)
-                  IconButton(
-                    icon: const Icon(LucideIcons.menu, color: Color(0xFF1E293B), size: 24),
-                    onPressed: onMenuPressed,
+                  Hoverable(
+                    onTap: onMenuPressed,
+                    scale: 1.1,
+                    semanticLabel: 'Open menu',
+                    builder: (hovered) => Icon(
+                      LucideIcons.menu,
+                      color: hovered ? Palette.primary : Palette.ink,
+                      size: 24,
+                    ),
                   ),
               ],
             ),
@@ -178,24 +182,25 @@ class _NavItemState extends State<_NavItem> {
 
   @override
   Widget build(BuildContext context) {
+    final reduced = Motion.reduced(context);
     return MouseRegion(
       onEnter: (_) => setState(() => isHovered = true),
       onExit: (_) => setState(() => isHovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: isHovered ? const Color(0xFFF8FAFC) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            widget.text,
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: isHovered ? const Color(0xFF0F172A) : const Color(0xFF1E293B),
-            ).merge(const TextStyle(debugLabel: 'PoppinsCheck')),
+        child: AnimatedScale(
+          scale: (isHovered && !reduced) ? 1.06 : 1.0,
+          duration: Motion.fast,
+          curve: Motion.hover,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(
+              widget.text,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: isHovered ? Palette.primary : Palette.ink,
+                  ),
+            ),
           ),
         ),
       ),
@@ -203,22 +208,17 @@ class _NavItemState extends State<_NavItem> {
   }
 }
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends ConsumerWidget {
   final GlobalKey<ScaffoldState>? scaffoldKey;
 
   const AppDrawer({super.key, this.scaffoldKey});
 
-  static const List<Map<String, dynamic>> navigation = [
-    {'name': 'Home', 'href': '/', 'icon': LucideIcons.home},
-    {'name': 'About Us', 'href': '/about', 'icon': LucideIcons.info},
-    {'name': 'Business Units', 'href': '/business-units', 'icon': LucideIcons.building2},
-    {'name': 'Careers', 'href': '/careers', 'icon': LucideIcons.users},
-    {'name': 'News', 'href': '/news', 'icon': LucideIcons.newspaper},
-    {'name': 'Contact', 'href': '/contact', 'icon': LucideIcons.phone},
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(siteSettingsProvider).valueOrNull ?? defaultSiteSettings;
+    final navigation = settings.navigation.where((n) => n.showInDrawer).toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+
     final screenWidth = MediaQuery.of(context).size.width;
     developer.log('AppDrawer: Building endDrawer with ${navigation.length} items', name: 'AppDrawer');
 
@@ -244,8 +244,10 @@ class AppDrawer extends StatelessWidget {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Image.asset(
-                            'assets/images/clients/jv.jpg',
+                          child: CmsImage(
+                            source: settings.logoImageUrl.isNotEmpty
+                                ? settings.logoImageUrl
+                                : 'assets/images/clients/jv.jpg',
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               developer.log('Drawer: Image load error: $error', name: 'AppDrawer');
@@ -269,7 +271,7 @@ class AppDrawer extends StatelessWidget {
                         child: IconButton(
                           icon: const Icon(
                             LucideIcons.x,
-                            color: Color(0xFF1E293B),
+                            color: Palette.ink,
                             size: 24,
                           ),
                           onPressed: () {
@@ -287,26 +289,25 @@ class AppDrawer extends StatelessWidget {
                     itemCount: navigation.length,
                     itemBuilder: (context, index) {
                       final item = navigation[index];
-                      developer.log('AppDrawer: Building item ${item['name']}', name: 'AppDrawer');
+                      developer.log('AppDrawer: Building item ${item.label}', name: 'AppDrawer');
                       return ListTile(
                         leading: Icon(
-                          item['icon'] as IconData,
-                          color: const Color(0xFF1E293B),
+                          IconKeyRegistry.resolve(item.iconKey),
+                          color: Palette.ink,
                           size: 20,
                         ),
                         title: Text(
-                          item['name']!,
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1E293B),
-                          ).merge(const TextStyle(debugLabel: 'PoppinsCheck')),
+                          item.label,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: Palette.ink,
+                              ),
                         ),
                         onTap: () {
-                          developer.log('AppDrawer: Tapped ${item['name']}', name: 'AppDrawer');
+                          developer.log('AppDrawer: Tapped ${item.label}', name: 'AppDrawer');
                           scaffoldKey?.currentState?.closeEndDrawer();
-                          Navigator.pushNamed(context, item['href']!).catchError((e) {
-                            developer.log('Drawer: Navigation error to ${item['href']}: $e', name: 'AppDrawer');
+                          Navigator.pushNamed(context, item.route).catchError((e) {
+                            developer.log('Drawer: Navigation error to ${item.route}: $e', name: 'AppDrawer');
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Navigation error: $e')),
@@ -320,26 +321,24 @@ class AppDrawer extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: CustomButton(
-                      text: 'Contact Us',
-                      onPressed: () {
-                        developer.log('AppDrawer: Tapped Get Quote', name: 'AppDrawer');
-                        scaffoldKey?.currentState?.closeEndDrawer();
-                        Navigator.pushNamed(context, '/contact').catchError((e) {
-                          developer.log('Drawer: Navigation error to /contact: $e', name: 'AppDrawer');
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Navigation error: $e')),
-                            );
-                          }
-                          return null;
-                        });
-                      },
-                      isLarge: true,
-                    ),
+                  padding: const EdgeInsets.all(Space.md),
+                  child: PrimaryButton(
+                    text: 'Contact Us',
+                    large: true,
+                    expand: true,
+                    onPressed: () {
+                      developer.log('AppDrawer: Tapped Get Quote', name: 'AppDrawer');
+                      scaffoldKey?.currentState?.closeEndDrawer();
+                      Navigator.pushNamed(context, '/contact').catchError((e) {
+                        developer.log('Drawer: Navigation error to /contact: $e', name: 'AppDrawer');
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Navigation error: $e')),
+                          );
+                        }
+                        return null;
+                      });
+                    },
                   ),
                 ),
               ],

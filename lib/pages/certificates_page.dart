@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../widgets/footer.dart';
 import '../widgets/header.dart';
+import '../design/palette.dart';
+import '../design/tokens.dart';
+import '../widgets/app_card.dart';
+import '../widgets/section.dart';
+import '../widgets/reveal_on_scroll.dart';
 
 class CertificatesPage extends StatefulWidget {
   const CertificatesPage({super.key});
@@ -23,7 +28,6 @@ class _CertificatesPageState extends State<CertificatesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
@@ -36,52 +40,43 @@ class _CertificatesPageState extends State<CertificatesPage> {
           children: [
             // Hero Section
             Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 40 : 64,
-                horizontal: isMobile ? 16 : 24,
-              ),
+              width: double.infinity,
+              decoration: const BoxDecoration(gradient: Palette.heroSurface),
+              padding: Space.sectionPad(isMobile),
               child: Center(
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.95 : 1200),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(Space.md),
                         decoration: BoxDecoration(
-                          color: const Color(0x33FFFFFF),
-                          borderRadius: BorderRadius.circular(50),
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: Radii.chip,
                         ),
                         child: Icon(
                           LucideIcons.award,
                           size: isMobile ? 40 : 56,
-                          color: Colors.white,
+                          color: Palette.n0,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: Space.lg),
                       Text(
                         'Certificates & Compliance',
-                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              color: Colors.white,
-                              fontSize: isMobile ? 28 : 40,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: (isMobile
+                                ? Theme.of(context).textTheme.headlineLarge
+                                : Theme.of(context).textTheme.displaySmall)
+                            ?.copyWith(color: Palette.n0),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: Space.sm),
                       Text(
                         'Committed to the highest standards of quality, safety, and compliance in everything we do',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: const Color(0xFFDDD6FE),
-                              fontSize: isMobile ? 14 : 16,
-                            ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.copyWith(color: Colors.white70),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -91,118 +86,94 @@ class _CertificatesPageState extends State<CertificatesPage> {
             ),
 
             // Our Commitment Section
-            Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 40 : 56,
-                horizontal: isMobile ? 16 : 24,
-              ),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.95 : 1200),
-                child: Column(
-                  children: [
-                    Text(
-                      'Our Commitment to Excellence',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontSize: isMobile ? 24 : 32,
-                            color: const Color(0xFF111827),
-                            fontWeight: FontWeight.bold,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    Wrap(
-                      spacing: 24,
-                      runSpacing: 24,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        _buildCommitmentCard(
+            SectionWrapper(
+              background: Palette.n0,
+              child: Column(
+                children: [
+                  const SectionHeader(title: 'Our Commitment to Excellence'),
+                  const SizedBox(height: Space.xl),
+                  Wrap(
+                    spacing: Space.lg,
+                    runSpacing: Space.lg,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      RevealOnScroll(
+                        delayMs: 0,
+                        child: _buildCommitmentCard(
                           context,
                           isMobile,
                           LucideIcons.shieldCheck,
                           'ISO 9001:2015',
                           'Quality Management System certified for consistent, high-quality service delivery',
-                          const Color(0xFF2563EB),
+                          Palette.construction,
                         ),
-                        _buildCommitmentCard(
+                      ),
+                      RevealOnScroll(
+                        delayMs: 60,
+                        child: _buildCommitmentCard(
                           context,
                           isMobile,
                           LucideIcons.checkCircle2,
                           'Fully Compliant',
                           'All regulatory requirements met and maintained across all operations',
-                          const Color(0xFF059669),
+                          Palette.success,
                         ),
-                        _buildCommitmentCard(
+                      ),
+                      RevealOnScroll(
+                        delayMs: 120,
+                        child: _buildCommitmentCard(
                           context,
                           isMobile,
                           LucideIcons.globe2,
                           'Internationally Recognized',
                           'Certifications accepted globally for cross-border operations',
-                          const Color(0xFF7C3AED),
+                          Palette.it,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             // Certificates Section
-            Container(
-              width: double.infinity,
-              color: const Color(0xFFF9FAFB),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 40 : 56,
-                horizontal: isMobile ? 16 : 24,
-              ),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.95 : 1280),
-                child: Column(
-                  children: [
-                    Text(
-                      'Our Certifications',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontSize: isMobile ? 24 : 32,
-                            color: const Color(0xFF111827),
-                            fontWeight: FontWeight.bold,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Click on any certificate to view details',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: isMobile ? 13 : 15,
-                            color: const Color(0xFF6B7280),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 40),
-                    Wrap(
-                      spacing: 24,
-                      runSpacing: 24,
-                      children: List.generate(certificates.length, (index) {
-                        final cert = certificates[index];
-                        return SizedBox(
-                          width: isMobile
-                              ? double.infinity
-                              : isTablet
-                                  ? (screenWidth - 64) / 2
-                                  : (screenWidth - 96) / 3,
+            SectionWrapper(
+              background: Palette.n50,
+              maxWidth: 1280,
+              child: Column(
+                children: [
+                  const SectionHeader(
+                    title: 'Our Certifications',
+                    subtitle: 'Click on any certificate to view details',
+                  ),
+                  const SizedBox(height: Space.xxl),
+                  Wrap(
+                    spacing: Space.lg,
+                    runSpacing: Space.lg,
+                    children: List.generate(certificates.length, (index) {
+                      final cert = certificates[index];
+                      return SizedBox(
+                        width: isMobile
+                            ? double.infinity
+                            : isTablet
+                                ? (screenWidth - 64) / 2
+                                : (screenWidth - 96) / 3,
+                        child: RevealOnScroll(
+                          delayMs: 60 * index,
                           child: _buildCertificateCard(
                             context,
                             isMobile,
                             cert,
                             () => showImageDialog(context, index),
                           ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ),
             ),
 
-            SizedBox(height: screenHeight * 0.03),
             const Footer(),
           ],
         ),
@@ -218,51 +189,29 @@ class _CertificatesPageState extends State<CertificatesPage> {
     String description,
     Color color,
   ) {
-    return Container(
+    return SizedBox(
       width: isMobile ? double.infinity : 300,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(50),
+      child: AppCard(
+        interactive: false,
+        accent: color,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconChip(icon: icon, color: color),
+            const SizedBox(height: Space.md),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
             ),
-            child: Icon(icon, size: 32, color: color),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1F2937),
-                  fontSize: isMobile ? 16 : 18,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF6B7280),
-                  fontSize: isMobile ? 13 : 14,
-                ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: Space.xs),
+            Text(
+              description,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -279,173 +228,152 @@ class _CertificatesPageState extends State<CertificatesPage> {
     IconData cardIcon;
 
     if (title.contains('Building') || title.contains('Construction')) {
-      cardColor = const Color(0xFF2563EB);
+      cardColor = Palette.construction;
       cardIcon = LucideIcons.building2;
     } else if (title.contains('Mechanical')) {
-      cardColor = const Color(0xFFDC2626);
+      cardColor = Palette.danger;
       cardIcon = LucideIcons.cog;
     } else if (title.contains('Water')) {
       cardColor = const Color(0xFF0891B2);
       cardIcon = LucideIcons.droplet;
     } else if (title.contains('KRA') || title.contains('Tax')) {
-      cardColor = const Color(0xFF059669);
+      cardColor = Palette.success;
       cardIcon = LucideIcons.fileText;
     } else {
-      cardColor = const Color(0xFF7C3AED);
+      cardColor = Palette.it;
       cardIcon = LucideIcons.award;
     }
 
-    return GestureDetector(
+    return AppCard(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cardColor.withValues(alpha: 0.2), width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: cardColor.withValues(alpha: 0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Certificate Image Preview
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(14),
-                topRight: Radius.circular(14),
-              ),
-              child: Stack(
-                children: [
-                  Image.asset(
-                    cert['filePath'],
+      accent: cardColor,
+      padding: EdgeInsets.zero,
+      semanticLabel: cert['title'],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Certificate Image Preview
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(Radii.lg)),
+            child: Stack(
+              children: [
+                Image.asset(
+                  cert['filePath'],
+                  width: double.infinity,
+                  height: isMobile ? 180 : 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
                     width: double.infinity,
                     height: isMobile ? 180 : 200,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: double.infinity,
-                      height: isMobile ? 180 : 200,
-                      color: cardColor.withValues(alpha: 0.1),
-                      child: Center(
-                        child: Icon(
-                          LucideIcons.fileText,
-                          size: 48,
-                          color: cardColor.withValues(alpha: 0.5),
-                        ),
+                    color: cardColor.withValues(alpha: 0.1),
+                    child: Center(
+                      child: Icon(
+                        LucideIcons.fileText,
+                        size: 48,
+                        color: cardColor.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(cardIcon, color: Colors.white, size: 20),
+                ),
+                Positioned(
+                  top: Space.sm,
+                  right: Space.sm,
+                  child: Container(
+                    padding: const EdgeInsets.all(Space.xs),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: Radii.chip,
                     ),
+                    child: Icon(cardIcon, color: Palette.n0, size: 20),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
-            // Certificate Details
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          // Certificate Details
+          Padding(
+            padding: const EdgeInsets.all(Space.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        cert['title'],
+                        style: Theme.of(context).textTheme.titleLarge,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Space.xs),
+                if (cert['certificateNo'] != null)
                   Row(
                     children: [
+                      const Icon(
+                        LucideIcons.hash,
+                        size: 14,
+                        color: Palette.n400,
+                      ),
+                      const SizedBox(width: Space.xxs),
                       Expanded(
                         child: Text(
-                          cert['title'],
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontSize: isMobile ? 16 : 18,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF111827),
+                          cert['certificateNo'],
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Palette.n500,
                               ),
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  if (cert['certificateNo'] != null)
-                    Row(
-                      children: [
-                        const Icon(
-                          LucideIcons.hash,
-                          size: 14,
-                          color: Color(0xFF9CA3AF),
+                const SizedBox(height: Space.xxs + 2),
+                if (cert['description'] != null)
+                  Text(
+                    cert['description'],
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Palette.n600,
                         ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            cert['certificateNo'],
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: isMobile ? 12 : 13,
-                                  color: const Color(0xFF6B7280),
-                                ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 6),
-                  if (cert['description'] != null)
-                    Text(
-                      cert['description'],
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: isMobile ? 13 : 14,
-                            color: const Color(0xFF4B5563),
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Icon(
-                              LucideIcons.eye,
-                              size: 16,
-                              color: cardColor,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'View Certificate',
-                              style: TextStyle(
-                                fontSize: isMobile ? 13 : 14,
-                                color: cardColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        LucideIcons.arrowRight,
-                        size: 20,
-                        color: cardColor,
-                      ),
-                    ],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
+                const SizedBox(height: Space.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            LucideIcons.eye,
+                            size: 16,
+                            color: cardColor,
+                          ),
+                          const SizedBox(width: Space.xxs + 2),
+                          Text(
+                            'View Certificate',
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  color: cardColor,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      LucideIcons.arrowRight,
+                      size: 20,
+                      color: cardColor,
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -495,8 +423,8 @@ class _ImageDialogState extends State<_ImageDialog> {
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 16 : 40,
-        vertical: isMobile ? 24 : 40,
+        horizontal: isMobile ? Space.md : Space.xxl - 8,
+        vertical: isMobile ? Space.lg : Space.xxl - 8,
       ),
       child: Container(
         constraints: BoxConstraints(
@@ -504,8 +432,8 @@ class _ImageDialogState extends State<_ImageDialog> {
           maxHeight: screenHeight * 0.9,
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: Palette.n0,
+          borderRadius: Radii.card,
         ),
         child: Stack(
           children: [
@@ -514,12 +442,12 @@ class _ImageDialogState extends State<_ImageDialog> {
               children: [
                 // Header
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(Space.lg),
                   decoration: const BoxDecoration(
-                    color: Color(0xFFF9FAFB),
+                    color: Palette.n50,
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
+                      topLeft: Radius.circular(Radii.lg),
+                      topRight: Radius.circular(Radii.lg),
                     ),
                   ),
                   child: Column(
@@ -528,28 +456,25 @@ class _ImageDialogState extends State<_ImageDialog> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(Space.xs),
                             decoration: BoxDecoration(
-                              color: const Color(0x193B82F6),
-                              borderRadius: BorderRadius.circular(8),
+                              color: Palette.primary.withValues(alpha: 0.1),
+                              borderRadius: Radii.chip,
                             ),
                             child: const Icon(
                               LucideIcons.award,
-                              color: Color(0xFF3B82F6),
+                              color: Palette.primary,
                               size: 20,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: Space.sm),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   cert['title'],
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                        fontSize: isMobile ? 16 : 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  style: Theme.of(context).textTheme.titleLarge,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -557,8 +482,7 @@ class _ImageDialogState extends State<_ImageDialog> {
                                   Text(
                                     cert['certificateNo'],
                                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          fontSize: isMobile ? 12 : 13,
-                                          color: const Color(0xFF6B7280),
+                                          color: Palette.n500,
                                         ),
                                   ),
                               ],
@@ -567,25 +491,23 @@ class _ImageDialogState extends State<_ImageDialog> {
                         ],
                       ),
                       if (cert['description'] != null) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: Space.xs),
                         Text(
                           cert['description'],
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontSize: isMobile ? 13 : 14,
-                                color: const Color(0xFF4B5563),
+                                color: Palette.n600,
                               ),
                         ),
                       ],
                       if (widget.certificates.length > 1) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: Space.sm),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               '${currentIndex + 1} of ${widget.certificates.length}',
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFF9CA3AF),
-                                    fontSize: 12,
+                                    color: Palette.n400,
                                   ),
                             ),
                           ],
@@ -597,15 +519,15 @@ class _ImageDialogState extends State<_ImageDialog> {
                 // Image
                 Flexible(
                   child: Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(Space.lg),
                     child: Image.asset(
                       cert['filePath'],
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => Container(
                         height: 300,
-                        color: Colors.grey[200],
+                        color: Palette.n200,
                         child: const Center(
-                          child: Icon(LucideIcons.imageOff, color: Colors.grey, size: 64),
+                          child: Icon(LucideIcons.imageOff, color: Palette.n400, size: 64),
                         ),
                       ),
                     ),
@@ -615,22 +537,17 @@ class _ImageDialogState extends State<_ImageDialog> {
             ),
             // Close Button
             Positioned(
-              top: 8,
-              right: 8,
+              top: Space.xs,
+              right: Space.xs,
               child: IconButton(
                 icon: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(Space.xs),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x19000000),
-                        blurRadius: 8,
-                      ),
-                    ],
+                    color: Palette.n0,
+                    borderRadius: Radii.chip,
+                    boxShadow: Elevation.card,
                   ),
-                  child: const Icon(LucideIcons.x, color: Colors.black, size: 20),
+                  child: const Icon(LucideIcons.x, color: Palette.ink, size: 20),
                 ),
                 onPressed: () => Navigator.of(context).pop(),
               ),
@@ -639,24 +556,19 @@ class _ImageDialogState extends State<_ImageDialog> {
             if (widget.certificates.length > 1) ...[
               if (currentIndex > 0)
                 Positioned(
-                  left: 8,
+                  left: Space.xs,
                   top: screenHeight * 0.4,
                   child: IconButton(
                     icon: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(Space.xs),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x19000000),
-                            blurRadius: 8,
-                          ),
-                        ],
+                        color: Palette.n0,
+                        borderRadius: Radii.chip,
+                        boxShadow: Elevation.card,
                       ),
                       child: const Icon(
                         LucideIcons.chevronLeft,
-                        color: Colors.black,
+                        color: Palette.ink,
                         size: 24,
                       ),
                     ),
@@ -665,24 +577,19 @@ class _ImageDialogState extends State<_ImageDialog> {
                 ),
               if (currentIndex < widget.certificates.length - 1)
                 Positioned(
-                  right: 8,
+                  right: Space.xs,
                   top: screenHeight * 0.4,
                   child: IconButton(
                     icon: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(Space.xs),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x19000000),
-                            blurRadius: 8,
-                          ),
-                        ],
+                        color: Palette.n0,
+                        borderRadius: Radii.chip,
+                        boxShadow: Elevation.card,
                       ),
                       child: const Icon(
                         LucideIcons.chevronRight,
-                        color: Colors.black,
+                        color: Palette.ink,
                         size: 24,
                       ),
                     ),

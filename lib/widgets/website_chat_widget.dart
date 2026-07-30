@@ -2,7 +2,9 @@
 // ignore_for_file: deprecated_member_use, avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'website_chat_service.dart';
+import '../providers/chat_provider.dart';
 
 // ─── Colours ───────────────────────────────────────────────────────────────
 const Color _brandDark   = Color(0xFF1E293B);
@@ -18,19 +20,6 @@ const Color _textBot     = Color(0xFF1E293B);
 const Color _fabBackground = Colors.white;
 const Color _fabTextColor  = Color(0xFF1E293B);
 const Color _fabBorderColor = Color(0xFFE2E8F0);
-
-// Text Cleaner
-String cleanAiResponse(String text) {
-  if (text.isEmpty) return text;
-  return text
-      .replaceAll(RegExp(r'\*+'), '')
-      .replaceAll(RegExp(r'#+\s*'), '')
-      .replaceAll(RegExp(r'_{2,}'), '')
-      .replaceAll(RegExp(r'/{2,}'), '')
-      .replaceAll(RegExp(r'^[-•*]\s*', multiLine: true), '')
-      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
-      .trim();
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  WebsiteChatFab — Visible on ALL screen sizes
@@ -53,6 +42,7 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
 
   Offset _offset = const Offset(20, 100);
   bool _isDragging = false;
+  bool _hovered = false;
 
   @override
   void initState() {
@@ -121,7 +111,20 @@ class _WebsiteChatFabState extends State<WebsiteChatFab>
         alignment: Alignment.bottomRight,
         child: Padding(
           padding: const EdgeInsets.only(right: 24, bottom: 80),
-          child: _buildFabContent(),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => _hovered = true),
+            onExit: (_) => setState(() => _hovered = false),
+            child: GestureDetector(
+              onTap: _toggleChat,
+              child: AnimatedScale(
+                scale: _hovered ? 1.06 : 1.0,
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                child: _buildFabContent(),
+              ),
+            ),
+          ),
         ),
       );
     }
@@ -325,21 +328,18 @@ class _ChatOverlay extends StatelessWidget {
   }
 }
 
-class _ChatPanel extends StatefulWidget {
+class _ChatPanel extends ConsumerStatefulWidget {
   final VoidCallback onClose;
   const _ChatPanel({required this.onClose});
 
   @override
-  State<_ChatPanel> createState() => _ChatPanelState();
+  ConsumerState<_ChatPanel> createState() => _ChatPanelState();
 }
 
-class _ChatPanelState extends State<_ChatPanel> with SingleTickerProviderStateMixin {
-  final _service = const WebsiteChatService();
+class _ChatPanelState extends ConsumerState<_ChatPanel> with SingleTickerProviderStateMixin {
   final _inputCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final _focusNode = FocusNode();
-  final List<ChatMessage> _history = [];
-  bool _isTyping = false;
 
   late final AnimationController _slideCtrl;
   late final Animation<Offset> _slideAnim;
@@ -350,7 +350,6 @@ class _ChatPanelState extends State<_ChatPanel> with SingleTickerProviderStateMi
     'How can I contact you?',
     'Are there any job openings?',
   ];
-  bool _showSuggestions = true;
 
   @override
   void initState() {
@@ -389,41 +388,22 @@ class _ChatPanelState extends State<_ChatPanel> with SingleTickerProviderStateMi
 
   Future<void> _send(String text) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty || _isTyping) return;
+    if (trimmed.isEmpty || ref.read(chatControllerProvider).isTyping) return;
 
     _inputCtrl.clear();
     _focusNode.requestFocus();
-
-    final historySnapshot = List<ChatMessage>.from(_history);
-
-    setState(() {
-      _showSuggestions = false;
-      _history.add(ChatMessage(role: 'user', text: trimmed, timestamp: DateTime.now()));
-      _isTyping = true;
-    });
-    _scrollToBottom();
-
-    final reply = await _service.sendMessage(
-      userMessage: trimmed,
-      history: historySnapshot,
-    );
-
-    if (mounted) {
-      setState(() {
-        _isTyping = false;
-        final cleanReply = cleanAiResponse(reply ?? "I'm having trouble connecting right now. Please email us at support@jvalmacis.co.ke.");
-        _history.add(ChatMessage(
-          role: 'assistant',
-          text: cleanReply,
-          timestamp: DateTime.now(),
-        ));
-      });
-      _scrollToBottom();
-    }
+    await ref.read(chatControllerProvider.notifier).send(trimmed);
   }
 
   @override
   Widget build(BuildContext context) {
+    final chatState = ref.watch(chatControllerProvider);
+    ref.listen(chatControllerProvider, (previous, next) {
+      if (previous == null || next.history.length != previous.history.length) {
+        _scrollToBottom();
+      }
+    });
+
     return SlideTransition(
       position: _slideAnim,
       child: Material(
@@ -436,9 +416,9 @@ class _ChatPanelState extends State<_ChatPanel> with SingleTickerProviderStateMi
           child: Column(
             children: [
               _buildHeader(),
-              Expanded(child: _buildMessages()),
-              if (_showSuggestions) _buildSuggestions(),
-              _buildInput(),
+              Expanded(child: _buildMessages(chatState)),
+              if (chatState.showSuggestions) _buildSuggestions(),
+              _buildInput(chatState.isTyping),
             ],
           ),
         ),
@@ -501,16 +481,16 @@ class _ChatPanelState extends State<_ChatPanel> with SingleTickerProviderStateMi
     );
   }
 
-  Widget _buildMessages() {
-    if (_history.isEmpty) return _buildWelcome();
+  Widget _buildMessages(ChatState chatState) {
+    if (chatState.history.isEmpty) return _buildWelcome();
 
     return ListView.builder(
       controller: _scrollCtrl,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-      itemCount: _history.length + (_isTyping ? 1 : 0),
+      itemCount: chatState.history.length + (chatState.isTyping ? 1 : 0),
       itemBuilder: (context, index) {
-        if (_isTyping && index == _history.length) return _buildTypingIndicator();
-        return _buildBubble(_history[index]);
+        if (chatState.isTyping && index == chatState.history.length) return _buildTypingIndicator();
+        return _buildBubble(chatState.history[index]);
       },
     );
   }
@@ -649,7 +629,7 @@ class _ChatPanelState extends State<_ChatPanel> with SingleTickerProviderStateMi
     );
   }
 
-  Widget _buildInput() {
+  Widget _buildInput(bool isTyping) {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
       decoration: BoxDecoration(
@@ -663,7 +643,7 @@ class _ChatPanelState extends State<_ChatPanel> with SingleTickerProviderStateMi
               controller: _inputCtrl,
               focusNode: _focusNode,
               onSubmitted: _send,
-              enabled: !_isTyping,
+              enabled: !isTyping,
               textInputAction: TextInputAction.send,
               style: const TextStyle(fontSize: 13),
               decoration: InputDecoration(
@@ -691,19 +671,19 @@ class _ChatPanelState extends State<_ChatPanel> with SingleTickerProviderStateMi
           Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: _isTyping ? null : () => _send(_inputCtrl.text),
+              onTap: isTyping ? null : () => _send(_inputCtrl.text),
               borderRadius: BorderRadius.circular(12),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _isTyping ? Colors.grey.shade300 : _brandAccent,
+                  color: isTyping ? Colors.grey.shade300 : _brandAccent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.send_rounded,
-                  color: _isTyping ? Colors.grey : Colors.white,
+                  color: isTyping ? Colors.grey : Colors.white,
                   size: 18,
                 ),
               ),

@@ -1,18 +1,55 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2025, 7, 3);
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Allowlist doc: admins/{uid} existing marks that uid as an admin.
+    // A user may read only their own doc (to check "am I admin"); writes
+    // require the caller to already be an admin. The very first admin doc
+    // is bootstrapped manually (see plan verification steps) since no
+    // client write can create it before an admin exists.
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if isAdmin();
+    }
+
+    // Public content: readable by anyone (the public site), writable only
+    // by authenticated admins.
+    match /siteSettings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /homepage/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /businessUnits/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Public contact form: anyone can submit, nobody can read/update/delete
+    // except an admin (unified onto the same admins/{uid} doc-check as the
+    // rest of the CMS — not a custom auth claim, since nothing in this
+    // codebase sets one).
+    match /contacts/{docId} {
+      allow create: if true;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // The 'mail' collection is managed server-side by the Trigger Email
+    // extension. Clients may only create a pending mail doc; nothing reads,
+    // updates, or deletes it from the client.
+    match /mail/{docId} {
+      allow create: if true;
+      allow read, update, delete: if false;
     }
   }
 }

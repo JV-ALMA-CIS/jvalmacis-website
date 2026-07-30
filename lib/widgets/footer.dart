@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:jv_alma_cis/config.dart' as app_config;
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../admin/modules/site_settings/site_settings_model.dart';
+import '../admin/modules/site_settings/site_settings_provider.dart';
+import 'brand_icons.dart';
+import 'cms_image.dart';
 
-class Footer extends StatefulWidget {
+class Footer extends ConsumerStatefulWidget {
   const Footer({super.key});
 
   @override
-  State<Footer> createState() => _FooterState();
+  ConsumerState<Footer> createState() => _FooterState();
 }
 
-class _FooterState extends State<Footer> {
+class _FooterState extends ConsumerState<Footer> {
   final Map<String, bool> _isClicked = {};
   final Map<String, bool> _isHovered = {};
   String? _hoveredUrl;
@@ -71,6 +75,10 @@ class _FooterState extends State<Footer> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(siteSettingsProvider).valueOrNull ?? defaultSiteSettings;
+    final offices = List<OfficeLocation>.of(settings.officeLocations)
+      ..sort((a, b) => a.order.compareTo(b.order));
+
     final screenWidth = MediaQuery.of(context).size.width.clamp(300.0, double.infinity);
     final isLargeScreen = screenWidth >= 768;
     final isMobile = screenWidth < 600;
@@ -119,8 +127,10 @@ class _FooterState extends State<Footer> {
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Image.asset(
-                                    'assets/images/clients/jv.jpg',
+                                  child: CmsImage(
+                                    source: settings.logoImageUrl.isNotEmpty
+                                        ? settings.logoImageUrl
+                                        : 'assets/images/clients/jv.jpg',
                                     fit: BoxFit.contain,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Container(
@@ -145,7 +155,7 @@ class _FooterState extends State<Footer> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Leading provider of construction, agribusiness, oil & gas services, and IT solutions across East Africa.',
+                                settings.footerTagline,
                                 style: TextStyle(
                                   color: const Color(0xFF94A3B8),
                                   fontSize: isMobile ? 14 : 16,
@@ -213,16 +223,16 @@ class _FooterState extends State<Footer> {
                               const SizedBox(height: 16),
                               _buildContactInfo(
                                 icon: LucideIcons.phone,
-                                text: 'Call us on\n${app_config.Config.companyPhone}',
-                                uri: 'tel:${app_config.Config.companyPhone.replaceAll(' ', '')}',
+                                text: 'Call us on\n${settings.companyPhone}',
+                                uri: 'tel:${settings.companyPhone.replaceAll(' ', '')}',
                                 isMobile: isMobile,
                                 buttonKey: 'phone',
                               ),
                               const SizedBox(height: 12),
                               _buildContactInfo(
                                 icon: LucideIcons.mail,
-                                text: 'Email us on\n${app_config.Config.companyEmail}',
-                                uri: 'mailto:${app_config.Config.companyEmail}',
+                                text: 'Email us on\n${settings.companyEmail}',
+                                uri: 'mailto:${settings.companyEmail}',
                                 isMobile: isMobile,
                                 buttonKey: 'email',
                               ),
@@ -234,27 +244,22 @@ class _FooterState extends State<Footer> {
                                 customContent: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'HQ: Kingara Heights, Nairobi, Kenya',
-                                      style: TextStyle(
-                                        color: _isHovered['address'] ?? false ? Colors.white : const Color(0xFF94A3B8),
-                                        fontSize: isMobile ? 14 : 16,
-                                        height: 1.5,
+                                    for (final office in offices)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Text(
+                                          '${office.label}: ${office.address}',
+                                          style: TextStyle(
+                                            color: _isHovered['address'] ?? false
+                                                ? Colors.white
+                                                : const Color(0xFF94A3B8),
+                                            fontSize: isMobile ? 14 : 16,
+                                            height: 1.5,
+                                          ),
+                                          softWrap: true,
+                                          maxLines: null,
+                                        ),
                                       ),
-                                      softWrap: true,
-                                      maxLines: null,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Branch: Manipur Plaza, Mombasa, Kenya',
-                                      style: TextStyle(
-                                        color: _isHovered['address'] ?? false ? Colors.white : const Color(0xFF94A3B8),
-                                        fontSize: isMobile ? 14 : 16,
-                                        height: 1.5,
-                                      ),
-                                      softWrap: true,
-                                      maxLines: null,
-                                    ),
                                   ],
                                 ),
                               ),
@@ -273,14 +278,14 @@ class _FooterState extends State<Footer> {
                                 children: [
                                   _buildSocialLink(
                                     context,
-                                    icon: LucideIcons.linkedin,
-                                    url: 'https://www.linkedin.com/company/jvalmacis/',
+                                    icon: BrandIcons.linkedin,
+                                    url: settings.linkedinUrl,
                                     buttonKey: 'linkedin',
                                   ),
                                   _buildSocialLink(
                                     context,
-                                    icon: LucideIcons.instagram,
-                                    url: 'https://www.instagram.com/jvalmacis/',
+                                    icon: BrandIcons.instagram,
+                                    url: settings.instagramUrl,
                                     buttonKey: 'instagram',
                                   ),
                                 ],
@@ -303,7 +308,7 @@ class _FooterState extends State<Footer> {
                         children: [
                           if (isMobile) ...[
                             Text(
-                              '© 2025 Copyright JV ALMA C.I.S Kenya.',
+                              settings.copyrightText,
                               style: TextStyle(
                                 color: const Color(0xFF94A3B8),
                                 fontSize: isMobile ? 12 : 14,
@@ -353,7 +358,7 @@ class _FooterState extends State<Footer> {
                               alignment: WrapAlignment.center,
                               children: [
                                 Text(
-                                  '© 2025 Copyright JV ALMA C.I.S Kenya.',
+                                  settings.copyrightText,
                                   style: TextStyle(
                                     color: const Color(0xFF94A3B8),
                                     fontSize: isMobile ? 12 : 14,

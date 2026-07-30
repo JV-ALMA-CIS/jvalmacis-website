@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/header.dart';
+import '../../design/palette.dart';
+import '../../design/tokens.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/section.dart';
+import '../../widgets/reveal_on_scroll.dart';
 import 'dart:developer' as developer;
 
 class AgribusinessDetail extends StatelessWidget {
@@ -138,20 +143,9 @@ class AgribusinessDetail extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0F172A),
-                    Color(0xFF1E293B),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 40 : 80,
-                horizontal: 16,
-              ),
+              width: double.infinity,
+              decoration: const BoxDecoration(gradient: Palette.heroSurface),
+              padding: Space.sectionPad(isMobile),
               child: Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -159,7 +153,7 @@ class AgribusinessDetail extends StatelessWidget {
                     IconButton(
                       icon: Icon(
                         LucideIcons.arrowLeft,
-                        color: Colors.white,
+                        color: Palette.n0,
                         size: isMobile ? 20 : 24,
                       ),
                       onPressed: () {
@@ -179,17 +173,17 @@ class AgribusinessDetail extends StatelessWidget {
                           children: [
                             Text(
                               'Agribusiness',
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontSize: isMobile ? 24 : 32,
-                                  ),
+                              style: (isMobile
+                                      ? Theme.of(context).textTheme.headlineLarge
+                                      : Theme.of(context).textTheme.displaySmall)
+                                  ?.copyWith(color: Palette.n0),
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: Space.md),
                             Text(
                               'End-to-end solutions for rural transformation, integrating advanced infrastructure, community development & capacity building, and digital tools to enhance agricultural productivity and sustainability.',
                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: const Color(0xFFBFDBFE),
+                                    color: Colors.white70,
                                   ),
                               textAlign: TextAlign.center,
                             ),
@@ -201,26 +195,14 @@ class AgribusinessDetail extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: isMobile ? 16 : 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Overview Section
-                  _buildOverviewSection(context, isMobile),
-                  const SizedBox(height: 24),
-                  // Infrastructure Section
-                  _buildInfrastructureSection(context, isMobile),
-                  const SizedBox(height: 24),
-                  // Community Section
-                  _buildCommunitySection(context, isMobile),
-                  const SizedBox(height: 24),
-                  // Digitization Section
-                  _buildDigitizationSection(context, isMobile),
-                ],
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+            // Overview Section
+            _buildOverviewSection(context, isMobile),
+            // Infrastructure Section
+            _buildInfrastructureSection(context, isMobile),
+            // Community Section
+            _buildCommunitySection(context, isMobile),
+            // Digitization Section
+            _buildDigitizationSection(context, isMobile),
             const Footer(),
           ],
         ),
@@ -229,37 +211,26 @@ class AgribusinessDetail extends StatelessWidget {
   }
 
   Widget _buildOverviewSection(BuildContext context, bool isMobile) {
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: 16),
+    return SectionWrapper(
+      background: Palette.n0,
+      topRule: Palette.agribusiness,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                LucideIcons.sprout,
-                size: isMobile ? 24 : 28,
-                color: const Color(0xFF16A34A),
-              ),
-              const SizedBox(width: 8),
+              const IconChip(icon: LucideIcons.sprout, color: Palette.agribusiness),
+              const SizedBox(width: Space.sm),
               Text(
                 'Overview',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: isMobile ? 20 : 24,
-                      color: const Color(0xFF1F2937),
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: Space.sm),
           Text(
             'JV ALMA C.I.S delivers comprehensive solutions for rural transformation, combining large-scale infrastructure development, community development & capacity building, and innovative digital agriculture tools. Our approach enhances productivity, builds resilient livelihoods, and promotes sustainable growth in underserved regions.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: isMobile ? 12 : 14,
-                  color: const Color(0xFF4B5563),
-                ),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
       ),
@@ -267,31 +238,22 @@ class AgribusinessDetail extends StatelessWidget {
   }
 
   Widget _buildInfrastructureSection(BuildContext context, bool isMobile) {
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      padding: EdgeInsets.all(isMobile ? 12 : 16),
+    return SectionWrapper(
+      background: Palette.n50,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                LucideIcons.bookOpen,
-                size: 28,
-                color: Color(0xFF16A34A),
-              ),
-              const SizedBox(width: 8),
+              const IconChip(icon: LucideIcons.bookOpen, color: Palette.agribusiness),
+              const SizedBox(width: Space.sm),
               Text(
                 'Technical Services',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: isMobile ? 20 : 24,
-                      color: const Color(0xFF1F2937),
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Space.lg),
           _buildInfrastructureContent(context, isMobile),
         ],
       ),
@@ -304,90 +266,91 @@ class AgribusinessDetail extends StatelessWidget {
       children: [
         Text(
           "JV ALMA C.I.S Kenya's technical services programs empower rural communities through targeted development and sustainable solutions.",
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF4B5563),
-              ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Space.sm),
         Text(
           'projects & Project Management',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 14 : 16,
-                color: const Color(0xFF1F2937),
-              ),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Space.sm),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _projects.length,
           itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              child: ExpansionTile(
-                title: Text(
-                  _projects[index]['title'],
-                  style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF2563EB), fontSize: isMobile ? 14 : 16),
-                ),
-                tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                childrenPadding: const EdgeInsets.all(12),
-                children: [
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: _getImageWidgets(context, _projects[index]['imagePaths'], isLogo: false),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Client: ${_projects[index]['client']}',
-                          style: TextStyle(fontSize: isMobile ? 12 : 14, color: const Color(0xFF4B5563), fontWeight: FontWeight.bold),
-                        ),
-                        if (_projects[index]['funded by'] != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Funded by: ${_projects[index]['funded by']}',
-                            style: TextStyle(fontSize: isMobile ? 12 : 14, color: const Color(0xFF4B5563)),
-                          ),
-                        ],
-                        if (_projects[index]['period'].isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Period: ${_projects[index]['period']}',
-                            style: TextStyle(fontSize: isMobile ? 12 : 14, color: const Color(0xFF4B5563)),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Text(
-                          _projects[index]['description'],
-                          style: TextStyle(fontSize: isMobile ? 12 : 14, color: const Color(0xFF4B5563)),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Testimonial',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: isMobile ? 14 : 16, color: const Color(0xFF1F2937)),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _projects[index]['testimonial'],
-                          style: TextStyle(fontSize: isMobile ? 12 : 14, color: const Color(0xFF4B5563), fontStyle: FontStyle.italic),
-                        ),
-                      ],
+            padding: const EdgeInsets.only(bottom: Space.sm),
+            child: RevealOnScroll(
+              delayMs: 60 * index,
+              child: AppCard(
+                interactive: false,
+                padding: EdgeInsets.zero,
+                accent: Palette.agribusiness,
+                child: Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    title: Text(
+                      _projects[index]['title'],
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Palette.primary),
                     ),
+                    tilePadding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xs),
+                    childrenPadding: const EdgeInsets.all(Space.sm),
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: _getImageWidgets(context, _projects[index]['imagePaths'], isLogo: false),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: Space.sm),
+                            Text(
+                              'Client: ${_projects[index]['client']}',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            if (_projects[index]['funded by'] != null) ...[
+                              const SizedBox(height: Space.xxs),
+                              Text(
+                                'Funded by: ${_projects[index]['funded by']}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                            if (_projects[index]['period'].isNotEmpty) ...[
+                              const SizedBox(height: Space.xxs),
+                              Text(
+                                'Period: ${_projects[index]['period']}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                            const SizedBox(height: Space.xs),
+                            Text(
+                              _projects[index]['description'],
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: Space.sm),
+                            Text(
+                              'Testimonial',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: Space.xxs),
+                            Text(
+                              _projects[index]['testimonial'],
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -397,31 +360,22 @@ class AgribusinessDetail extends StatelessWidget {
   }
 
   Widget _buildCommunitySection(BuildContext context, bool isMobile) {
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      padding: EdgeInsets.all(isMobile ? 12 : 16),
+    return SectionWrapper(
+      background: Palette.n0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                LucideIcons.users,
-                size: 28,
-                color: Color(0xFF16A34A),
-              ),
-              const SizedBox(width: 8),
+              const IconChip(icon: LucideIcons.users, color: Palette.agribusiness),
+              const SizedBox(width: Space.sm),
               Text(
                 'Capacity Building',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: isMobile ? 20 : 24,
-                      color: const Color(0xFF1F2937),
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Space.lg),
           _buildCommunityContent(context, isMobile),
         ],
       ),
@@ -434,122 +388,133 @@ class AgribusinessDetail extends StatelessWidget {
       children: [
         Text(
           _content['description'],
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF4B5563),
-              ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
-        const SizedBox(height: 12),
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          child: ExpansionTile(
-            title: Text(
-              'Core Services',
-              style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF2563EB), fontSize: isMobile ? 14 : 16),
-            ),
-            tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            childrenPadding: const EdgeInsets.all(12),
-            children: [
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ...(_content['coreServices'] as List<Map<String, dynamic>>).map(
-                      (service) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            service['title'],
-                            style: TextStyle(fontSize: isMobile ? 14 : 16, color: const Color(0xFF1F2937), fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Center(
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: _getImageWidgets(context, service['imagePaths'], isLogo: false),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            service['description'],
-                            style: TextStyle(fontSize: isMobile ? 12 : 14, color: const Color(0xFF4B5563)),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+        const SizedBox(height: Space.sm),
+        AppCard(
+          interactive: false,
+          padding: EdgeInsets.zero,
+          accent: Palette.agribusiness,
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              title: Text(
+                'Core Services',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Palette.primary),
               ),
-            ],
+              tilePadding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xs),
+              childrenPadding: const EdgeInsets.all(Space.sm),
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...(_content['coreServices'] as List<Map<String, dynamic>>).asMap().entries.map(
+                        (entry) => RevealOnScroll(
+                          delayMs: 60 * entry.key,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                entry.value['title'],
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: Space.xxs),
+                              Center(
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: _getImageWidgets(context, entry.value['imagePaths'], isLogo: false),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: Space.xs),
+                              Text(
+                                entry.value['description'],
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: Space.sm),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 12),
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          child: ExpansionTile(
-            title: Text(
-              _partnerships['title'],
-              style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF2563EB), fontSize: isMobile ? 14 : 16),
-            ),
-            tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            childrenPadding: const EdgeInsets.all(12),
-            children: [
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center, // Center the entire partnership content
-                  children: [
-                    ...(_partnerships['partnerships'] as List<Map<String, dynamic>>).map(
-                      (partnership) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.center, // Center each partnership
-                        children: [
-                          Text(
-                            partnership['name'],
-                            style: TextStyle(fontSize: isMobile ? 14 : 16, color: const Color(0xFF1F2937), fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center, // Center the logos
-                              children: _getImageWidgets(context, partnership['imagePaths'], isLogo: true),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            partnership['impact'],
-                            style: TextStyle(fontSize: isMobile ? 12 : 14, color: const Color(0xFF4B5563)),
-                            textAlign: TextAlign.center, // Center the impact text
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Signatories:',
-                            style: TextStyle(fontSize: isMobile ? 12 : 14, color: const Color(0xFF4B5563), fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center, // Center the signatories header
-                          ),
-                          ...((partnership['signatories'] as List<String>).map(
-                            (signatory) => Text(
-                              signatory,
-                              style: TextStyle(fontSize: isMobile ? 12 : 14, color: const Color(0xFF4B5563)),
-                              textAlign: TextAlign.center, // Center each signatory
-                            ),
-                          )),
-                          const SizedBox(height: 12),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+        const SizedBox(height: Space.sm),
+        AppCard(
+          interactive: false,
+          padding: EdgeInsets.zero,
+          accent: Palette.agribusiness,
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              title: Text(
+                _partnerships['title'],
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Palette.primary),
               ),
-            ],
+              tilePadding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xs),
+              childrenPadding: const EdgeInsets.all(Space.sm),
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center, // Center the entire partnership content
+                    children: [
+                      ...(_partnerships['partnerships'] as List<Map<String, dynamic>>).asMap().entries.map(
+                        (entry) => RevealOnScroll(
+                          delayMs: 60 * entry.key,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center, // Center each partnership
+                            children: [
+                              Text(
+                                entry.value['name'],
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: Space.xxs),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center, // Center the logos
+                                  children: _getImageWidgets(context, entry.value['imagePaths'], isLogo: true),
+                                ),
+                              ),
+                              const SizedBox(height: Space.xs),
+                              Text(
+                                entry.value['impact'],
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                textAlign: TextAlign.center, // Center the impact text
+                              ),
+                              const SizedBox(height: Space.xs),
+                              Text(
+                                'Signatories:',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center, // Center the signatories header
+                              ),
+                              ...((entry.value['signatories'] as List<String>).map(
+                                (signatory) => Text(
+                                  signatory,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  textAlign: TextAlign.center, // Center each signatory
+                                ),
+                              )),
+                              const SizedBox(height: Space.sm),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -557,31 +522,22 @@ class AgribusinessDetail extends StatelessWidget {
   }
 
   Widget _buildDigitizationSection(BuildContext context, bool isMobile) {
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      padding: EdgeInsets.all(isMobile ? 12 : 16),
+    return SectionWrapper(
+      background: Palette.n50,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                LucideIcons.globe,
-                size: 28,
-                color: Color(0xFF16A34A),
-              ),
-              const SizedBox(width: 8),
+              const IconChip(icon: LucideIcons.globe, color: Palette.agribusiness),
+              const SizedBox(width: Space.sm),
               Text(
                 'Digitization In Agriculture',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: isMobile ? 20 : 24,
-                      color: const Color(0xFF1F2937),
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Space.lg),
           _buildDigitizationContent(context, isMobile),
         ],
       ),
@@ -594,124 +550,86 @@ class AgribusinessDetail extends StatelessWidget {
       children: [
         Text(
           'JV ALMA C.I.S leverages digital innovation to empower farmers with mobile-based tools for crop management, market access, and financial planning.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF4B5563),
-              ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Space.sm),
         Text(
           'Applications',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 14 : 16,
-                color: const Color(0xFF1F2937),
-              ),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Space.sm),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: InkWell(
+            RevealOnScroll(
+              delayMs: 0,
+              child: AppCard(
                 onTap: () {
                   developer.log('AgribusinessDetail: Navigating to /kilimo-mkononi', name: 'AgribusinessDetail');
                   Navigator.pushNamed(context, '/kilimo-mkononi');
                 },
+                semanticLabel: 'KilimoMkononi Platform',
                 child: Row(
                   children: [
-                    Icon(
-                      LucideIcons.globe,
-                      color: const Color(0xFF16A34A),
-                      size: isMobile ? 20 : 24,
-                    ),
-                    const SizedBox(width: 12),
+                    const IconChip(icon: LucideIcons.globe, color: Palette.agribusiness),
+                    const SizedBox(width: Space.sm),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'KilimoMkononi Platform',
-                            style: TextStyle(
-                              fontSize: isMobile ? 12 : 14,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1F2937),
-                            ),
+                            style: Theme.of(context).textTheme.titleSmall,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: Space.xxs),
                           Text(
                             'Grow, Protect, Prosper\n\nKilimoMkononi delivers comprehensive agricultural solutions through two specialized editions:\n\n• Enterprise Edition: Empowers professional farmers and agricultural businesses with crop-specific advice, real-time market prices, 5-day weather forecasts, soil health management, pest/disease control, and financial tracking for crops like maize, beans, carrots, and tomatoes.\n\n• Education Edition: Interactive learning platform for schools featuring quizzes, farm simulations, and a three-tier safety approval system (JV Admin → Headteachers → Teachers → Students), making agricultural education safe, engaging, and accessible.',
-                            style: TextStyle(
-                              fontSize: isMobile ? 12 : 14,
-                              color: const Color(0xFF4B5563),
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
                       ),
                     ),
                     Icon(
                       LucideIcons.chevronRight,
-                      color: const Color(0xFF6B7280),
+                      color: Palette.n500,
                       size: isMobile ? 16 : 20,
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: InkWell(
+            const SizedBox(height: Space.sm),
+            RevealOnScroll(
+              delayMs: 60,
+              child: AppCard(
                 onTap: () {
                   developer.log('AgribusinessDetail: Navigating to /coffee-core', name: 'AgribusinessDetail');
                   Navigator.pushNamed(context, '/coffee-core');
                 },
+                semanticLabel: 'CoffeeCore Application',
                 child: Row(
                   children: [
-                    Icon(
-                      LucideIcons.globe,
-                      color: const Color(0xFF16A34A),
-                      size: isMobile ? 20 : 24,
-                    ),
-                    const SizedBox(width: 12),
+                    const IconChip(icon: LucideIcons.globe, color: Palette.agribusiness),
+                    const SizedBox(width: Space.sm),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'CoffeeCore Application',
-                            style: TextStyle(
-                              fontSize: isMobile ? 12 : 14,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1F2937),
-                            ),
+                            style: Theme.of(context).textTheme.titleSmall,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: Space.xxs),
                           Text(
                             'Sow – Safeguard – Soar\nDesigned specifically for coffee farmers and cooperatives, CoffeeCore offers farm management tools, real-time market prices, soil and weather data, pest solutions, and financial oversight. It streamlines cooperative coordination while promoting sustainable coffee farming and data-driven decisions from seed to sale.',
-                            style: TextStyle(
-                              fontSize: isMobile ? 12 : 14,
-                              color: const Color(0xFF4B5563),
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
                       ),
                     ),
                     Icon(
                       LucideIcons.chevronRight,
-                      color: const Color(0xFF6B7280),
+                      color: Palette.n500,
                       size: isMobile ? 16 : 20,
                     ),
                   ],
@@ -731,7 +649,7 @@ class AgribusinessDetail extends StatelessWidget {
       return imagePaths.map((imageData) {
         if (imageData is Map<String, dynamic> && imageData['path'] is String) {
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.only(right: Space.xs),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -739,7 +657,7 @@ class AgribusinessDetail extends StatelessWidget {
                   height: isLogo ? (isMobile ? 100 : 150) : (isMobile ? 180 : 240), // Reduced height for logos only
                   width: isLogo ? (isMobile ? 150 : 200) : (isMobile ? 300 : 400),   // Reduced width for logos only
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: Radii.card,
                     child: Image.asset(
                       imageData['path'],
                       height: isLogo ? (isMobile ? 100 : 150) : (isMobile ? 180 : 240),
@@ -748,23 +666,19 @@ class AgribusinessDetail extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) => Container(
                         height: isLogo ? (isMobile ? 100 : 150) : (isMobile ? 180 : 240),
                         width: isLogo ? (isMobile ? 150 : 200) : (isMobile ? 300 : 400),
-                        color: Colors.grey[200],
-                        child: const Center(child: Icon(LucideIcons.imageOff, color: Colors.grey)),
+                        color: Palette.n200,
+                        child: const Center(child: Icon(LucideIcons.imageOff, color: Palette.n500)),
                       ),
                     ),
                   ),
                 ),
                 if (imageData['caption'] != null && imageData['caption'].isNotEmpty) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: Space.sm),
                   SizedBox(
                     width: isLogo ? (isMobile ? 150 : 200) : (isMobile ? 300 : 400),
                     child: Text(
                       imageData['caption'],
-                      style: TextStyle(
-                        fontSize: isMobile ? 12 : 14,
-                        color: const Color(0xFF4B5563),
-                        fontStyle: FontStyle.italic,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
                       textAlign: TextAlign.center,
                     ),
                   ),

@@ -1,38 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../admin/modules/business_units/business_unit_model.dart';
+import '../admin/modules/business_units/business_units_provider.dart';
+import '../admin/modules/homepage/homepage_model.dart';
+import '../admin/modules/homepage/homepage_provider.dart';
+import '../admin/shared/color_key_registry.dart';
+import '../admin/shared/icon_key_registry.dart';
 import '../design/palette.dart';
 import '../design/tokens.dart';
 import '../design/typography.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/app_card.dart';
+import '../widgets/cms_image.dart';
 import '../widgets/footer.dart';
 import '../widgets/header.dart';
 import '../widgets/logo_marquee.dart';
 import '../widgets/reveal_on_scroll.dart';
 import '../widgets/section.dart';
 
-/// Home page — visual redesign only.
+/// Home page.
 ///
-/// TEXT POLICY FOR THIS FILE
-/// Only strings that exist in the original home_page.dart appear here.
-/// The invented eyebrow labels from the previous pass ('JV ALMA C.I.S',
-/// 'What we do', 'Partners') have been removed, and the invented secondary
-/// hero button has been removed. Strings rendered by this file:
-///
-///   'For Construction, Agribusiness, Oil & Gas Services, and IT Solutions'
-///   'Our Business Units'
-///   'Comprehensive solutions across multiple sectors'
-///   'Construction' / 'Civil Works & Systems'
-///   'Agribusiness' / 'Infrastructure, Training and Digitization'
-///   'Oil & Gas Services' / 'Inspection and Regulatory Compliance'
-///   'IT Division' / 'Digital Solutions'
-///   'Learn more'
-///   'Our Valued Clients'
-///   'Trusted by leading organizations across industries'
-///   'Ready to Collaborate?'
-///   "Let's build a sustainable future together."
-///   'Contact Us'
+/// Hero, business units, client logos and the CTA band are CMS-driven —
+/// see [homepageProvider] and [businessUnitsProvider] — with the original
+/// hardcoded copy kept as the fallback (`defaultHomepageContent` /
+/// `defaultBusinessUnits`) shown while Firestore is loading or unreachable,
+/// so this page never regresses to a blank state.
 ///
 /// SCROLL FIX
 /// The previous version rebuilt the entire page tree on every scroll tick
@@ -40,41 +34,18 @@ import '../widgets/section.dart';
 /// marquee's repeating AnimationController this starved the scroll gesture
 /// and made the page feel stuck. Parallax now runs through a ValueNotifier
 /// that rebuilds the hero image only.
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   final ScrollController _scroll = ScrollController();
 
   /// Drives hero parallax without rebuilding the rest of the page.
   final ValueNotifier<double> _heroOffset = ValueNotifier<double>(0);
-
-  static const _clientLogos = <String>[
-    'assets/images/clients/kvda.jpg',
-    'assets/images/clients/sweden.jpg',
-    'assets/images/clients/italy.jpg',
-    'assets/images/clients/usa.jpg',
-    'assets/images/clients/navfac.jpg',
-    'assets/images/clients/portugal.jpg',
-    'assets/images/clients/iadc.jpg',
-    'assets/images/clients/total.jpg',
-    'assets/images/clients/eni.jpg',
-  ];
-
-  static const _businessUnits = <_Unit>[
-    _Unit('Construction', 'Civil Works & Systems', LucideIcons.building,
-        '/construction-detail', Palette.construction),
-    _Unit('Agribusiness', 'Infrastructure, Training and Digitization',
-        LucideIcons.sprout, '/agribusiness', Palette.agribusiness),
-    _Unit('Oil & Gas Services', 'Inspection and Regulatory Compliance',
-        LucideIcons.droplets, '/oil-gas', Palette.oilGas),
-    _Unit('IT Division', 'Digital Solutions', LucideIcons.globe, '/it-division',
-        Palette.it),
-  ];
 
   @override
   void initState() {
@@ -103,6 +74,19 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.sizeOf(context).width < 600;
 
+    final content = ref.watch(homepageProvider).valueOrNull ?? defaultHomepageContent;
+    // An unseeded (but reachable) Firestore collection resolves to an empty
+    // list, not null — falling back on nullness alone would leave the
+    // section with zero cards instead of the intended default content.
+    final liveUnits = ref.watch(businessUnitsProvider).valueOrNull;
+    final featuredUnits = List<BusinessUnit>.of(
+      (liveUnits == null || liveUnits.isEmpty) ? defaultBusinessUnits : liveUnits,
+    )
+      ..removeWhere((u) => !u.published || !u.featured)
+      ..sort((a, b) => a.order.compareTo(b.order));
+    final clientLogos = List<ClientLogo>.of(content.clientLogos)
+      ..sort((a, b) => a.order.compareTo(b.order));
+
     return AppScaffold(
       body: SingleChildScrollView(
         controller: _scroll,
@@ -111,10 +95,10 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _hero(context, isMobile),
-            _businessUnitsSection(context, isMobile),
-            _clientsSection(context, isMobile),
-            _ctaBand(context, isMobile),
+            _hero(context, isMobile, content),
+            _businessUnitsSection(context, isMobile, featuredUnits),
+            _clientsSection(context, isMobile, clientLogos),
+            _ctaBand(context, isMobile, content),
             const Footer(),
           ],
         ),
@@ -123,7 +107,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ---------------------------------------------------------------- hero ---
-  Widget _hero(BuildContext context, bool isMobile) {
+  Widget _hero(BuildContext context, bool isMobile, HomepageContent content) {
     final height = isMobile ? 520.0 : 640.0;
     final reduced = Motion.reduced(context);
 
@@ -134,21 +118,32 @@ class _HomePageState extends State<HomePage> {
         fit: StackFit.expand,
         children: [
           // Parallax is isolated: only this subtree rebuilds on scroll.
+          // A one-shot Ken Burns zoom (1.08 → 1.0) plays on load, independent
+          // of the scroll-driven parallax scale below — the hero shouldn't
+          // sit static until the visitor starts scrolling.
           RepaintBoundary(
-            child: ValueListenableBuilder<double>(
-              valueListenable: _heroOffset,
-              builder: (context, offset, child) {
-                if (reduced) return child!;
-                return Transform.translate(
-                  offset: Offset(0, offset * 0.25),
-                  child: Transform.scale(
-                    scale: 1.0 + (offset / 6000),
-                    child: child,
-                  ),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: reduced ? 1.0 : 1.08, end: 1.0),
+              duration: Motion.slow * 2,
+              curve: Motion.enter,
+              builder: (context, introScale, child) {
+                return ValueListenableBuilder<double>(
+                  valueListenable: _heroOffset,
+                  builder: (context, offset, child) {
+                    if (reduced) return child!;
+                    return Transform.translate(
+                      offset: Offset(0, offset * 0.25),
+                      child: Transform.scale(
+                        scale: introScale + (offset / 6000),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: child,
                 );
               },
-              child: Image.asset(
-                'assets/images/company_background.jpg',
+              child: CmsImage(
+                source: content.heroBackgroundImageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) =>
                     const ColoredBox(color: Palette.ink),
@@ -182,8 +177,7 @@ class _HomePageState extends State<HomePage> {
                   _HeroEntrance(
                     delayMs: 0,
                     child: Text(
-                      // Original string, unchanged.
-                      'For Construction, Agribusiness, Oil & Gas Services, and IT Solutions',
+                      content.heroTitle,
                       style: AppType.theme.displayLarge?.copyWith(
                         color: Colors.white,
                         fontSize: AppType.fluid(context, min: 32, max: 58),
@@ -193,12 +187,9 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: Space.xl),
                   _HeroEntrance(
                     delayMs: 140,
-                    // 'Contact Us' is an existing string from this page's CTA
-                    // band, reused. Delete this block if you want the hero to
-                    // stay exactly as it was.
                     child: PrimaryButton(
-                      text: 'Contact Us',
-                      onPressed: () => _navigate('/contact'),
+                      text: content.heroCtaText,
+                      onPressed: () => _navigate(content.heroCtaRoute),
                       icon: LucideIcons.arrowRight,
                       large: true,
                       onDark: true,
@@ -214,7 +205,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ------------------------------------------------------- business units ---
-  Widget _businessUnitsSection(BuildContext context, bool isMobile) {
+  Widget _businessUnitsSection(BuildContext context, bool isMobile, List<BusinessUnit> units) {
     return SectionWrapper(
       background: Palette.n50,
       reveal: false,
@@ -233,7 +224,7 @@ class _HomePageState extends State<HomePage> {
                   ? 1
                   : constraints.maxWidth < 1000
                       ? 2
-                      : 4;
+                      : units.length.clamp(1, 4);
               const gap = Space.lg;
               final cardWidth =
                   (constraints.maxWidth - gap * (columns - 1)) / columns;
@@ -241,14 +232,14 @@ class _HomePageState extends State<HomePage> {
               return Wrap(
                 spacing: gap,
                 runSpacing: gap,
-                children: List.generate(_businessUnits.length, (i) {
+                children: List.generate(units.length, (i) {
                   return SizedBox(
                     width: cardWidth,
                     // Computed widths end the childAspectRatio breakpoint
                     // hacks and the Clip.hardEdge that was masking overflow.
                     child: RevealOnScroll(
                       delayMs: 70 * i,
-                      child: _unitCard(context, _businessUnits[i]),
+                      child: _unitCard(context, units[i]),
                     ),
                   );
                 }),
@@ -260,22 +251,23 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _unitCard(BuildContext context, _Unit unit) {
+  Widget _unitCard(BuildContext context, BusinessUnit unit) {
+    final color = ColorKeyRegistry.resolve(unit.accentColorKey);
     return AppCard(
-      accent: unit.color,
+      accent: color,
       onTap: () => _navigate(unit.route),
-      semanticLabel: '${unit.title}. ${unit.description}',
+      semanticLabel: '${unit.title}. ${unit.tagline}',
       padding: const EdgeInsets.all(Space.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconChip(icon: unit.icon, color: unit.color),
+          IconChip(icon: IconKeyRegistry.resolve(unit.iconKey), color: color),
           const SizedBox(height: Space.lg),
           Text(unit.title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: Space.xs),
           Text(
-            unit.description,
+            unit.tagline,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: Space.lg),
@@ -283,10 +275,10 @@ class _HomePageState extends State<HomePage> {
             children: [
               Text(
                 'Learn more',
-                style: AppType.theme.labelLarge?.copyWith(color: unit.color),
+                style: AppType.theme.labelLarge?.copyWith(color: color),
               ),
               const SizedBox(width: Space.xxs),
-              Icon(LucideIcons.arrowRight, size: 15, color: unit.color),
+              Icon(LucideIcons.arrowRight, size: 15, color: color),
             ],
           ),
         ],
@@ -295,7 +287,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ------------------------------------------------------------- clients ---
-  Widget _clientsSection(BuildContext context, bool isMobile) {
+  Widget _clientsSection(BuildContext context, bool isMobile, List<ClientLogo> logos) {
     return SectionWrapper(
       background: Palette.n0,
       reveal: false,
@@ -311,7 +303,7 @@ class _HomePageState extends State<HomePage> {
           RevealOnScroll(
             delayMs: 80,
             child: LogoMarquee(
-              assetPaths: _clientLogos,
+              assetPaths: logos.map((l) => l.imageUrl).toList(),
               logoHeight: isMobile ? 36 : 48,
               gap: isMobile ? 48 : 80,
             ),
@@ -322,7 +314,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ------------------------------------------------------------ CTA band ---
-  Widget _ctaBand(BuildContext context, bool isMobile) {
+  Widget _ctaBand(BuildContext context, bool isMobile, HomepageContent content) {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(gradient: Palette.heroSurface),
@@ -343,7 +335,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Ready to Collaborate?',
+                        content.ctaBandTitle,
                         textAlign: TextAlign.center,
                         style: (isMobile
                                 ? AppType.theme.headlineLarge
@@ -352,15 +344,15 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: Space.md),
                       Text(
-                        "Let's build a sustainable future together.",
+                        content.ctaBandSubtitle,
                         textAlign: TextAlign.center,
                         style: AppType.theme.bodyLarge
                             ?.copyWith(color: Colors.white70),
                       ),
                       const SizedBox(height: Space.xl),
                       PrimaryButton(
-                        text: 'Contact Us',
-                        onPressed: () => _navigate('/contact'),
+                        text: content.ctaBandButtonText,
+                        onPressed: () => _navigate(content.ctaBandButtonRoute),
                         icon: LucideIcons.arrowRight,
                         large: true,
                         onDark: true,
@@ -375,15 +367,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
-
-class _Unit {
-  const _Unit(this.title, this.description, this.icon, this.route, this.color);
-  final String title;
-  final String description;
-  final IconData icon;
-  final String route;
-  final Color color;
 }
 
 /// One-shot entrance for hero elements (plays on load, not on scroll).
@@ -402,7 +385,7 @@ class _HeroEntranceState extends State<_HeroEntrance> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 80 + widget.delayMs), () {
+    Future.delayed(Duration(milliseconds: 120 + widget.delayMs), () {
       if (mounted) setState(() => _in = true);
     });
   }
@@ -410,15 +393,21 @@ class _HeroEntranceState extends State<_HeroEntrance> {
   @override
   Widget build(BuildContext context) {
     if (Motion.reduced(context)) return widget.child;
+    final duration = Motion.slow + const Duration(milliseconds: 250);
     return AnimatedOpacity(
       opacity: _in ? 1 : 0,
-      duration: Motion.slow,
+      duration: duration,
       curve: Motion.enter,
       child: AnimatedSlide(
-        offset: _in ? Offset.zero : const Offset(0, 0.18),
-        duration: Motion.slow,
+        offset: _in ? Offset.zero : const Offset(0, 0.4),
+        duration: duration,
         curve: Motion.enter,
-        child: widget.child,
+        child: AnimatedScale(
+          scale: _in ? 1.0 : 0.94,
+          duration: duration,
+          curve: Motion.enter,
+          child: widget.child,
+        ),
       ),
     );
   }

@@ -14,6 +14,20 @@ const List<String> _modelPriority = [
   'gemini-2.5-pro',
 ];
 
+// ─── Text cleanup ──────────────────────────────────────────────────────────
+
+String cleanAiResponse(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .replaceAll(RegExp(r'\*+'), '')
+      .replaceAll(RegExp(r'#+\s*'), '')
+      .replaceAll(RegExp(r'_{2,}'), '')
+      .replaceAll(RegExp(r'/{2,}'), '')
+      .replaceAll(RegExp(r'^[-•*]\s*', multiLine: true), '')
+      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .trim();
+}
+
 // ─── Data Model ────────────────────────────────────────────────────────────
 
 class ChatMessage {

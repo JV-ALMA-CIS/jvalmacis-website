@@ -1,6 +1,8 @@
-import 'package:firebase_core/firebase_core.dart'; 
-import 'firebase_options.dart'; 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'design/app_theme.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'pages/home_page.dart';
@@ -27,6 +29,7 @@ import 'detail/it/coffee_core_page.dart';
 import 'detail/it/kilimo_mkononi_landing_page.dart';
 import 'detail/it/kilimo_mkononi_enterprise_page.dart';
 import 'detail/it/kilimo_mkononi_education_page.dart';
+import 'admin/auth/admin_gate.dart';
 import 'dart:developer' as developer;
 
 void main() async {
@@ -35,7 +38,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform, // Initialize Firebase with platform-specific options
   );
   usePathUrlStrategy(); // Keep your URL strategy for clean URLs
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -46,77 +49,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'JV ALMA C.I.S',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1E293B),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        fontFamily: 'Inter',
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
-          ),
-          displayMedium: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
-          ),
-          displaySmall: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
-          ),
-          headlineLarge: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
-          headlineMedium: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
-          headlineSmall: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
-          titleLarge: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF1E293B),
-          ),
-          titleMedium: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF1E293B),
-          ),
-          titleSmall: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF1E293B),
-          ),
-          bodyLarge: TextStyle(
-            fontSize: 14,
-            color: Color(0xFF374151),
-          ),
-          bodyMedium: TextStyle(
-            fontSize: 13,
-            color: Color(0xFF4B5563),
-          ),
-          bodySmall: TextStyle(
-            fontSize: 12,
-            color: Color(0xFF6B7280),
-          ),
-        ),
-        scaffoldBackgroundColor: Colors.white,
-        cardTheme: const CardThemeData(  // no const needed if you have dynamic values, but const is fine here
-  color: Colors.white,
-        ),
-      ),
+      theme: buildAppTheme(),
       onGenerateRoute: (settings) {
         developer.log('MyApp: Generating route for ${settings.name}', name: 'MyApp');
         switch (settings.name) {
@@ -166,6 +99,11 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const KilimoMkononiEnterprisePage());
           case '/kilimo-mkononi-education':
             return MaterialPageRoute(builder: (_) => const KilimoMkononiEducationPage());
+          // Intentionally not linked from any nav/footer/sitemap. Real access
+          // control is the Firebase Auth + firestore.rules admin check inside
+          // AdminGate, not this route's obscurity.
+          case '/portal-mgmt':
+            return MaterialPageRoute(builder: (_) => const AdminGate());
           default:
             developer.log('Unknown route: ${settings.name}', name: 'MyApp');
             return MaterialPageRoute(

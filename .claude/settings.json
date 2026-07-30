@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -v ':0$')",
+      "Bash(mkdir -p apk_archive)",
+      "Bash(mv assets/apk/CoffeeCore.apk assets/apk/KilimoMkononi.apk apk_archive/)",
+      "Bash(chromium-cli --help)",
+      "Bash(flutter --version)",
+      "Bash(curl -s https://pub.dev/api/packages/lucide_icons)",
+      "Bash(curl -s \"https://pub.dev/api/search?q=lucide\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(p['package']\\) for p in d.get\\('packages',[]\\)]\")",
+      "Bash(curl -s \"https://pub.dev/api/packages/lucide_icons_flutter\")",
+      "Bash(curl -s \"https://pub.dev/api/packages/flutter_lucide\")",
+      "Bash(curl -sL \"https://pub.dev/packages/lucide_icons_flutter/versions/3.1.15\" -o /tmp/lp.html)",
+      "Bash(curl -s \"https://pub.dev/api/archives/lucide_icons_flutter-3.1.15.tar.gz\" -o /tmp/licf.tar.gz)",
+      "Bash(cd /tmp)",
+      "Bash(tar -tzf licf.tar.gz)",
+      "Bash(tar -xzf licf.tar.gz lib/lucide_icons.dart)",
+      "Bash(find / -path \"*/font_awesome_flutter-*/lib/src/*.dart\" 2>/dev/null | head -5 *)",
+      "Read(//c//**)",
+      "Read(//c/Users/Administrator/AppData/Local/Pub/Cache/**)",
+      "Read(//c/Users/Administrator/AppData/Local/Pub/Cache/hosted/pub.dev/font_awesome_flutter-10.12.0/lib/src/**)",
+      "Read(//c/Users/Administrator/AppData/Local/Pub/Cache/hosted/pub.dev/font_awesome_flutter-10.12.0/lib/**)",
+      "Bash(netstat -ano)",
+      "Bash(awk '{print $5}')",
+      "Bash(taskkill //F //T //PID 17232)",
+      "Bash(> flutter_run.log)",
+      "Bash(nohup flutter run -d chrome --web-port=8765)",
+      "Bash(echo \"Started with PID $!\")"
+    ]
+  }
+}

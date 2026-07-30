@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../widgets/header.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/responsive_utils.dart';
+import '../../widgets/app_buttons.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/section.dart';
+import '../../widgets/reveal_on_scroll.dart';
+import '../../design/palette.dart';
+import '../../design/tokens.dart';
 
 class AlmaWorksPage extends StatelessWidget {
   const AlmaWorksPage({super.key});
@@ -11,7 +17,7 @@ class AlmaWorksPage extends StatelessWidget {
     {
       'role': 'JV Admin',
       'icon': LucideIcons.shieldCheck,
-      'color': Color(0xFF7C3AED),
+      'color': Palette.it,
       'responsibilities': [
         'Approves client and employee registrations',
         'Manages system-wide permissions and access',
@@ -22,7 +28,7 @@ class AlmaWorksPage extends StatelessWidget {
     {
       'role': 'Project Managers',
       'icon': LucideIcons.userCheck,
-      'color': Color(0xFF2563EB),
+      'color': Palette.construction,
       'responsibilities': [
         'Manage project timelines and milestones',
         'Assign tasks to contractors and teams',
@@ -33,7 +39,7 @@ class AlmaWorksPage extends StatelessWidget {
     {
       'role': 'Contractors',
       'icon': LucideIcons.hardHat,
-      'color': Color(0xFFEA580C),
+      'color': Palette.oilGas,
       'responsibilities': [
         'Access assigned work orders and tasks',
         'Update work progress and completion status',
@@ -44,7 +50,7 @@ class AlmaWorksPage extends StatelessWidget {
     {
       'role': 'Clients',
       'icon': LucideIcons.building2,
-      'color': Color(0xFF059669),
+      'color': Palette.success,
       'responsibilities': [
         'View project progress and updates',
         'Access approved drawings and documents',
@@ -78,37 +84,37 @@ class AlmaWorksPage extends StatelessWidget {
       'icon': LucideIcons.users,
       'title': 'Role-Based Access Control',
       'description': 'Hierarchical user management with customizable permissions for administrators, project managers, contractors, and clients.',
-      'color': Color(0xFF2563EB),
+      'color': Palette.construction,
     },
     {
       'icon': LucideIcons.userCheck,
       'title': 'Client & Employee Management',
       'description': 'Comprehensive database for managing construction clients, employees, and team assignments across multiple projects.',
-      'color': Color(0xFF7C3AED),
+      'color': Palette.it,
     },
     {
       'icon': LucideIcons.fileText,
       'title': 'Contract Administration',
       'description': 'Centralized contract management system tracking agreements, milestones, deliverables, and contractual obligations.',
-      'color': Color(0xFF059669),
+      'color': Palette.success,
     },
     {
       'icon': LucideIcons.phone,
       'title': 'Supplier & Client Contacts',
       'description': 'Organized contact database for suppliers, subcontractors, and clients with communication history and interaction logs.',
-      'color': Color(0xFFEA580C),
+      'color': Palette.oilGas,
     },
     {
       'icon': LucideIcons.fileImage,
       'title': 'Drawing & Document Storage',
       'description': 'Secure storage and version control for architectural drawings, blueprints, permits, and project documentation.',
-      'color': Color(0xFFDC2626),
+      'color': Palette.danger,
     },
     {
       'icon': LucideIcons.dollarSign,
       'title': 'Financial Management',
       'description': 'Comprehensive financial tracking for clients and contractors including invoicing, payments, budgets, and cost analysis.',
-      'color': Color(0xFF16A34A),
+      'color': Palette.agribusiness,
     },
   ];
 
@@ -117,25 +123,25 @@ class AlmaWorksPage extends StatelessWidget {
       'icon': LucideIcons.messageSquare,
       'title': 'Client-Contractor Communication',
       'description': 'Built-in messaging system facilitating seamless communication between clients and contractors with threaded conversations.',
-      'color': Color(0xFF0891B2),
+      'color': Palette.primary,
     },
     {
       'icon': LucideIcons.shieldCheck,
       'title': 'Quality & Safety Management',
       'description': 'Tools for quality inspections, safety checklists, incident reporting, and compliance tracking to maintain construction standards.',
-      'color': Color(0xFFF59E0B),
+      'color': Palette.oilGas,
     },
     {
       'icon': LucideIcons.fileBarChart,
       'title': 'Progress Reports',
       'description': 'Automated generation of weekly and monthly progress reports with customizable templates and data visualization.',
-      'color': Color(0xFF8B5CF6),
+      'color': Palette.it,
     },
     {
       'icon': LucideIcons.camera,
       'title': 'Photo Gallery & Documentation',
       'description': 'Organized photo gallery for documenting construction progress, before/after comparisons, and site inspections with geo-tagging.',
-      'color': Color(0xFFEC4899),
+      'color': Palette.danger,
     },
   ];
 
@@ -171,193 +177,13 @@ class AlmaWorksPage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Hero Section - Compact
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF1E3A8A),
-                    Color(0xFF3B82F6),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 24 : 40,
-                horizontal: isMobile ? 16 : 24,
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        LucideIcons.arrowLeft,
-                        color: Colors.white,
-                        size: isMobile ? 20 : 24,
-                      ),
-                      onPressed: () {
-                        debugPrint('AlmaWorksPage: Navigating back');
-                        Navigator.pop(context);
-                      },
-                      tooltip: 'Back',
-                    ),
-                    Expanded(
-                      child: Container(
-                        constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 900),
-                        child: Column(
-                          children: [
-                            Icon(
-                              LucideIcons.hardHat,
-                              size: isMobile ? 36 : 48,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'AlmaWorks',
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    fontSize: isMobile ? 28 : 40,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Construction Management Software',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    fontSize: isMobile ? 14 : 18,
-                                    color: const Color(0xFFBFDBFE),
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              constraints: const BoxConstraints(maxWidth: 700),
-                              child: Text(
-                                'Proprietary construction management platform designed for sensitive construction operations with comprehensive role-based security.',
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      fontSize: isMobile ? 12 : 14,
-                                      color: const Color(0xFFDDD6FE),
-                                    ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Main Content
-            Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 20 : 32,
-                horizontal: isMobile ? 16 : 24,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // User Roles Section
-                      Text(
-                        'User Roles & Permissions',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: isMobile ? 18 : 22,
-                              color: const Color(0xFF1F2937),
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'AlmaWorks features hierarchical access control for construction project management:',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: isMobile ? 12 : 14,
-                              color: const Color(0xFF6B7280),
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      // User Role Cards - True side-by-side
-                      _buildRoleCards(context, isMobile, screenWidth),
-                      const SizedBox(height: 24),
-
-                      // Security Features Section
-                      Text(
-                        'Security & Access Control',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: isMobile ? 18 : 22,
-                              color: const Color(0xFF1F2937),
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      _buildSecurityCards(context, isMobile, screenWidth),
-                      const SizedBox(height: 24),
-
-                      // Core Features Section
-                      Text(
-                        'Core Features',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: isMobile ? 18 : 22,
-                              color: const Color(0xFF1F2937),
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Essential tools for modern construction management',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: isMobile ? 12 : 14,
-                              color: const Color(0xFF6B7280),
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      _buildFeatureCards(context, _coreFeatures, isMobile, screenWidth),
-                      const SizedBox(height: 24),
-
-                      // Advanced Features Section
-                      Text(
-                        'Advanced Capabilities',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: isMobile ? 18 : 22,
-                              color: const Color(0xFF1F2937),
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Enhanced functionality for comprehensive project oversight',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: isMobile ? 12 : 14,
-                              color: const Color(0xFF6B7280),
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      _buildFeatureCards(context, _advancedFeatures, isMobile, screenWidth),
-                      const SizedBox(height: 24),
-
-                      // Benefits Section
-                      _buildBenefitsSection(context, isMobile, screenWidth),
-                      const SizedBox(height: 20),
-
-                      // CTA Section
-                      _buildCTASection(context, isMobile),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
+            _buildHeroSection(context, isMobile, screenWidth),
+            _buildRolesSection(context, isMobile),
+            _buildSecuritySection(context, isMobile),
+            _buildCoreFeaturesSection(context, isMobile),
+            _buildAdvancedFeaturesSection(context, isMobile),
+            _buildBenefitsSection(context, isMobile),
+            _buildCtaSection(context, isMobile),
             const Footer(),
           ],
         ),
@@ -365,12 +191,99 @@ class AlmaWorksPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRoleCards(BuildContext context, bool isMobile, double screenWidth) {
+  Widget _buildHeroSection(BuildContext context, bool isMobile, double screenWidth) {
+    return Container(
+      decoration: const BoxDecoration(gradient: Palette.heroSurface),
+      padding: Space.sectionPad(isMobile),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: Icon(
+                LucideIcons.arrowLeft,
+                color: Palette.n0,
+                size: isMobile ? 20 : 24,
+              ),
+              onPressed: () {
+                debugPrint('AlmaWorksPage: Navigating back');
+                Navigator.pop(context);
+              },
+              tooltip: 'Back',
+            ),
+            Expanded(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 900),
+                child: Column(
+                  children: [
+                    Icon(
+                      LucideIcons.hardHat,
+                      size: isMobile ? 36 : 48,
+                      color: Palette.n0,
+                    ),
+                    const SizedBox(height: Space.sm),
+                    Text(
+                      'AlmaWorks',
+                      style: (isMobile
+                              ? Theme.of(context).textTheme.headlineLarge
+                              : Theme.of(context).textTheme.displaySmall)
+                          ?.copyWith(color: Palette.n0),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: Space.xs),
+                    Text(
+                      'Construction Management Software',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white70),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: Space.sm),
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 700),
+                      child: Text(
+                        'Proprietary construction management platform designed for sensitive construction operations with comprehensive role-based security.',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRolesSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      topRule: Palette.it,
+      background: Palette.n0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            align: TextAlign.start,
+            accent: Palette.it,
+            title: 'User Roles & Permissions',
+            subtitle: 'AlmaWorks features hierarchical access control for construction project management:',
+          ),
+          const SizedBox(height: Space.xl),
+          _buildRoleCards(context, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleCards(BuildContext context, bool isMobile) {
     if (isMobile) {
       return Column(
-        children: _userRoles.map((role) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _buildRoleCard(context, role, isMobile),
+        children: _userRoles.asMap().entries.map((entry) => Padding(
+          padding: const EdgeInsets.only(bottom: Space.md),
+          child: RevealOnScroll(
+            delayMs: 60 * entry.key,
+            child: _buildRoleCard(context, entry.value, isMobile),
+          ),
         )).toList(),
       );
     } else {
@@ -379,18 +292,18 @@ class AlmaWorksPage extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _buildRoleCard(context, _userRoles[0], isMobile)),
-              const SizedBox(width: 12),
-              Expanded(child: _buildRoleCard(context, _userRoles[1], isMobile)),
+              Expanded(child: RevealOnScroll(delayMs: 0, child: _buildRoleCard(context, _userRoles[0], isMobile))),
+              const SizedBox(width: Space.md),
+              Expanded(child: RevealOnScroll(delayMs: 60, child: _buildRoleCard(context, _userRoles[1], isMobile))),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Space.md),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _buildRoleCard(context, _userRoles[2], isMobile)),
-              const SizedBox(width: 12),
-              Expanded(child: _buildRoleCard(context, _userRoles[3], isMobile)),
+              Expanded(child: RevealOnScroll(delayMs: 120, child: _buildRoleCard(context, _userRoles[2], isMobile))),
+              const SizedBox(width: Space.md),
+              Expanded(child: RevealOnScroll(delayMs: 180, child: _buildRoleCard(context, _userRoles[3], isMobile))),
             ],
           ),
         ],
@@ -400,63 +313,37 @@ class AlmaWorksPage extends StatelessWidget {
 
   Widget _buildRoleCard(BuildContext context, Map<String, dynamic> role, bool isMobile) {
     final color = role['color'] as Color;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
+      accent: color,
+      interactive: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(role['icon'] as IconData, color: color, size: isMobile ? 18 : 20),
-              ),
-              const SizedBox(width: 10),
+              IconChip(icon: role['icon'] as IconData, color: color, size: isMobile ? 18 : 20),
+              const SizedBox(width: Space.sm),
               Expanded(
                 child: Text(
                   role['role'] as String,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: isMobile ? 13 : 15,
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: color),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: Space.sm),
           ...(role['responsibilities'] as List<String>).map((resp) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.only(bottom: Space.xs),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(LucideIcons.checkCircle2, size: 14, color: color),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: Space.xs),
                     Expanded(
                       child: Text(
                         resp,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: isMobile ? 10 : 12,
-                              color: const Color(0xFF4B5563),
-                              height: 1.3,
-                            ),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
                   ],
@@ -467,12 +354,33 @@ class AlmaWorksPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSecurityCards(BuildContext context, bool isMobile, double screenWidth) {
+  Widget _buildSecuritySection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            align: TextAlign.start,
+            accent: Palette.it,
+            title: 'Security & Access Control',
+          ),
+          const SizedBox(height: Space.xl),
+          _buildSecurityCards(context, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSecurityCards(BuildContext context, bool isMobile) {
     if (isMobile) {
       return Column(
-        children: _securityFeatures.map((feature) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _buildSecurityCard(context, feature, isMobile),
+        children: _securityFeatures.asMap().entries.map((entry) => Padding(
+          padding: const EdgeInsets.only(bottom: Space.md),
+          child: RevealOnScroll(
+            delayMs: 60 * entry.key,
+            child: _buildSecurityCard(context, entry.value, isMobile),
+          ),
         )).toList(),
       );
     } else {
@@ -481,18 +389,18 @@ class AlmaWorksPage extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _buildSecurityCard(context, _securityFeatures[0], isMobile)),
-              const SizedBox(width: 12),
-              Expanded(child: _buildSecurityCard(context, _securityFeatures[1], isMobile)),
+              Expanded(child: RevealOnScroll(delayMs: 0, child: _buildSecurityCard(context, _securityFeatures[0], isMobile))),
+              const SizedBox(width: Space.md),
+              Expanded(child: RevealOnScroll(delayMs: 60, child: _buildSecurityCard(context, _securityFeatures[1], isMobile))),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Space.md),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _buildSecurityCard(context, _securityFeatures[2], isMobile)),
-              const SizedBox(width: 12),
-              Expanded(child: _buildSecurityCard(context, _securityFeatures[3], isMobile)),
+              Expanded(child: RevealOnScroll(delayMs: 120, child: _buildSecurityCard(context, _securityFeatures[2], isMobile))),
+              const SizedBox(width: Space.md),
+              Expanded(child: RevealOnScroll(delayMs: 180, child: _buildSecurityCard(context, _securityFeatures[3], isMobile))),
             ],
           ),
         ],
@@ -501,53 +409,83 @@ class AlmaWorksPage extends StatelessWidget {
   }
 
   Widget _buildSecurityCard(BuildContext context, Map<String, String> feature, bool isMobile) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.red[50],
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.red[200]!),
-      ),
+    return AppCard(
+      interactive: false,
+      accent: Palette.danger,
+      padding: const EdgeInsets.all(Space.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(LucideIcons.shield, size: 18, color: Colors.red[700]),
-              const SizedBox(width: 8),
+              const Icon(LucideIcons.shield, size: 18, color: Palette.danger),
+              const SizedBox(width: Space.xs),
               Expanded(
                 child: Text(
                   feature['title']!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isMobile ? 12 : 13,
-                        color: Colors.red[900],
-                      ),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Palette.danger),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: Space.xs),
           Text(
             feature['description']!,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: isMobile ? 10 : 12,
-                  color: Colors.red[800],
-                  height: 1.3,
-                ),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFeatureCards(BuildContext context, List<Map<String, dynamic>> features, bool isMobile, double screenWidth) {
+  Widget _buildCoreFeaturesSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            align: TextAlign.start,
+            accent: Palette.it,
+            title: 'Core Features',
+            subtitle: 'Essential tools for modern construction management',
+          ),
+          const SizedBox(height: Space.xl),
+          _buildFeatureCards(context, _coreFeatures, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdvancedFeaturesSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            align: TextAlign.start,
+            accent: Palette.it,
+            title: 'Advanced Capabilities',
+            subtitle: 'Enhanced functionality for comprehensive project oversight',
+          ),
+          const SizedBox(height: Space.xl),
+          _buildFeatureCards(context, _advancedFeatures, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureCards(BuildContext context, List<Map<String, dynamic>> features, bool isMobile) {
     if (isMobile) {
       return Column(
-        children: features.map((feature) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _buildFeatureCard(context, feature, isMobile),
+        children: features.asMap().entries.map((entry) => Padding(
+          padding: const EdgeInsets.only(bottom: Space.md),
+          child: RevealOnScroll(
+            delayMs: 60 * entry.key,
+            child: _buildFeatureCard(context, entry.value, isMobile),
+          ),
         )).toList(),
       );
     } else {
@@ -557,17 +495,27 @@ class AlmaWorksPage extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _buildFeatureCard(context, features[i], isMobile)),
-              const SizedBox(width: 12),
+              Expanded(
+                child: RevealOnScroll(
+                  delayMs: 60 * i,
+                  child: _buildFeatureCard(context, features[i], isMobile),
+                ),
+              ),
+              const SizedBox(width: Space.md),
               if (i + 1 < features.length)
-                Expanded(child: _buildFeatureCard(context, features[i + 1], isMobile))
+                Expanded(
+                  child: RevealOnScroll(
+                    delayMs: 60 * (i + 1),
+                    child: _buildFeatureCard(context, features[i + 1], isMobile),
+                  ),
+                )
               else
                 const Expanded(child: SizedBox()),
             ],
           ),
         );
         if (i + 2 < features.length) {
-          rows.add(const SizedBox(height: 12));
+          rows.add(const SizedBox(height: Space.md));
         }
       }
       return Column(children: rows);
@@ -576,88 +524,53 @@ class AlmaWorksPage extends StatelessWidget {
 
   Widget _buildFeatureCard(BuildContext context, Map<String, dynamic> feature, bool isMobile) {
     final color = feature['color'] as Color;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
+      accent: color,
+      interactive: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(feature['icon'] as IconData, color: color, size: isMobile ? 18 : 20),
-              ),
-              const SizedBox(width: 10),
+              IconChip(icon: feature['icon'] as IconData, color: color, size: isMobile ? 18 : 20),
+              const SizedBox(width: Space.sm),
               Expanded(
                 child: Text(
                   feature['title'] as String,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: isMobile ? 13 : 15,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1F2937),
-                      ),
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: Space.sm),
           Text(
             feature['description'] as String,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: isMobile ? 11 : 12,
-                  color: const Color(0xFF6B7280),
-                  height: 1.4,
-                ),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBenefitsSection(BuildContext context, bool isMobile, double screenWidth) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 20 : 24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEFF6FF), Color(0xFFDDEAFE)],
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
+  Widget _buildBenefitsSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n0,
       child: Column(
         children: [
-          Text(
-            'Why Choose AlmaWorks?',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: isMobile ? 18 : 22,
-                  color: const Color(0xFF1E3A8A),
-                  fontWeight: FontWeight.bold,
-                ),
-            textAlign: TextAlign.center,
+          const SectionHeader(
+            accent: Palette.it,
+            title: 'Why Choose AlmaWorks?',
           ),
-          const SizedBox(height: 16),
-          
+          const SizedBox(height: Space.xl),
           if (isMobile)
             Column(
-              children: _benefits.map((benefit) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildBenefitCard(context, benefit, isMobile),
+              children: _benefits.asMap().entries.map((entry) => Padding(
+                padding: const EdgeInsets.only(bottom: Space.md),
+                child: RevealOnScroll(
+                  delayMs: 60 * entry.key,
+                  child: _buildBenefitCard(context, entry.value, isMobile),
+                ),
               )).toList(),
             )
           else
@@ -666,18 +579,18 @@ class AlmaWorksPage extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _buildBenefitCard(context, _benefits[0], isMobile)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildBenefitCard(context, _benefits[1], isMobile)),
+                    Expanded(child: RevealOnScroll(delayMs: 0, child: _buildBenefitCard(context, _benefits[0], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 60, child: _buildBenefitCard(context, _benefits[1], isMobile))),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: Space.md),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _buildBenefitCard(context, _benefits[2], isMobile)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildBenefitCard(context, _benefits[3], isMobile)),
+                    Expanded(child: RevealOnScroll(delayMs: 120, child: _buildBenefitCard(context, _benefits[2], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 180, child: _buildBenefitCard(context, _benefits[3], isMobile))),
                   ],
                 ),
               ],
@@ -688,121 +601,66 @@ class AlmaWorksPage extends StatelessWidget {
   }
 
   Widget _buildBenefitCard(BuildContext context, Map<String, dynamic> benefit, bool isMobile) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
+      interactive: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(benefit['icon'] as IconData, color: const Color(0xFF3B82F6), size: isMobile ? 24 : 28),
-          const SizedBox(height: 8),
+          IconChip(icon: benefit['icon'] as IconData, color: Palette.it, size: isMobile ? 24 : 28),
+          const SizedBox(height: Space.sm),
           Text(
             benefit['title'] as String,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: isMobile ? 13 : 15,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1F2937),
-                ),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: Space.xxs),
           Text(
             benefit['description'] as String,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: isMobile ? 11 : 12,
-                  color: const Color(0xFF6B7280),
-                  height: 1.3,
-                ),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCTASection(BuildContext context, bool isMobile) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? 20 : 32),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E3A8A),
-            Color(0xFF3B82F6),
-          ],
+  Widget _buildCtaSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(Space.lg),
+        decoration: BoxDecoration(
+          color: Palette.ink,
+          borderRadius: Radii.card,
         ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(LucideIcons.building2, size: isMobile ? 40 : 52, color: Colors.white),
-          const SizedBox(height: 12),
-          Text(
-            'Built by Construction Professionals',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: isMobile ? 18 : 22,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'AlmaWorks is currently used internally by JV ALMA C.I.S for managing our construction projects. Interested in learning more?',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontSize: isMobile ? 12 : 14,
-                  color: const Color(0xFFDDD6FE),
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: isMobile ? double.infinity : 250,
-            child: ElevatedButton.icon(
+        child: Column(
+          children: [
+            Icon(LucideIcons.building2, size: isMobile ? 40 : 52, color: Palette.n0),
+            const SizedBox(height: Space.sm),
+            Text(
+              'Built by Construction Professionals',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Palette.n0),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: Space.xs),
+            Text(
+              'AlmaWorks is currently used internally by JV ALMA C.I.S for managing our construction projects. Interested in learning more?',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: Space.lg),
+            PrimaryButton(
+              text: 'Contact Us',
+              icon: LucideIcons.mail,
+              onDark: true,
+              large: true,
               onPressed: () {
                 debugPrint('Navigating to contact page for AlmaWorks inquiry');
                 Navigator.pushNamed(context, '/contact');
               },
-              icon: const Icon(LucideIcons.mail, size: 20),
-              label: Text(
-                'Contact Us',
-                style: TextStyle(
-                  fontSize: isMobile ? 15 : 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF1E3A8A),
-                padding: EdgeInsets.symmetric(
-                  vertical: isMobile ? 14 : 18,
-                  horizontal: 24,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

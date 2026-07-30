@@ -1,41 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../admin/modules/business_units/business_unit_model.dart';
+import '../admin/modules/business_units/business_units_provider.dart';
+import '../admin/shared/color_key_registry.dart';
+import '../admin/shared/icon_key_registry.dart';
 import '../widgets/footer.dart';
 import '../widgets/header.dart';
+import '../design/palette.dart';
+import '../design/tokens.dart';
+import '../widgets/app_card.dart';
+import '../widgets/section.dart';
+import '../widgets/reveal_on_scroll.dart';
 
-class BusinessUnitsPage extends StatelessWidget {
+class BusinessUnitsPage extends ConsumerWidget {
   const BusinessUnitsPage({super.key});
-
-  static const List<Map<String, dynamic>> _businessUnits = [
-    {
-      'icon': LucideIcons.building,
-      'title': 'Construction',
-      'description': 'Comprehensive civil works including diplomatic and residential projects, infrastructure development, and facility maintenance management.',
-      'route': '/construction-detail',
-      'color': Color(0xFF2563EB),
-    },
-    {
-      'icon': LucideIcons.sprout,
-      'title': 'Agribusiness',
-      'description': 'Empowering farmers with modern agricultural solutions, technical services, and smart digital farming tools promoting sustainable agriculture.',
-      'route': '/agribusiness',
-      'color': Color(0xFF059669),
-    },
-    {
-      'icon': LucideIcons.droplets,
-      'title': 'Oil & Gas',
-      'description': 'Specialized inspection services and regulatory compliance for the oil and gas industry with certified expertise.',
-      'route': '/oil-gas',
-      'color': Color(0xFFEA580C),
-    },
-    {
-      'icon': LucideIcons.globe,
-      'title': 'Information Technology',
-      'description': 'Cutting-edge software solutions including NyumbaSmart CMMS, CoffeeCore, and KilimoMkononi agricultural applications.',
-      'route': '/it-division',
-      'color': Color(0xFF7C3AED),
-    },
-  ];
 
   static const List<Map<String, dynamic>> _whyChooseUs = [
     {
@@ -61,17 +40,27 @@ class BusinessUnitsPage extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+
+    // An unseeded (but reachable) Firestore collection resolves to an empty
+    // list, not null — falling back on nullness alone would leave the page
+    // with zero cards instead of the intended default content.
+    final liveUnits = ref.watch(businessUnitsProvider).valueOrNull;
+    final units = List<BusinessUnit>.of(
+      (liveUnits == null || liveUnits.isEmpty) ? defaultBusinessUnits : liveUnits,
+    )
+      ..removeWhere((u) => !u.published)
+      ..sort((a, b) => a.order.compareTo(b.order));
 
     return AppScaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildHeroSection(context, isMobile, screenWidth),
-            _buildBusinessUnitsSection(context, isMobile, screenWidth),
-            _buildWhyChooseUsSection(context, isMobile, screenWidth),
+            _buildHeroSection(context, isMobile),
+            _buildBusinessUnitsSection(context, isMobile, units),
+            _buildWhyChooseUsSection(context, isMobile),
             const Footer(),
           ],
         ),
@@ -79,45 +68,31 @@ class BusinessUnitsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroSection(BuildContext context, bool isMobile, double screenWidth) {
+  Widget _buildHeroSection(BuildContext context, bool isMobile) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-          ],
-        ),
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 16 : 24,
-        vertical: isMobile ? 40 : 64,
-      ),
+      decoration: const BoxDecoration(gradient: Palette.heroSurface),
+      padding: Space.sectionPad(isMobile),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
+          constraints: const BoxConstraints(maxWidth: Space.contentMax),
           child: Column(
             children: [
               Text(
                 'Our Business Units',
-                style: TextStyle(
-                  fontSize: isMobile ? 28 : 40,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                style: (isMobile
+                        ? Theme.of(context).textTheme.headlineLarge
+                        : Theme.of(context).textTheme.displaySmall)
+                    ?.copyWith(color: Colors.white),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: Space.md),
               Text(
                 'Delivering innovative solutions across construction, agribusiness, oil & gas, and information technology.',
-                style: TextStyle(
-                  fontSize: isMobile ? 14 : 16,
-                  color: const Color(0xFFBFDBFE),
-                  height: 1.5,
-                ),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(color: Colors.white70),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -127,264 +102,190 @@ class BusinessUnitsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBusinessUnitsSection(BuildContext context, bool isMobile, double screenWidth) {
-    return Container(
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 32 : 48,
-        horizontal: isMobile ? 16 : 24,
+  Widget _buildBusinessUnitsSection(BuildContext context, bool isMobile, List<BusinessUnit> units) {
+    return SectionWrapper(
+      background: Palette.n0,
+      child: Column(
+        children: [
+          const SectionHeader(
+            title: 'Our Core Divisions',
+            subtitle: 'Explore our diverse portfolio of services across multiple industries',
+          ),
+          const SizedBox(height: Space.xl),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth < 640
+                  ? 1
+                  : constraints.maxWidth < 1000
+                      ? 2
+                      : units.length.clamp(1, 4);
+              const gap = Space.md;
+              final cardWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
+
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: List.generate(units.length, (i) {
+                  return SizedBox(
+                    width: cardWidth,
+                    child: RevealOnScroll(
+                      delayMs: 60 * i,
+                      child: _buildBusinessUnitCard(context, units[i], isMobile),
+                    ),
+                  );
+                }),
+              );
+            },
+          ),
+        ],
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
+    );
+  }
+
+  Widget _buildBusinessUnitCard(BuildContext context, BusinessUnit unit, bool isMobile) {
+    final color = ColorKeyRegistry.resolve(unit.accentColorKey);
+    return AppCard(
+      accent: color,
+      onTap: () {
+        Navigator.pushNamed(context, unit.route);
+      },
+      semanticLabel: unit.title,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconChip(
+            icon: IconKeyRegistry.resolve(unit.iconKey),
+            color: color,
+            size: isMobile ? 28 : 32,
+          ),
+          const SizedBox(height: Space.md),
+          Text(
+            unit.title,
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: Space.xs),
+          Text(
+            unit.description,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: Space.md),
+          Row(
             children: [
               Text(
-                'Our Core Divisions',
-                style: TextStyle(
-                  fontSize: isMobile ? 24 : 32,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0F172A),
-                ),
-                textAlign: TextAlign.center,
+                unit.ctaText,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelLarge
+                    ?.copyWith(color: color),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Explore our diverse portfolio of services across multiple industries',
-                style: TextStyle(
-                  fontSize: isMobile ? 14 : 16,
-                  color: const Color(0xFF64748B),
-                ),
-                textAlign: TextAlign.center,
+              const SizedBox(width: Space.xxs),
+              Icon(
+                LucideIcons.arrowRight,
+                size: 16,
+                color: color,
               ),
-              const SizedBox(height: 32),
-              
-              // Business Units - True side-by-side layout
-              if (isMobile)
-                Column(
-                  children: _businessUnits.map((unit) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _buildBusinessUnitCard(context, unit, isMobile),
-                  )).toList(),
-                )
-              else
-                Column(
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWhyChooseUsSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Column(
+        children: [
+          const SectionHeader(
+            title: 'Why Choose Us',
+            subtitle: 'Our commitment to quality and innovation sets us apart',
+          ),
+          const SizedBox(height: Space.xl),
+
+          // Why Choose Us - True side-by-side layout
+          if (isMobile)
+            Column(
+              children: _whyChooseUs
+                  .asMap()
+                  .entries
+                  .map((entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: Space.md),
+                        child: RevealOnScroll(
+                          delayMs: 60 * entry.key,
+                          child: _buildWhyChooseUsCard(context, entry.value, isMobile),
+                        ),
+                      ))
+                  .toList(),
+            )
+          else
+            Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildBusinessUnitCard(context, _businessUnits[0], isMobile)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildBusinessUnitCard(context, _businessUnits[1], isMobile)),
-                      ],
+                    Expanded(
+                      child: RevealOnScroll(
+                        delayMs: 0,
+                        child: _buildWhyChooseUsCard(context, _whyChooseUs[0], isMobile),
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildBusinessUnitCard(context, _businessUnits[2], isMobile)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildBusinessUnitCard(context, _businessUnits[3], isMobile)),
-                      ],
+                    const SizedBox(width: Space.md),
+                    Expanded(
+                      child: RevealOnScroll(
+                        delayMs: 60,
+                        child: _buildWhyChooseUsCard(context, _whyChooseUs[1], isMobile),
+                      ),
                     ),
                   ],
                 ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBusinessUnitCard(BuildContext context, Map<String, dynamic> unit, bool isMobile) {
-    final color = unit['color'] as Color;
-    return InkWell(
-      onTap: () {
-        Navigator.pushNamed(context, unit['route'] as String);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                unit['icon'] as IconData,
-                color: color,
-                size: isMobile ? 28 : 32,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              unit['title'] as String,
-              style: TextStyle(
-                fontSize: isMobile ? 18 : 20,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              unit['description'] as String,
-              style: TextStyle(
-                fontSize: isMobile ? 13 : 14,
-                color: const Color(0xFF64748B),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Text(
-                  'Learn more',
-                  style: TextStyle(
-                    fontSize: isMobile ? 13 : 14,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  LucideIcons.arrowRight,
-                  size: 16,
-                  color: color,
+                const SizedBox(height: Space.md),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: RevealOnScroll(
+                        delayMs: 120,
+                        child: _buildWhyChooseUsCard(context, _whyChooseUs[2], isMobile),
+                      ),
+                    ),
+                    const SizedBox(width: Space.md),
+                    Expanded(
+                      child: RevealOnScroll(
+                        delayMs: 180,
+                        child: _buildWhyChooseUsCard(context, _whyChooseUs[3], isMobile),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWhyChooseUsSection(BuildContext context, bool isMobile, double screenWidth) {
-    return Container(
-      color: const Color(0xFFF8FAFC),
-      padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 32 : 48,
-        horizontal: isMobile ? 16 : 24,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
-            children: [
-              Text(
-                'Why Choose Us',
-                style: TextStyle(
-                  fontSize: isMobile ? 24 : 32,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0F172A),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Our commitment to quality and innovation sets us apart',
-                style: TextStyle(
-                  fontSize: isMobile ? 14 : 16,
-                  color: const Color(0xFF64748B),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              
-              // Why Choose Us - True side-by-side layout
-              if (isMobile)
-                Column(
-                  children: _whyChooseUs.map((item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _buildWhyChooseUsCard(context, item, isMobile),
-                  )).toList(),
-                )
-              else
-                Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildWhyChooseUsCard(context, _whyChooseUs[0], isMobile)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildWhyChooseUsCard(context, _whyChooseUs[1], isMobile)),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildWhyChooseUsCard(context, _whyChooseUs[2], isMobile)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildWhyChooseUsCard(context, _whyChooseUs[3], isMobile)),
-                      ],
-                    ),
-                  ],
-                ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildWhyChooseUsCard(BuildContext context, Map<String, dynamic> item, bool isMobile) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
+    return AppCard(
+      interactive: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            item['icon'] as IconData,
-            color: const Color(0xFF2563EB),
+          IconChip(
+            icon: item['icon'] as IconData,
+            color: Palette.primary,
             size: isMobile ? 28 : 32,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Space.sm),
           Text(
             item['title'] as String,
-            style: TextStyle(
-              fontSize: isMobile ? 16 : 18,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF0F172A),
-            ),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: Space.xs),
           Text(
             item['description'] as String,
-            style: TextStyle(
-              fontSize: isMobile ? 13 : 14,
-              color: const Color(0xFF64748B),
-              height: 1.5,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
       ),

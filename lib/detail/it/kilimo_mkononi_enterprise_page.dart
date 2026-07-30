@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/header.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/responsive_utils.dart';
+import '../../design/palette.dart';
+import '../../design/tokens.dart';
+import '../../widgets/app_buttons.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/section.dart';
+import '../../widgets/reveal_on_scroll.dart';
 
 class KilimoMkononiEnterprisePage extends StatelessWidget {
   const KilimoMkononiEnterprisePage({super.key});
@@ -42,7 +48,7 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
   Future<void> _openPlayStore(BuildContext context) async {
     try {
       debugPrint('KilimoMkononiEnterprisePage: Opening Google Play Store');
-      
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -60,13 +66,13 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
       );
 
       const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.jvalmacis.kilimomkononi&pli=1';
-      
+
       if (await canLaunchUrl(Uri.parse(playStoreUrl))) {
         await launchUrl(
           Uri.parse(playStoreUrl),
           mode: LaunchMode.externalApplication,
         );
-        
+
         if (context.mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
@@ -91,7 +97,7 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
       }
     } catch (e) {
       debugPrint('KilimoMkononiEnterprisePage: Play Store redirect error: $e');
-      
+
       if (context.mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -118,20 +124,8 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF065F46),
-                    Color(0xFF047857),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 24 : 48,
-                horizontal: isMobile ? 8 : 16,
-              ),
+              decoration: const BoxDecoration(gradient: Palette.heroSurface),
+              padding: Space.sectionPad(isMobile),
               child: Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -139,7 +133,7 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
                     IconButton(
                       icon: Icon(
                         LucideIcons.arrowLeft,
-                        color: Colors.white,
+                        color: Palette.n0,
                         size: isMobile ? 20 : 24,
                       ),
                       onPressed: () {
@@ -155,18 +149,17 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
                           children: [
                             Text(
                               'Kilimo Mkononi Enterprise',
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    fontSize: isMobile ? 24 : 32,
-                                    color: Colors.white,
-                                  ),
+                              style: (isMobile
+                                      ? Theme.of(context).textTheme.headlineLarge
+                                      : Theme.of(context).textTheme.displaySmall)
+                                  ?.copyWith(color: Palette.n0),
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: Space.xs),
                             Text(
                               'Professional Farming Solutions for Farmers & Enterprises',
                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: isMobile ? 14 : 16,
-                                    color: const Color(0xFFD1FAE5),
+                                    color: Colors.white70,
                                   ),
                               textAlign: TextAlign.center,
                             ),
@@ -178,19 +171,14 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 16 : 24,
-                horizontal: isMobile ? 12 : 16,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1280),
-                child: isMobile
-                    ? _buildMobileLayout(context, screenWidth)
-                    : _buildDesktopTabletLayout(context, screenWidth, isTablet),
-              ),
+            Container(height: 3, width: double.infinity, color: Palette.it),
+            SectionWrapper(
+              background: Palette.n0,
+              reveal: false,
+              child: isMobile
+                  ? _buildMobileLayout(context, screenWidth)
+                  : _buildDesktopTabletLayout(context, screenWidth, isTablet),
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.03),
             const Footer(),
           ],
         ),
@@ -203,37 +191,37 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: screenWidth * 0.95,
+          width: double.infinity,
           height: 100,
           decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(8),
+            color: Palette.n100,
+            borderRadius: Radii.card,
           ),
           child: Stack(
             children: [
-              Center(
+              const Center(
                 child: Icon(
                   LucideIcons.wheat,
                   size: 40,
-                  color: Colors.grey[400],
+                  color: Palette.n400,
                 ),
               ),
               Positioned(
-                top: 4,
-                left: 4,
+                top: Space.xxs,
+                left: Space.xxs,
                 child: Chip(
                   label: const Text('Enterprise Edition'),
-                  backgroundColor: Colors.green[50],
-                  labelStyle: TextStyle(
-                    color: Colors.green[700],
-                    fontSize: 10,
-                  ),
+                  backgroundColor: Palette.agribusiness.withValues(alpha: 0.10),
+                  labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Palette.agribusiness,
+                        fontSize: 10,
+                      ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Space.sm),
         _buildContent(context, screenWidth, true),
       ],
     );
@@ -249,8 +237,8 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
             width: isTablet ? screenWidth * 0.3 : screenWidth * 0.3,
             height: isTablet ? 100 : 120,
             decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
+              color: Palette.n100,
+              borderRadius: Radii.card,
             ),
             child: Stack(
               children: [
@@ -258,19 +246,19 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
                   child: Icon(
                     LucideIcons.wheat,
                     size: isTablet ? 40 : 48,
-                    color: Colors.grey[400],
+                    color: Palette.n400,
                   ),
                 ),
                 Positioned(
-                  top: 4,
-                  left: 4,
+                  top: Space.xxs,
+                  left: Space.xxs,
                   child: Chip(
                     label: const Text('Enterprise Edition'),
-                    backgroundColor: Colors.green[50],
-                    labelStyle: TextStyle(
-                      color: Colors.green[700],
-                      fontSize: isTablet ? 8 : 10,
-                    ),
+                    backgroundColor: Palette.agribusiness.withValues(alpha: 0.10),
+                    labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Palette.agribusiness,
+                          fontSize: isTablet ? 8 : 10,
+                        ),
                   ),
                 ),
               ],
@@ -280,7 +268,7 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
         Expanded(
           flex: 2,
           child: Padding(
-            padding: EdgeInsets.all(isTablet ? 8 : 16),
+            padding: EdgeInsets.all(isTablet ? Space.xs : Space.md),
             child: _buildContent(context, screenWidth, false),
           ),
         ),
@@ -297,145 +285,106 @@ class KilimoMkononiEnterprisePage extends StatelessWidget {
       children: [
         Text(
           'Kilimo Mkononi Enterprise',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: isMobile ? 20 : 24,
-                color: const Color(0xFF1F2937),
-              ),
+          style: (isMobile
+                  ? Theme.of(context).textTheme.titleLarge
+                  : Theme.of(context).textTheme.headlineSmall)
+              ?.copyWith(color: Palette.ink),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Space.xs),
         Text(
           'Developed through hands-on work with farming communities and real-world feedback, Kilimo Mkononi Enterprise provides farmers with accessible, actionable tools directly on their mobile phones. Designed for professional farmers and agricultural enterprises growing Beans, Maize, Carrots, Tomatoes, Onions, Courgettes, and Green Peppers to Grow, Protect, and Prosper.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF4B5563),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Palette.n600,
               ),
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Key Features',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 14 : 16,
-                color: const Color(0xFF1F2937),
-              ),
+        const SizedBox(height: Space.sm),
+        const SectionHeader(
+          title: 'Key Features',
+          align: TextAlign.start,
+          accent: Palette.it,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Space.xs),
         Wrap(
-          spacing: isMobile ? 8 : 12,
-          runSpacing: 12,
-          children: _features.map((feature) {
-            return SizedBox(
-              width: isMobile ? screenWidth * 0.9 : screenWidth * (isTablet ? 0.45 : 0.25),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.check_circle,
-                    size: 14,
-                    color: Color(0xFF16A34A),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          feature['title']!,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: isMobile ? 12 : 14,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          feature['description']!,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontSize: isMobile ? 12 : 14,
-                              ),
-                        ),
-                      ],
+          spacing: isMobile ? Space.xs : Space.sm,
+          runSpacing: Space.sm,
+          children: _features.asMap().entries.map((entry) {
+            final index = entry.key;
+            final feature = entry.value;
+            return RevealOnScroll(
+              delayMs: 60 * index,
+              child: SizedBox(
+                width: isMobile ? screenWidth * 0.9 : screenWidth * (isTablet ? 0.45 : 0.25),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      size: 14,
+                      color: Palette.it,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: Space.xs),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            feature['title']!,
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                          const SizedBox(height: Space.xxs),
+                          Text(
+                            feature['description']!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Impact',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 14 : 16,
-                color: const Color(0xFF1F2937),
-              ),
+        const SizedBox(height: Space.sm),
+        const SectionHeader(
+          title: 'Impact',
+          align: TextAlign.start,
+          accent: Palette.it,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Space.xs),
         Text(
           'Kilimo Mkononi Enterprise enables smarter, more resilient farming by combining on-the-ground experience with cutting-edge digital tools. It enhances income, strengthens communities, and contributes to a more sustainable agricultural future.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF4B5563),
+                color: Palette.n600,
               ),
         ),
-        const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.green[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.green[200]!),
-          ),
+        const SizedBox(height: Space.md),
+        AppCard(
+          accent: Palette.it,
+          interactive: false,
           child: Column(
             children: [
-              Icon(
-                LucideIcons.smartphone,
-                size: 48,
-                color: Colors.green[700],
-              ),
-              const SizedBox(height: 12),
+              const IconChip(icon: LucideIcons.smartphone, color: Palette.it, size: 32),
+              const SizedBox(height: Space.sm),
               Text(
                 'Get Kilimo Mkononi Enterprise',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontSize: isMobile ? 16 : 18,
-                      color: Colors.green[800],
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: Space.xs),
               Text(
                 'Download Kilimo Mkononi Enterprise from Google Play Store and start farming smarter today!',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: isMobile ? 12 : 14,
-                      color: Colors.green[700],
+                      color: Palette.n600,
                     ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _openPlayStore(context),
-                  icon: const Icon(LucideIcons.download, size: 20),
-                  label: Text(
-                    'Get from Play Store',
-                    style: TextStyle(
-                      fontSize: isMobile ? 14 : 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[600],
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(
-                      vertical: isMobile ? 12 : 16,
-                      horizontal: 24,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
+              const SizedBox(height: Space.md),
+              PrimaryButton(
+                text: 'Get from Play Store',
+                icon: LucideIcons.download,
+                onPressed: () => _openPlayStore(context),
+                expand: true,
               ),
             ],
           ),

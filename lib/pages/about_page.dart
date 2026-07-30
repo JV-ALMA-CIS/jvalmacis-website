@@ -1,9 +1,14 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../widgets/header.dart';
 import '../widgets/footer.dart';
+import '../design/palette.dart';
+import '../design/tokens.dart';
+import '../widgets/app_card.dart';
+import '../widgets/section.dart';
+import '../widgets/reveal_on_scroll.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -20,17 +25,9 @@ class AboutPage extends StatelessWidget {
           children: [
             // Hero Section
             Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 40 : 64,
-                horizontal: isMobile ? 16 : 24,
-              ),
+              width: double.infinity,
+              decoration: const BoxDecoration(gradient: Palette.heroSurface),
+              padding: Space.sectionPad(isMobile),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1000),
@@ -38,19 +35,19 @@ class AboutPage extends StatelessWidget {
                     children: [
                       Text(
                         'About JV ALMA C.I.S',
-                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              color: Colors.white,
-                              fontSize: isMobile ? 28 : 40,
-                            ),
+                        style: (isMobile
+                                ? Theme.of(context).textTheme.headlineLarge
+                                : Theme.of(context).textTheme.displaySmall)
+                            ?.copyWith(color: Colors.white),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: Space.md),
                       Text(
                         'Building Africa\'s future through excellence in construction, agribusiness, oil & gas services, and information technology',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: const Color(0xFFBFDBFE),
-                              fontSize: isMobile ? 14 : 16,
-                            ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.copyWith(color: Colors.white70),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -59,7 +56,7 @@ class AboutPage extends StatelessWidget {
               ),
             ),
 
-             // Company Overview - Brief Story
+            // Company Overview - Brief Story
             _buildCompanyOverviewSection(context, isMobile),
 
             // Timeline with CORRECT data
@@ -68,7 +65,7 @@ class AboutPage extends StatelessWidget {
             // Mission & Vision
             _buildMissionVisionSection(context, isMobile),
 
-             // Featured Projects Across Divisions
+            // Featured Projects Across Divisions
             _buildFeaturedProjectsSection(context, isMobile, isTablet),
 
             const Footer(),
@@ -78,49 +75,27 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-
-    // ===== COMPANY OVERVIEW (CORRECTED) =====
+  // ===== COMPANY OVERVIEW (CORRECTED) =====
   Widget _buildCompanyOverviewSection(BuildContext context, bool isMobile) {
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 24 : 40,
-        horizontal: isMobile ? 16 : 24,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Column(
-            children: [
-              Text(
-                'Our Story',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: isMobile ? 22 : 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Founded in 2017, JV ALMA C.I.S has rapidly grown into a trusted multi-sector company serving construction, agribusiness, oil & gas services, and information technology across East Africa. In just seven years, we have established ourselves as a leader in delivering high-quality projects and innovative solutions.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: isMobile ? 13 : 15,
-                      color: const Color(0xFF4B5563),
-                      height: 1.6,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Our success is built on the foundation of technical expertise, community engagement, and a commitment to sustainable impact. Whether building critical infrastructure, empowering farmers through sustainable agriculture, ensuring regulatory compliance in oil & gas, or delivering innovative digital solutions, we bring the same dedication to excellence in everything we do.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: isMobile ? 13 : 15,
-                      color: const Color(0xFF4B5563),
-                      height: 1.6,
-                    ),
-              ),
-            ],
+    return SectionWrapper(
+      background: Palette.n50,
+      maxWidth: 900,
+      child: Column(
+        children: [
+          const SectionHeader(title: 'Our Story', align: TextAlign.center, eyebrow: null, subtitle: null),
+          const SizedBox(height: Space.lg),
+          Text(
+            'Founded in 2017, JV ALMA C.I.S has rapidly grown into a trusted multi-sector company serving construction, agribusiness, oil & gas services, and information technology across East Africa. In just seven years, we have established ourselves as a leader in delivering high-quality projects and innovative solutions.',
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
           ),
-        ),
+          const SizedBox(height: Space.sm),
+          Text(
+            'Our success is built on the foundation of technical expertise, community engagement, and a commitment to sustainable impact. Whether building critical infrastructure, empowering farmers through sustainable agriculture, ensuring regulatory compliance in oil & gas, or delivering innovative digital solutions, we bring the same dedication to excellence in everything we do.',
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -151,160 +126,130 @@ class AboutPage extends StatelessWidget {
       },
     ];
 
-    return Container(
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 24 : 40,
-        horizontal: isMobile ? 16 : 24,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Column(
-            children: [
-              Text(
-                'Our Journey',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: isMobile ? 22 : 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              // Timeline
-              ...milestones.asMap().entries.map((entry) {
-                final index = entry.key;
-                final milestone = entry.value;
-                final isLast = index == milestones.length - 1;
+    return SectionWrapper(
+      background: Palette.n0,
+      maxWidth: 900,
+      child: Column(
+        children: [
+          const SectionHeader(title: 'Our Journey'),
+          const SizedBox(height: Space.xl),
+          // Timeline
+          ...milestones.asMap().entries.map((entry) {
+            final index = entry.key;
+            final milestone = entry.value;
+            final isLast = index == milestones.length - 1;
 
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Timeline dot and line
-                    Column(
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFF2563EB),
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 3,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF2563EB).withOpacity(0.3),
-                                blurRadius: 8,
-                              ),
-                            ],
+            return RevealOnScroll(
+              delayMs: 60 * index,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Timeline dot and line
+                  Column(
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Palette.primary,
+                          border: Border.all(
+                            color: Palette.n0,
+                            width: 3,
                           ),
-                        ),
-                        if (!isLast)
-                          Container(
-                            width: 2,
-                            height: 60,
-                            color: const Color(0xFFE5E7EB),
-                          ),
-                      ],
-                    ),
-                    // Content
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 24, bottom: 60),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              milestone['year']!,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: isMobile ? 13 : 15,
-                                    color: const Color(0xFF2563EB),
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              milestone['event']!,
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: isMobile ? 14 : 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              milestone['detail']!,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontSize: isMobile ? 12 : 14,
-                                    color: const Color(0xFF6B7280),
-                                  ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Palette.primary.withValues(alpha: 0.3),
+                              blurRadius: 8,
                             ),
                           ],
                         ),
                       ),
+                      if (!isLast)
+                        Container(
+                          width: 2,
+                          height: 60,
+                          color: Palette.n200,
+                        ),
+                    ],
+                  ),
+                  // Content
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: Space.lg, bottom: Space.xxxl - 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            milestone['year']!,
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                  color: Palette.primary,
+                                ),
+                          ),
+                          const SizedBox(height: Space.xxs),
+                          Text(
+                            milestone['event']!,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: Space.xxs),
+                          Text(
+                            milestone['detail']!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                );
-              }),
-            ],
-          ),
-        ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
 
   // ===== MISSION & VISION =====
   Widget _buildMissionVisionSection(BuildContext context, bool isMobile) {
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 24 : 40,
-        horizontal: isMobile ? 16 : 24,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Column(
+        children: [
+          const SectionHeader(title: 'Our Purpose'),
+          const SizedBox(height: Space.xl),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Our Purpose',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: isMobile ? 22 : 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                textAlign: TextAlign.center,
+              Expanded(
+                child: RevealOnScroll(
+                  delayMs: 0,
+                  child: _buildPurposeCard(
+                    context,
+                    'Our Mission',
+                    'To deliver exceptional infrastructure, services, and digital solutions that drive sustainable development across East Africa.',
+                    LucideIcons.target,
+                    Palette.primary,
+                    isMobile,
+                  ),
+                ),
               ),
-              const SizedBox(height: 32),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _buildPurposeCard(
-                      context,
-                      'Our Mission',
-                      'To deliver exceptional infrastructure, services, and digital solutions that drive sustainable development across East Africa.',
-                      LucideIcons.target,
-                      const Color(0xFF2563EB),
-                      isMobile,
-                    ),
+              SizedBox(width: isMobile ? Space.sm : Space.lg),
+              Expanded(
+                child: RevealOnScroll(
+                  delayMs: 60,
+                  child: _buildPurposeCard(
+                    context,
+                    'Our Vision',
+                    'To be the region\'s most trusted partner for integrated solutions—connecting communities, businesses, and opportunities.',
+                    LucideIcons.eye,
+                    Palette.success,
+                    isMobile,
                   ),
-                  SizedBox(width: isMobile ? 12 : 24),
-                  Expanded(
-                    child: _buildPurposeCard(
-                      context,
-                      'Our Vision',
-                      'To be the region\'s most trusted partner for integrated solutions—connecting communities, businesses, and opportunities.',
-                      LucideIcons.eye,
-                      const Color(0xFF059669),
-                      isMobile,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -317,44 +262,28 @@ class AboutPage extends StatelessWidget {
     Color color,
     bool isMobile,
   ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontSize: isMobile ? 18 : 20,
-                    fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: isMobile ? 13 : 14,
-                    color: const Color(0xFF4B5563),
-                    height: 1.6,
-                  ),
-            ),
-          ],
-        ),
+    return AppCard(
+      interactive: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconChip(icon: icon, color: color),
+          const SizedBox(height: Space.lg),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: Space.sm),
+          Text(
+            description,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
       ),
     );
   }
 
-  
   // ===== FEATURED PROJECTS =====
   Widget _buildFeaturedProjectsSection(BuildContext context, bool isMobile, bool isTablet) {
     final projects = [
@@ -375,57 +304,46 @@ class AboutPage extends StatelessWidget {
       },
     ];
 
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 24 : 40,
-        horizontal: isMobile ? 16 : 24,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
-            children: [
-              Text(
-                'Featured Work',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: isMobile ? 22 : 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Representative projects across our divisions',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: isMobile ? 13 : 14,
-                      color: const Color(0xFF6B7280),
-                    ),
-              ),
-              const SizedBox(height: 32),
-              if (isMobile)
-                Column(
-                  children: projects
-                      .map((project) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _buildFeaturedProjectCard(context, project, isMobile),
-                          ))
-                      .toList(),
-                )
-              else
-                Row(
-                  children: projects
-                      .map((project) => Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              child: _buildFeaturedProjectCard(context, project, isMobile),
-                            ),
-                          ))
-                      .toList(),
-                ),
-            ],
+    return SectionWrapper(
+      background: Palette.n0,
+      child: Column(
+        children: [
+          const SectionHeader(
+            title: 'Featured Work',
+            subtitle: 'Representative projects across our divisions',
           ),
-        ),
+          const SizedBox(height: Space.xl),
+          if (isMobile)
+            Column(
+              children: projects
+                  .asMap()
+                  .entries
+                  .map((entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: Space.md),
+                        child: RevealOnScroll(
+                          delayMs: 60 * entry.key,
+                          child: _buildFeaturedProjectCard(context, entry.value, isMobile),
+                        ),
+                      ))
+                  .toList(),
+            )
+          else
+            Row(
+              children: projects
+                  .asMap()
+                  .entries
+                  .map((entry) => Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: Space.xs),
+                          child: RevealOnScroll(
+                            delayMs: 60 * entry.key,
+                            child: _buildFeaturedProjectCard(context, entry.value, isMobile),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+        ],
       ),
     );
   }
@@ -435,40 +353,42 @@ class AboutPage extends StatelessWidget {
     Map<String, dynamic> project,
     bool isMobile,
   ) {
-    return Card(
+    return AppCard(
+      interactive: false,
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            height: isMobile ? 180 : 200,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(project['image']),
-                fit: BoxFit.cover,
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(Radii.lg)),
+            child: Container(
+              height: isMobile ? 180 : 200,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(project['image']),
+                  fit: BoxFit.cover,
+                ),
+                color: Palette.n200,
               ),
-              color: Colors.grey[200],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(Space.sm),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   project['division'],
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF2563EB),
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelSmall
+                      ?.copyWith(color: Palette.primary),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: Space.xxs),
                 Text(
                   project['title'],
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isMobile ? 14 : 15,
-                      ),
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
               ],
             ),

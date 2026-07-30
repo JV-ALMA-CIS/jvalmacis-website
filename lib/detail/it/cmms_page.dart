@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/header.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/responsive_utils.dart';
+import '../../widgets/app_buttons.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/section.dart';
+import '../../widgets/reveal_on_scroll.dart';
+import '../../design/palette.dart';
+import '../../design/tokens.dart';
 
 class CmmsPage extends StatelessWidget {
   const CmmsPage({super.key});
@@ -12,7 +18,7 @@ class CmmsPage extends StatelessWidget {
     {
       'role': 'JV Admin',
       'icon': LucideIcons.shieldCheck,
-      'color': Color(0xFF7C3AED),
+      'color': Palette.it,
       'responsibilities': [
         'Approves client and JV employee registrations',
         'Grants or denies access based on employee functions',
@@ -23,7 +29,7 @@ class CmmsPage extends StatelessWidget {
     {
       'role': 'JV Employees',
       'icon': LucideIcons.users,
-      'color': Color(0xFF2563EB),
+      'color': Palette.construction,
       'responsibilities': [
         'Create work orders from client requests',
         'Upload, view, edit, or download documentation',
@@ -34,7 +40,7 @@ class CmmsPage extends StatelessWidget {
     {
       'role': 'Clients',
       'icon': LucideIcons.building2,
-      'color': Color(0xFF059669),
+      'color': Palette.success,
       'responsibilities': [
         'Submit work requests for facility maintenance',
         'View approved documentation and drawings',
@@ -45,7 +51,7 @@ class CmmsPage extends StatelessWidget {
     {
       'role': 'Contractors',
       'icon': LucideIcons.hardHat,
-      'color': Color(0xFFEA580C),
+      'color': Palette.oilGas,
       'responsibilities': [
         'Access assigned work orders',
         'Update work progress and completion status',
@@ -96,7 +102,7 @@ class CmmsPage extends StatelessWidget {
   Future<void> _openPlayStore(BuildContext context) async {
     try {
       debugPrint('CmmsPage: Opening Google Play Store');
-      
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -114,20 +120,20 @@ class CmmsPage extends StatelessWidget {
       );
 
       const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.jvalmacis.cmms';
-      
+
       if (await canLaunchUrl(Uri.parse(playStoreUrl))) {
         await launchUrl(
           Uri.parse(playStoreUrl),
           mode: LaunchMode.externalApplication,
         );
-        
+
         if (context.mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Opening Google Play Store...'),
               duration: Duration(seconds: 3),
-              backgroundColor: Colors.purple,
+              backgroundColor: Palette.it,
             ),
           );
         }
@@ -138,21 +144,21 @@ class CmmsPage extends StatelessWidget {
             const SnackBar(
               content: Text('Could not open Play Store. Please try again.'),
               duration: Duration(seconds: 3),
-              backgroundColor: Colors.orange,
+              backgroundColor: Palette.danger,
             ),
           );
         }
       }
     } catch (e) {
       debugPrint('CmmsPage: Play Store redirect error: $e');
-      
+
       if (context.mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Error redirecting to Play Store. Please visit the Play Store manually.'),
             duration: Duration(seconds: 3),
-            backgroundColor: Colors.orange,
+            backgroundColor: Palette.danger,
           ),
         );
       }
@@ -169,80 +175,12 @@ class CmmsPage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0F172A),
-                    Color(0xFF1E293B),
-                  ],
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 24 : 48,
-                horizontal: isMobile ? 8 : 16,
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        LucideIcons.arrowLeft,
-                        color: Colors.white,
-                        size: isMobile ? 20 : 24,
-                      ),
-                      onPressed: () {
-                        debugPrint('CmmsPage: Navigating back');
-                        Navigator.pop(context);
-                      },
-                      tooltip: 'Back',
-                    ),
-                    Expanded(
-                      child: Container(
-                        constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 896),
-                        child: Column(
-                          children: [
-                            Text(
-                              'NyumbaSmart - CMMS',
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    fontSize: isMobile ? 24 : 32,
-                                    color: Colors.white,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Facility Management Platform',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: isMobile ? 14 : 16,
-                                    color: const Color(0xFFBFDBFE),
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: isMobile ? 16 : 24,
-                horizontal: isMobile ? 12 : 16,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: _buildContent(context, screenWidth, isMobile),
-                ),
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+            _buildHeroSection(context, isMobile, screenWidth),
+            _buildRolesSection(context, isMobile),
+            _buildSecuritySection(context, isMobile),
+            _buildFeaturesSection(context, isMobile, screenWidth),
+            _buildMediaSection(context, isMobile, screenWidth),
+            _buildDownloadSection(context, isMobile),
             const Footer(),
           ],
         ),
@@ -250,412 +188,139 @@ class CmmsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, double screenWidth, bool isMobile) {
-    final isTablet = screenWidth >= ResponsiveUtils.mobileBreakpoint &&
-        screenWidth <= ResponsiveUtils.tabletBreakpoint;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'NyumbaSmart - CMMS',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: isMobile ? 20 : 24,
-                color: const Color(0xFF1F2937),
+  Widget _buildHeroSection(BuildContext context, bool isMobile, double screenWidth) {
+    return Container(
+      decoration: const BoxDecoration(gradient: Palette.heroSurface),
+      padding: Space.sectionPad(isMobile),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: Icon(
+                LucideIcons.arrowLeft,
+                color: Palette.n0,
+                size: isMobile ? 20 : 24,
               ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Comprehensive facility management platform with secure, role-based access to manage multiple facilities efficiently.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: isMobile ? 12 : 14,
-                color: const Color(0xFF4B5563),
-              ),
-        ),
-        const SizedBox(height: 24),
-
-        // User Roles Section
-        Text(
-          'User Roles & Permissions',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 16 : 18,
-                color: const Color(0xFF1F2937),
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 12),
-        
-        // User Role Cards - True side-by-side layout
-        if (isMobile)
-          // Mobile: Stack vertically
-          Column(
-            children: _userRoles.map((role) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildRoleCard(context, role, isMobile, isTablet),
-            )).toList(),
-          )
-        else
-          // Desktop/Tablet: True side-by-side (2 rows of 2 cards each)
-          Column(
-            children: [
-              // Row 1: JV Admin + JV Employees
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildRoleCard(context, _userRoles[0], isMobile, isTablet)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildRoleCard(context, _userRoles[1], isMobile, isTablet)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Row 2: Clients + Contractors
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildRoleCard(context, _userRoles[2], isMobile, isTablet)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildRoleCard(context, _userRoles[3], isMobile, isTablet)),
-                ],
-              ),
-            ],
-          ),
-        const SizedBox(height: 24),
-
-        // Facility Selection Section - Compact
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.blue[50],
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.blue[200]!),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(LucideIcons.building2, color: Colors.blue[700], size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Facility Selection on Login',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: isMobile ? 13 : 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue[900],
-                        ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Users select their facility (Houses, Garages, Storerooms, Office Buildings, etc.) and only access authorized data, ensuring complete security.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: isMobile ? 11 : 12,
-                      color: Colors.blue[800],
-                      height: 1.3,
-                    ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // Security Features - True side-by-side
-        Text(
-          'Security & Access Control',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 16 : 18,
-                color: const Color(0xFF1F2937),
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 12),
-        
-        if (isMobile)
-          Column(
-            children: _securityFeatures.map((feature) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildSecurityCard(context, feature, isMobile),
-            )).toList(),
-          )
-        else
-          Column(
-            children: [
-              // Row 1
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildSecurityCard(context, _securityFeatures[0], isMobile)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildSecurityCard(context, _securityFeatures[1], isMobile)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Row 2
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildSecurityCard(context, _securityFeatures[2], isMobile)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildSecurityCard(context, _securityFeatures[3], isMobile)),
-                ],
-              ),
-            ],
-          ),
-        const SizedBox(height: 24),
-
-        // Core Features - Compact grid
-        Text(
-          'Core Features',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 14 : 16,
-                color: const Color(0xFF1F2937),
-              ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: isMobile ? 8 : 12,
-          runSpacing: 8,
-          children: _features.map((feature) {
-            return Container(
-              width: isMobile ? screenWidth * 0.9 : (screenWidth / (isTablet ? 2 : 4)) - 16,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.purple[200]!),
-                boxShadow: const [
-                  BoxShadow(
-                    color:  Color(0x1A9E9E9E),
-                    blurRadius: 3,
-                    offset: Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(feature['icon'] as IconData, size: 20, color: Colors.purple[600]),
-                  const SizedBox(height: 6),
-                  Text(
-                    feature['title']!,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: isMobile ? 11 : 12,
-                      color: const Color(0xFF1F2937),
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    feature['description']!,
-                    style: TextStyle(
-                      fontSize: isMobile ? 10 : 11,
-                      color: const Color(0xFF4B5563),
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 20),
-
-        // Media Section
-        Text(
-          'Platform Views',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: isMobile ? 14 : 16,
-                color: const Color(0xFF1F2937),
-              ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: isMobile ? 12 : 16,
-          runSpacing: 12,
-          alignment: WrapAlignment.center,
-          children: _media.map((media) {
-            return SizedBox(
-              width: isMobile ? screenWidth * 0.9 : screenWidth * (isTablet ? 0.45 : 0.3),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (media['type'] == 'image')
-                    Semantics(
-                      image: true,
-                      label: media['description'],
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: SizedBox(
-                          height: isMobile ? 200 : 300,
-                          child: Image.asset(
-                            media['path']!,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: Colors.grey[200],
-                              child: const Center(
-                                child: Icon(LucideIcons.imageOff, color: Colors.grey),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      media['description']!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: isMobile ? 12 : 14,
-                            color: const Color(0xFF4B5563),
-                          ),
+              onPressed: () {
+                debugPrint('CmmsPage: Navigating back');
+                Navigator.pop(context);
+              },
+              tooltip: 'Back',
+            ),
+            Expanded(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 896),
+                child: Column(
+                  children: [
+                    Text(
+                      'NyumbaSmart - CMMS',
+                      style: (isMobile
+                              ? Theme.of(context).textTheme.headlineLarge
+                              : Theme.of(context).textTheme.displaySmall)
+                          ?.copyWith(color: Palette.n0),
                       textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 20),
-
-        // Download Section - Prominent
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.purple[600]!,
-                Colors.purple[800]!,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.purple.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              const Icon(LucideIcons.database, size: 48, color: Colors.white),
-              const SizedBox(height: 12),
-              Text(
-                'Get NyumbaSmart - CMMS',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontSize: isMobile ? 18 : 22,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: Space.xs),
+                    Text(
+                      'Facility Management Platform',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                      textAlign: TextAlign.center,
                     ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Download from Google Play Store. JV Admin approval required after login.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: isMobile ? 13 : 15,
-                      color: const Color(0xE6FFFFFF),
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: isMobile ? double.infinity : 300,
-                child: ElevatedButton.icon(
-                  onPressed: () => _openPlayStore(context),
-                  icon: const Icon(LucideIcons.download, size: 20),
-                  label: Text(
-                    'Get from Play Store',
-                    style: TextStyle(
-                      fontSize: isMobile ? 15 : 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.purple[800],
-                    padding: EdgeInsets.symmetric(
-                      vertical: isMobile ? 14 : 18,
-                      horizontal: 24,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildRoleCard(BuildContext context, Map<String, dynamic> role, bool isMobile, bool isTablet) {
-    final color = role['color'] as Color;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+  Widget _buildRolesSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      topRule: Palette.it,
+      background: Palette.n0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            align: TextAlign.start,
+            accent: Palette.it,
+            title: 'User Roles & Permissions',
+            subtitle: 'Comprehensive facility management platform with secure, role-based access to manage multiple facilities efficiently.',
           ),
+          const SizedBox(height: Space.xl),
+          if (isMobile)
+            Column(
+              children: _userRoles.asMap().entries.map((entry) => Padding(
+                padding: const EdgeInsets.only(bottom: Space.md),
+                child: RevealOnScroll(
+                  delayMs: 60 * entry.key,
+                  child: _buildRoleCard(context, entry.value, isMobile),
+                ),
+              )).toList(),
+            )
+          else
+            Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: RevealOnScroll(delayMs: 0, child: _buildRoleCard(context, _userRoles[0], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 60, child: _buildRoleCard(context, _userRoles[1], isMobile))),
+                  ],
+                ),
+                const SizedBox(height: Space.md),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: RevealOnScroll(delayMs: 120, child: _buildRoleCard(context, _userRoles[2], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 180, child: _buildRoleCard(context, _userRoles[3], isMobile))),
+                  ],
+                ),
+              ],
+            ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRoleCard(BuildContext context, Map<String, dynamic> role, bool isMobile) {
+    final color = role['color'] as Color;
+    return AppCard(
+      accent: color,
+      interactive: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(role['icon'] as IconData, color: color, size: isMobile ? 18 : 20),
-              ),
-              const SizedBox(width: 10),
+              IconChip(icon: role['icon'] as IconData, color: color, size: isMobile ? 18 : 20),
+              const SizedBox(width: Space.sm),
               Expanded(
                 child: Text(
                   role['role'] as String,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: isMobile ? 13 : 15,
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: color),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: Space.sm),
           ...(role['responsibilities'] as List<String>).map((resp) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.only(bottom: Space.xs),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(LucideIcons.checkCircle2, size: 14, color: color),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: Space.xs),
                     Expanded(
                       child: Text(
                         resp,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: isMobile ? 10 : 12,
-                              color: const Color(0xFF4B5563),
-                              height: 1.3,
-                            ),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
                   ],
@@ -666,44 +331,271 @@ class CmmsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSecurityCard(BuildContext context, Map<String, String> feature, bool isMobile) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.red[50],
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.red[200]!),
+  Widget _buildSecuritySection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppCard(
+            interactive: false,
+            accent: Palette.primary,
+            padding: const EdgeInsets.all(Space.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(LucideIcons.building2, color: Palette.primary, size: 20),
+                    const SizedBox(width: Space.xs),
+                    Text(
+                      'Facility Selection on Login',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Palette.primaryHover),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Space.xs),
+                Text(
+                  'Users select their facility (Houses, Garages, Storerooms, Office Buildings, etc.) and only access authorized data, ensuring complete security.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: Space.xl),
+          const SectionHeader(
+            align: TextAlign.start,
+            accent: Palette.it,
+            title: 'Security & Access Control',
+          ),
+          const SizedBox(height: Space.lg),
+          if (isMobile)
+            Column(
+              children: _securityFeatures.asMap().entries.map((entry) => Padding(
+                padding: const EdgeInsets.only(bottom: Space.md),
+                child: RevealOnScroll(
+                  delayMs: 60 * entry.key,
+                  child: _buildSecurityCard(context, entry.value, isMobile),
+                ),
+              )).toList(),
+            )
+          else
+            Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: RevealOnScroll(delayMs: 0, child: _buildSecurityCard(context, _securityFeatures[0], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 60, child: _buildSecurityCard(context, _securityFeatures[1], isMobile))),
+                  ],
+                ),
+                const SizedBox(height: Space.md),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: RevealOnScroll(delayMs: 120, child: _buildSecurityCard(context, _securityFeatures[2], isMobile))),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: RevealOnScroll(delayMs: 180, child: _buildSecurityCard(context, _securityFeatures[3], isMobile))),
+                  ],
+                ),
+              ],
+            ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildSecurityCard(BuildContext context, Map<String, String> feature, bool isMobile) {
+    return AppCard(
+      interactive: false,
+      accent: Palette.danger,
+      padding: const EdgeInsets.all(Space.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(LucideIcons.shield, size: 18, color: Colors.red[700]),
-              const SizedBox(width: 8),
+              const Icon(LucideIcons.shield, size: 18, color: Palette.danger),
+              const SizedBox(width: Space.xs),
               Expanded(
                 child: Text(
                   feature['title']!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isMobile ? 12 : 13,
-                        color: Colors.red[900],
-                      ),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Palette.danger),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: Space.xs),
           Text(
             feature['description']!,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: isMobile ? 10 : 12,
-                  color: Colors.red[800],
-                  height: 1.3,
-                ),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFeaturesSection(BuildContext context, bool isMobile, double screenWidth) {
+    final isTablet = screenWidth >= ResponsiveUtils.mobileBreakpoint &&
+        screenWidth <= ResponsiveUtils.tabletBreakpoint;
+
+    return SectionWrapper(
+      background: Palette.n0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            align: TextAlign.start,
+            accent: Palette.it,
+            title: 'Core Features',
+          ),
+          const SizedBox(height: Space.lg),
+          Wrap(
+            spacing: Space.sm,
+            runSpacing: Space.sm,
+            children: _features.asMap().entries.map((entry) {
+              final feature = entry.value;
+              return SizedBox(
+                width: isMobile ? screenWidth * 0.9 : (screenWidth / (isTablet ? 2 : 4)) - Space.lg,
+                child: RevealOnScroll(
+                  delayMs: 40 * entry.key,
+                  child: AppCard(
+                    interactive: false,
+                    accent: Palette.it,
+                    padding: const EdgeInsets.all(Space.sm),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(feature['icon'] as IconData, size: 20, color: Palette.it),
+                        const SizedBox(height: Space.xs),
+                        Text(
+                          feature['title']!,
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          feature['description']!,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaSection(BuildContext context, bool isMobile, double screenWidth) {
+    final isTablet = screenWidth >= ResponsiveUtils.mobileBreakpoint &&
+        screenWidth <= ResponsiveUtils.tabletBreakpoint;
+
+    return SectionWrapper(
+      background: Palette.n50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            align: TextAlign.start,
+            accent: Palette.it,
+            title: 'Platform Views',
+          ),
+          const SizedBox(height: Space.lg),
+          Wrap(
+            spacing: Space.md,
+            runSpacing: Space.md,
+            alignment: WrapAlignment.center,
+            children: _media.asMap().entries.map((entry) {
+              final media = entry.value;
+              return RevealOnScroll(
+                delayMs: 60 * entry.key,
+                child: SizedBox(
+                  width: isMobile ? screenWidth * 0.9 : screenWidth * (isTablet ? 0.45 : 0.3),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (media['type'] == 'image')
+                        Semantics(
+                          image: true,
+                          label: media['description'],
+                          child: ClipRRect(
+                            borderRadius: Radii.card,
+                            child: SizedBox(
+                              height: isMobile ? 200 : 300,
+                              child: Image.asset(
+                                media['path']!,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  color: Palette.n200,
+                                  child: const Center(
+                                    child: Icon(LucideIcons.imageOff, color: Palette.n500),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: Space.xs),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: Space.xs),
+                        child: Text(
+                          media['description']!,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDownloadSection(BuildContext context, bool isMobile) {
+    return SectionWrapper(
+      background: Palette.n0,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(Space.lg),
+        decoration: BoxDecoration(
+          color: Palette.ink,
+          borderRadius: Radii.card,
+        ),
+        child: Column(
+          children: [
+            const Icon(LucideIcons.database, size: 48, color: Palette.n0),
+            const SizedBox(height: Space.sm),
+            Text(
+              'Get NyumbaSmart - CMMS',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Palette.n0),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: Space.xs),
+            Text(
+              'Download from Google Play Store. JV Admin approval required after login.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: Space.lg),
+            PrimaryButton(
+              text: 'Get from Play Store',
+              icon: LucideIcons.download,
+              onDark: true,
+              large: true,
+              onPressed: () => _openPlayStore(context),
+            ),
+          ],
+        ),
       ),
     );
   }
