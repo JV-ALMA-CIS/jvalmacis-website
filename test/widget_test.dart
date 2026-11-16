@@ -85,7 +85,8 @@ void main() {
 
       final order = [
         find.text('Specialised services. Integrated solutions.'),
-        find.textContaining('A multi-sector group delivering construction services'),
+        find.text('A multi-sector group delivering construction, '
+            'agribusiness solutions, and oil and gas inspection.'),
         find.text('Our areas of expertise'),
         find.text('Experience you can explore'),
         find.text('Looking for a specialised solution?'),
