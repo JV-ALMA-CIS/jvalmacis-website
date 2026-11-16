@@ -1,27 +1,194 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../widgets/header.dart';
 import '../widgets/footer.dart';
 import 'dart:developer' as developer;
 import 'package:url_launcher/url_launcher.dart';
+import '../admin/modules/site_settings/site_settings_model.dart';
+import '../admin/modules/site_settings/site_settings_provider.dart';
 import '../design/palette.dart';
 import '../design/tokens.dart';
-import '../widgets/app_card.dart';
+import '../design/typography.dart';
 import '../widgets/app_buttons.dart';
-import '../widgets/section.dart';
-import '../widgets/reveal_on_scroll.dart';
 import '../widgets/brand_icons.dart';
+import '../widgets/hoverable.dart';
 
-class NewsPage extends StatefulWidget {
+/// A confirmed publication date. [day] is null when only the month is known.
+class _NewsDate {
+  const _NewsDate(this.year, this.month, [this.day]);
+
+  final int year;
+  final int month;
+  final int? day;
+
+  static const _months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  String get label =>
+      day == null ? '${_months[month - 1]} $year' : '${_months[month - 1]} $day, $year';
+
+  /// A month-only date sorts after any specific day in the same month.
+  int get sortKey => year * 10000 + month * 100 + (day ?? 0);
+}
+
+/// One news entry.
+///
+/// News is not CMS-managed: this list is the page's only data source and has
+/// no publication status or detail route. Items with a [url] link out to the
+/// publisher; the rest open their [image] (a scanned clipping) in a dialog.
+/// [date] is set only where the publication date is confirmed. [featured]
+/// is the explicit editorial choice for the featured story.
+class _NewsItem {
+  const _NewsItem({
+    required this.image,
+    required this.title,
+    required this.summary,
+    required this.category,
+    this.date,
+    this.url,
+    this.source,
+    this.featured = false,
+  });
+
+  final String image;
+  final String title;
+  final String summary;
+  final String category;
+  final _NewsDate? date;
+  final String? url;
+  final String? source;
+  final bool featured;
+
+  bool get isExternal => url != null && url!.isNotEmpty;
+
+  String get action => isExternal ? 'Read on ${source ?? 'publisher site'}' : 'View article';
+}
+
+const _newsItems = <_NewsItem>[
+  // The Wei Wei and "giardiniera" clippings show printed dates
+  // (6 March 2020 and 23 November 2023) that the company has not confirmed,
+  // so they are deliberately left undated.
+  _NewsItem(
+    image: 'assets/news/news_2.jpg',
+    title: 'Pastoralists in West Pokot reap big from seed maize farming',
+    summary: 'Transforming lives through agricultural innovation in West Pokot region',
+    category: 'Agriculture',
+  ),
+  _NewsItem(
+    image: 'assets/news/wei_wei_project.jpg',
+    title: 'Wei Wei irrigation scheme to be handed over to pastoralists',
+    summary: 'Empowering communities with sustainable irrigation infrastructure',
+    category: 'Development',
+  ),
+  _NewsItem(
+    image: 'assets/news/italy_project.jpg',
+    title: 'Italian "giardiniera" helps Kenyan farmers',
+    summary: 'International collaboration bringing expertise to local agriculture',
+    category: 'Collaboration',
+  ),
+  _NewsItem(
+    image: 'assets/news/news_3.jpg',
+    title: 'Pastoralists in Baringo Kapluk benefit from seed maize farming',
+    summary: 'Continued success stories from our agricultural development programs',
+    category: 'Agriculture',
+  ),
+  _NewsItem(
+    image: 'assets/news/gourmet_article.jpg',
+    title: 'From Abruzzo to Kenya: The Digital Revolution Transforming African Agriculture',
+    summary:
+        'Technology, training and sustainable agriculture: the story of an Italian company building a development model in East Africa where innovation and social impact grow together.',
+    category: 'Press',
+    date: _NewsDate(2026, 3, 6),
+    url:
+        'https://www.gourmetandtravelmagazine.com/2026/03/06/dallabruzzo-al-kenya-la-rivoluzione-digitale-che-sta-cambiando-lagricoltura-africana/',
+    source: 'Gourmet & Travel Magazine',
+  ),
+  _NewsItem(
+    image: 'assets/news/ilpescara_article.jpg',
+    title:
+        'With JV Almacis, Pescara Native Di Carmine is Leading Agriculture 2.0 in Kenya, Combining Business and Social Development',
+    summary:
+        'How a Pescara entrepreneur built a digital agribusiness model in Kenya, blending technology, sustainability, and social impact across East Africa.',
+    category: 'Press',
+    date: _NewsDate(2026, 3),
+    url:
+        'https://www.ilpescara.it/attualita/piergiorgio-di-carmine-jv-almacis-kenya-agricoltura-digitale.html',
+    source: 'Il Pescara',
+    // Featured: a genuine field photograph from the story itself.
+    featured: true,
+  ),
+];
+
+/// Newest confirmed date first; undated items follow in their original
+/// order, never ahead of a dated one.
+List<_NewsItem> _orderedNews(List<_NewsItem> items) {
+  final indexed = items.indexed.toList()
+    ..sort((a, b) {
+      final da = a.$2.date;
+      final db = b.$2.date;
+      if (da != null && db != null) {
+        final byDate = db.sortKey.compareTo(da.sortKey);
+        if (byDate != 0) return byDate;
+      } else if (da != null) {
+        return -1;
+      } else if (db != null) {
+        return 1;
+      }
+      return a.$1.compareTo(b.$1);
+    });
+  return [for (final (_, item) in indexed) item];
+}
+
+/// Shared column for every section on this page: white ground, site gutter,
+/// one editorial width so the header, featured story and list share edges.
+class _PageColumn extends StatelessWidget {
+  const _PageColumn({required this.child, required this.padding});
+
+  final Widget child;
+  final EdgeInsets padding;
+
+  static const maxWidth = 1080.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    return Container(
+      width: double.infinity,
+      color: Palette.n0,
+      padding: padding.add(EdgeInsets.symmetric(horizontal: isMobile ? 20 : Space.lg)),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: maxWidth),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class NewsPage extends ConsumerStatefulWidget {
   const NewsPage({super.key});
 
   @override
-  State<NewsPage> createState() => _NewsPageState();
+  ConsumerState<NewsPage> createState() => _NewsPageState();
 }
 
-class _NewsPageState extends State<NewsPage> {
+class _NewsPageState extends ConsumerState<NewsPage> {
   @override
   void initState() {
     super.initState();
@@ -82,6 +249,7 @@ class _NewsPageState extends State<NewsPage> {
                         child: Image.asset(
                           imageUrl,
                           fit: BoxFit.contain,
+                          semanticLabel: title,
                           errorBuilder: (context, error, stackTrace) => Container(
                             height: 200,
                             color: Palette.n200,
@@ -99,6 +267,7 @@ class _NewsPageState extends State<NewsPage> {
                 top: Space.xs,
                 right: Space.xs,
                 child: IconButton(
+                  tooltip: 'Close',
                   icon: Container(
                     padding: const EdgeInsets.all(Space.xxs),
                     decoration: BoxDecoration(
@@ -117,65 +286,24 @@ class _NewsPageState extends State<NewsPage> {
     );
   }
 
+  void _open(_NewsItem item) {
+    if (item.isExternal) {
+      _launchUrl(item.url!);
+    } else {
+      _showImageDialog(item.image, item.title);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final settings = ref.watch(siteSettingsProvider).valueOrNull ?? defaultSiteSettings;
 
-    final newsItems = [
-      {
-        'image': 'assets/news/news_2.jpg',
-        'title': 'Pastoralists in West Pokot reap big from seed maize farming',
-        'excerpt': 'Transforming lives through agricultural innovation in West Pokot region',
-        'date': 'Project Highlight',
-        'category': 'Agriculture',
-        'color': Palette.agribusiness,
-      },
-      {
-        'image': 'assets/news/wei_wei_project.jpg',
-        'title': 'Wei Wei irrigation scheme to be handed over to pastoralists',
-        'excerpt': 'Empowering communities with sustainable irrigation infrastructure',
-        'date': 'Infrastructure',
-        'category': 'Development',
-        'color': Palette.construction,
-      },
-      {
-        'image': 'assets/news/italy_project.jpg',
-        'title': 'Italian "giardiniera" helps Kenyan farmers',
-        'excerpt': 'International collaboration bringing expertise to local agriculture',
-        'date': 'Partnership',
-        'category': 'Collaboration',
-        'color': Palette.danger,
-      },
-      {
-        'image': 'assets/news/news_3.jpg',
-        'title': 'Pastoralists in Baringo Kapluk benefit from seed maize farming',
-        'excerpt': 'Continued success stories from our agricultural development programs',
-        'date': 'Impact Story',
-        'category': 'Agriculture',
-        'color': Palette.it,
-      },
-      {
-        'image': 'assets/news/gourmet_article.jpg',
-        'title': 'From Abruzzo to Kenya: The Digital Revolution Transforming African Agriculture',
-        'excerpt': 'Technology, training and sustainable agriculture: the story of an Italian company building a development model in East Africa where innovation and social impact grow together.',
-        'date': 'March 6, 2026',
-        'category': 'Press',
-        'color': Palette.agribusiness,
-        'url': 'https://www.gourmetandtravelmagazine.com/2026/03/06/dallabruzzo-al-kenya-la-rivoluzione-digitale-che-sta-cambiando-lagricoltura-africana/',
-        'source': 'Gourmet & Travel Magazine',
-      },
-      {
-        'image': 'assets/news/ilpescara_article.jpg',
-        'title': 'With JV Almacis, Pescara Native Di Carmine is Leading Agriculture 2.0 in Kenya, Combining Business and Social Development',
-        'excerpt': 'How a Pescara entrepreneur built a digital agribusiness model in Kenya, blending technology, sustainability, and social impact across East Africa.',
-        'date': 'March 2026',
-        'category': 'Press',
-        'color': Palette.construction,
-        'url': 'https://www.ilpescara.it/attualita/piergiorgio-di-carmine-jv-almacis-kenya-agricoltura-digitale.html',
-        'source': 'Il Pescara',
-      },
+    final ordered = _orderedNews(_newsItems);
+    final featured = ordered.where((n) => n.featured && n.image.isNotEmpty).firstOrNull;
+    final listing = [
+      for (final n in ordered)
+        if (!identical(n, featured)) n
     ];
 
     return AppScaffold(
@@ -184,138 +312,38 @@ class _NewsPageState extends State<NewsPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Hero Section
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(gradient: Palette.heroSurface),
-              padding: Space.sectionPad(isMobile),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1000),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        LucideIcons.newspaper,
-                        size: isMobile ? 40 : 56,
-                        color: Palette.n0,
-                      ),
-                      const SizedBox(height: Space.md),
-                      Text(
-                        'News & Updates',
-                        style: (isMobile
-                                ? Theme.of(context).textTheme.headlineLarge
-                                : Theme.of(context).textTheme.displaySmall)
-                            ?.copyWith(color: Palette.n0),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: Space.sm),
-                      Text(
-                        'Stay informed about JV ALMA C.I.S\'s latest achievements, project milestones, and industry insights',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
-                            ?.copyWith(color: Colors.white70),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
+            // 01 — Page header: neutral ground, hierarchy from type alone.
+            _PageColumn(
+              padding: EdgeInsets.only(
+                top: isMobile ? Space.xxl : Space.section - Space.lg,
+                bottom: isMobile ? Space.xl : Space.xxl,
+              ),
+              child: const _PageHeader(),
+            ),
+
+            // 02 — Featured story, only when one is explicitly marked.
+            if (featured != null)
+              _PageColumn(
+                padding: EdgeInsets.only(bottom: isMobile ? Space.xxl : Space.xxxl),
+                child: _FeaturedStory(item: featured, onOpen: () => _open(featured)),
+              ),
+
+            // 03 — Article listing.
+            _PageColumn(
+              padding: EdgeInsets.only(bottom: isMobile ? Space.xxl : Space.xxxl),
+              child: _ArticleList(
+                items: listing,
+                heading: featured != null ? 'More news' : 'Latest news',
+                onOpen: _open,
               ),
             ),
 
-            // News Grid Section
-            SectionWrapper(
-              background: Palette.n0,
-              child: Column(
-                children: [
-                  const SectionHeader(
-                    title: 'Latest Stories',
-                    subtitle: 'Highlights from our recent projects and initiatives',
-                  ),
-                  const SizedBox(height: Space.xxl),
-
-                  // News Cards Grid
-                  Wrap(
-                    spacing: Space.lg,
-                    runSpacing: Space.lg,
-                    children: newsItems.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      return SizedBox(
-                        width: isMobile
-                            ? double.infinity
-                            : isTablet
-                                ? (screenWidth - 64) / 2
-                                : (screenWidth - 96) / 2,
-                        child: RevealOnScroll(
-                          delayMs: 60 * index,
-                          child: _buildNewsCard(
-                            context,
-                            isMobile,
-                            item['image'] as String,
-                            item['title'] as String,
-                            item['excerpt'] as String,
-                            item['date'] as String,
-                            item['category'] as String,
-                            item['color'] as Color,
-                            externalUrl: item['url'] as String?,
-                            source: item['source'] as String?,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-
-            // Stay Updated Section
-            SectionWrapper(
-              background: Palette.n50,
-              maxWidth: 800,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(Space.md),
-                    decoration: BoxDecoration(
-                      color: Palette.n0,
-                      borderRadius: Radii.chip,
-                      boxShadow: Elevation.card,
-                    ),
-                    child: Icon(
-                      LucideIcons.bell,
-                      size: isMobile ? 32 : 40,
-                      color: Palette.primary,
-                    ),
-                  ),
-                  const SizedBox(height: Space.lg),
-                  const SectionHeader(
-                    title: 'Stay Connected',
-                    subtitle:
-                        'Follow us on social media for real-time updates, behind-the-scenes content, and more stories from JV ALMA C.I.S',
-                  ),
-                  const SizedBox(height: Space.xl),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildSocialButton(
-                        context,
-                        'LinkedIn',
-                        BrandIcons.linkedin,
-                        () => _launchUrl('https://www.linkedin.com/company/jvalmacis/'),
-                      ),
-                      const SizedBox(width: Space.md),
-                      _buildSocialButton(
-                        context,
-                        'Instagram',
-                        BrandIcons.instagram,
-                        () => _launchUrl('https://www.instagram.com/jvalmacis/'),
-                      ),
-                    ],
-                  ),
-                ],
+            // Social accounts, from the same site settings as the footer.
+            _PageColumn(
+              padding: EdgeInsets.only(bottom: isMobile ? Space.xxl : Space.xxxl),
+              child: _FollowUs(
+                onLinkedIn: () => _launchUrl(settings.linkedinUrl),
+                onInstagram: () => _launchUrl(settings.instagramUrl),
               ),
             ),
 
@@ -325,174 +353,372 @@ class _NewsPageState extends State<NewsPage> {
       ),
     );
   }
+}
 
-  Widget _buildNewsCard(
-    BuildContext context,
-    bool isMobile,
-    String imageUrl,
-    String title,
-    String excerpt,
-    String date,
-    String category,
-    Color categoryColor, {
-    String? externalUrl,
-    String? source,
-  }) {
-    final bool isExternal = externalUrl != null && externalUrl.isNotEmpty;
-    return AppCard(
-      onTap: () {
-        if (isExternal) {
-          _launchUrl(externalUrl);
-        } else {
-          _showImageDialog(imageUrl, title);
-        }
-      },
-      accent: categoryColor,
-      padding: EdgeInsets.zero,
-      semanticLabel: title,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Image Section
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(Radii.lg)),
-                child: Image.asset(
-                  imageUrl,
-                  width: double.infinity,
-                  height: isMobile ? 200 : 240,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: double.infinity,
-                    height: isMobile ? 200 : 240,
-                    color: Palette.n200,
-                    child: const Center(
-                      child: Icon(LucideIcons.imageOff, color: Palette.n400, size: 48),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: Space.sm,
-                left: Space.sm,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xxs),
-                  decoration: BoxDecoration(
-                    color: categoryColor,
-                    borderRadius: Radii.chip,
-                  ),
-                  child: Text(
-                    category,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Palette.n0,
-                        ),
-                  ),
-                ),
-              ),
-              if (isExternal)
-                Positioned(
-                  top: Space.sm,
-                  right: Space.sm,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: Space.xs, vertical: Space.xxs),
-                    decoration: BoxDecoration(
-                      color: Palette.n0.withValues(alpha: 0.9),
-                      borderRadius: Radii.chip,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(LucideIcons.externalLink, size: 12, color: categoryColor),
-                        const SizedBox(width: Space.xxs),
-                        Text(
-                          'External',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: categoryColor,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+class _PageHeader extends StatelessWidget {
+  const _PageHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'News & Updates',
+          style: AppType.theme.displayMedium?.copyWith(
+            fontSize: AppType.fluid(context, min: 34, max: 48),
           ),
+        ),
+        const SizedBox(height: Space.md),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: Space.proseMax),
+          child: Text(
+            'Company announcements, developments and updates from across the group.',
+            style: AppType.theme.bodyLarge,
+          ),
+        ),
+        SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? Space.xl : Space.xxl),
+        const Divider(height: 1, thickness: 1, color: Palette.ink),
+      ],
+    );
+  }
+}
 
-          // Content Section
-          Padding(
-            padding: EdgeInsets.all(isMobile ? Space.md : Space.lg),
+/// Category in brand blue, then the confirmed date if there is one.
+class _Meta extends StatelessWidget {
+  const _Meta({required this.item});
+
+  final _NewsItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final small = Theme.of(context).textTheme.bodySmall;
+    return Wrap(
+      spacing: Space.xs,
+      runSpacing: Space.xxs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(item.category.toUpperCase(), style: AppType.eyebrow(Palette.primary)),
+        if (item.date != null) ...[
+          Text('·', style: small),
+          Text(item.date!.label, style: small),
+        ],
+      ],
+    );
+  }
+}
+
+class _NewsImage extends StatelessWidget {
+  const _NewsImage({
+    required this.item,
+    required this.aspectRatio,
+    required this.decodeWidth,
+    this.radius = Radii.sm,
+  });
+
+  final _NewsItem item;
+  final double aspectRatio;
+  final double decodeWidth;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: aspectRatio,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: ColoredBox(
+          color: Palette.n100,
+          child: Image.asset(
+            item.image,
+            fit: BoxFit.cover,
+            // Many images are scanned clippings; anchoring to the top keeps
+            // the printed headline in frame.
+            alignment: Alignment.topCenter,
+            // Decode at display size rather than full resolution.
+            cacheWidth: (decodeWidth * MediaQuery.devicePixelRatioOf(context)).round(),
+            excludeFromSemantics: true,
+            errorBuilder: (context, error, stackTrace) => const Center(
+              child: Icon(LucideIcons.imageOff, color: Palette.n400, size: 32),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Wide image beside the story on desktop, image over text on narrow
+/// screens. Larger headline and summary than the list, no card chrome.
+class _FeaturedStory extends StatelessWidget {
+  const _FeaturedStory({required this.item, required this.onOpen});
+
+  final _NewsItem item;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final image = Hoverable(
+      onTap: onOpen,
+      scale: 1.0,
+      lift: 0,
+      semanticLabel: '${item.title}. ${item.action}',
+      builder: (_) =>
+          _NewsImage(item: item, aspectRatio: 3 / 2, decodeWidth: 720, radius: Radii.md),
+    );
+
+    final credit = item.isExternal
+        ? Padding(
+            padding: const EdgeInsets.only(top: Space.xs),
+            child: Text(
+              'Image: ${item.source}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          )
+        : const SizedBox.shrink();
+
+    final story = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('FEATURED', style: AppType.eyebrow(Palette.n500)),
+        const SizedBox(height: Space.md),
+        _Meta(item: item),
+        const SizedBox(height: Space.sm),
+        Text(
+          item.title,
+          style: AppType.theme.headlineLarge?.copyWith(
+            fontSize: AppType.fluid(context, min: 24, max: 30),
+          ),
+        ),
+        const SizedBox(height: Space.md),
+        Text(item.summary, style: AppType.theme.bodyLarge),
+        const SizedBox(height: Space.lg),
+        SecondaryButton(
+          text: item.action,
+          icon: item.isExternal ? LucideIcons.externalLink : LucideIcons.arrowRight,
+          onPressed: onOpen,
+        ),
+      ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 820) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 7,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [image, credit],
+                ),
+              ),
+              const SizedBox(width: Space.xxl),
+              Expanded(flex: 5, child: story),
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [image, credit, const SizedBox(height: Space.lg), story],
+        );
+      },
+    );
+  }
+}
+
+class _ArticleList extends StatelessWidget {
+  const _ArticleList({required this.items, required this.heading, required this.onOpen});
+
+  final List<_NewsItem> items;
+  final String heading;
+  final void Function(_NewsItem) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+
+    if (items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: Space.xxl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('No news has been published yet.', style: text.titleLarge),
+            const SizedBox(height: Space.xs),
+            Text('Please check back soon.', style: text.bodyMedium),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(heading, style: text.headlineSmall),
+        const SizedBox(height: Space.md),
+        const Divider(height: 1, thickness: 1, color: Palette.n200),
+        for (final item in items) ...[
+          _ArticleRow(item: item, onOpen: () => onOpen(item)),
+          const Divider(height: 1, thickness: 1, color: Palette.n200),
+        ],
+      ],
+    );
+  }
+}
+
+/// Wide: thumbnail, then text. Narrow: text with a small square thumbnail
+/// on the right, so the list stays scannable on a phone.
+class _ArticleRow extends StatelessWidget {
+  const _ArticleRow({required this.item, required this.onOpen});
+
+  final _NewsItem item;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+
+    return Hoverable(
+      onTap: onOpen,
+      scale: 1.0,
+      lift: 0,
+      semanticLabel: '${item.title}. ${item.action}',
+      builder: (hovered) => LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 640;
+
+          final details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _Meta(item: item),
+              const SizedBox(height: Space.xs),
+              AnimatedDefaultTextStyle(
+                duration: Motion.fast,
+                curve: Motion.hover,
+                style: (wide ? text.headlineSmall : text.titleLarge)!.copyWith(
+                  color: hovered ? Palette.primary : Palette.ink,
+                ),
+                child: Text(item.title),
+              ),
+              const SizedBox(height: Space.xs),
+              Text(
+                item.summary,
+                style: wide ? text.bodyMedium : text.bodySmall,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: Space.sm),
+              // Icon flows inline so it stays beside the text when it wraps.
+              Text.rich(
+                TextSpan(
+                  text: '${item.action} ',
+                  style: text.labelLarge?.copyWith(
+                    color: Palette.primary,
+                    height: 1.4,
+                    decoration: hovered ? TextDecoration.underline : null,
+                    decorationColor: Palette.primary,
+                  ),
+                  children: [
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: Icon(
+                        item.isExternal ? LucideIcons.externalLink : LucideIcons.arrowRight,
+                        size: 15,
+                        color: Palette.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: wide ? Space.lg : Space.md),
+            child: wide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 200,
+                        child: _NewsImage(item: item, aspectRatio: 4 / 3, decodeWidth: 400),
+                      ),
+                      const SizedBox(width: Space.xl),
+                      Expanded(child: details),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: details),
+                      const SizedBox(width: Space.md),
+                      SizedBox(
+                        width: 88,
+                        child: _NewsImage(item: item, aspectRatio: 1, decodeWidth: 176),
+                      ),
+                    ],
+                  ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FollowUs extends StatelessWidget {
+  const _FollowUs({required this.onLinkedIn, required this.onInstagram});
+
+  final VoidCallback onLinkedIn;
+  final VoidCallback onInstagram;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(Space.lg),
+      decoration: BoxDecoration(
+        color: Palette.n50,
+        borderRadius: BorderRadius.circular(Radii.md),
+        border: Border.all(color: Palette.n200),
+      ),
+      child: Wrap(
+        spacing: Space.lg,
+        runSpacing: Space.md,
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.tag,
-                      size: 14,
-                      color: Palette.n400,
-                    ),
-                    const SizedBox(width: Space.xxs + 2),
-                    Text(
-                      date,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Palette.n400,
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: Space.sm),
+                Text('Follow JV ALMA C.I.S', style: text.titleLarge),
+                const SizedBox(height: Space.xxs),
                 Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: Space.xs),
-                Text(
-                  excerpt,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Palette.n600,
-                        height: 1.5,
-                      ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: Space.md),
-                Row(
-                  children: [
-                    Text(
-                      isExternal ? 'Read Article' : 'View Article',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: categoryColor,
-                          ),
-                    ),
-                    const SizedBox(width: Space.xxs),
-                    Icon(
-                      isExternal ? LucideIcons.externalLink : LucideIcons.arrowRight,
-                      size: 16,
-                      color: categoryColor,
-                    ),
-                  ],
+                  'More project news and updates on our social media accounts.',
+                  style: text.bodyMedium,
                 ),
               ],
             ),
           ),
+          Wrap(
+            spacing: Space.sm,
+            runSpacing: Space.sm,
+            children: [
+              SecondaryButton(text: 'LinkedIn', icon: BrandIcons.linkedin, onPressed: onLinkedIn),
+              SecondaryButton(
+                  text: 'Instagram', icon: BrandIcons.instagram, onPressed: onInstagram),
+            ],
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSocialButton(
-    BuildContext context,
-    String label,
-    IconData icon,
-    VoidCallback onPressed,
-  ) {
-    return PrimaryButton(
-      text: label,
-      icon: icon,
-      onPressed: onPressed,
     );
   }
 }

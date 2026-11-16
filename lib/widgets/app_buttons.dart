@@ -66,11 +66,16 @@ class PrimaryButton extends StatelessWidget {
               ),
               const SizedBox(width: Space.sm),
             ],
-            Text(
-              text,
-              style: AppType.theme.labelLarge?.copyWith(
-                color: fg,
-                fontSize: large ? 15 : 14,
+            // Flexible: long labels wrap on narrow screens instead of overflowing.
+            Flexible(
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: AppType.theme.labelLarge?.copyWith(
+                  color: fg,
+                  fontSize: large ? 15 : 14,
+                  height: 1.25,
+                ),
               ),
             ),
             if (icon != null && !loading) ...[
@@ -122,9 +127,7 @@ class SecondaryButton extends StatelessWidget {
         height: large ? 56 : 48,
         padding: EdgeInsets.symmetric(horizontal: large ? Space.xl : Space.lg),
         decoration: BoxDecoration(
-          color: hovered
-              ? (onDark ? Colors.white10 : Palette.n50)
-              : Colors.transparent,
+          color: hovered ? (onDark ? Colors.white10 : Palette.n50) : Colors.transparent,
           borderRadius: Radii.button,
           border: Border.all(
             color: hovered ? (onDark ? Colors.white38 : Palette.n400) : border,
@@ -133,11 +136,16 @@ class SecondaryButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              text,
-              style: AppType.theme.labelLarge?.copyWith(
-                color: fg,
-                fontSize: large ? 15 : 14,
+            // Flexible: long labels wrap on narrow screens instead of overflowing.
+            Flexible(
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: AppType.theme.labelLarge?.copyWith(
+                  color: fg,
+                  fontSize: large ? 15 : 14,
+                  height: 1.25,
+                ),
               ),
             ),
             if (icon != null) ...[

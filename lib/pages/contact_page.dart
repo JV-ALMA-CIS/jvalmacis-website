@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -10,11 +12,13 @@ import '../widgets/footer.dart';
 import 'dart:developer' as developer;
 import '../design/palette.dart';
 import '../design/tokens.dart';
+import '../design/typography.dart';
 import '../widgets/app_buttons.dart';
-import '../widgets/app_card.dart';
-import '../widgets/section.dart';
 import '../widgets/hoverable.dart';
 import '../widgets/brand_icons.dart';
+
+/// The four approved business units an enquiry can be directed to.
+const businessUnitOptions = ['Construction', 'Agribusiness', 'Oil & Gas Services', 'IT Division'];
 
 class ContactPage extends ConsumerStatefulWidget {
   const ContactPage({super.key});
@@ -30,7 +34,12 @@ class _ContactPageState extends ConsumerState<ContactPage> {
   final _phoneController = TextEditingController();
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
+  String? _businessUnit;
   bool _isSubmitting = false;
+
+  /// Bumped after a successful submission so the business-unit dropdown is
+  /// rebuilt empty (its initial value is only read when it is created).
+  int _formGeneration = 0;
 
   @override
   void dispose() {
@@ -55,6 +64,7 @@ class _ContactPageState extends ConsumerState<ContactPage> {
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
           'phone': _phoneController.text.trim(),
+          'businessUnit': _businessUnit,
           'subject': _subjectController.text.trim(),
           'message': _messageController.text.trim(),
           'timestamp': FieldValue.serverTimestamp(),
@@ -63,7 +73,9 @@ class _ContactPageState extends ConsumerState<ContactPage> {
 
         await FirebaseFirestore.instance.collection('contacts').add(contactData);
 
-        // 2. Trigger email notification via firestore-send-email extension
+        // 2. Trigger email notification via firestore-send-email extension.
+        // Visitor input is HTML-escaped before it goes into the email body.
+        const esc = HtmlEscape();
         final emailSubject = 'New Contact Inquiry: ${_subjectController.text.trim()}';
 
         final emailHtml = '''
@@ -73,14 +85,15 @@ class _ContactPageState extends ConsumerState<ContactPage> {
 
             <hr style="border: 1px solid #E2E8F0;">
 
-            <p><strong>Name:</strong> ${_nameController.text.trim()}</p>
-            <p><strong>Email:</strong> ${_emailController.text.trim()}</p>
-            <p><strong>Phone:</strong> ${_phoneController.text.trim()}</p>
-            <p><strong>Subject:</strong> ${_subjectController.text.trim()}</p>
+            <p><strong>Name:</strong> ${esc.convert(_nameController.text.trim())}</p>
+            <p><strong>Email:</strong> ${esc.convert(_emailController.text.trim())}</p>
+            <p><strong>Phone:</strong> ${esc.convert(_phoneController.text.trim())}</p>
+            <p><strong>Business unit:</strong> ${esc.convert(_businessUnit ?? 'Not specified')}</p>
+            <p><strong>Subject:</strong> ${esc.convert(_subjectController.text.trim())}</p>
 
             <h3 style="color: #0F172A; margin-top: 20px;">Message:</h3>
             <p style="white-space: pre-wrap; background-color: #F8FAFC; padding: 12px; border-radius: 6px;">
-              ${_messageController.text.trim().replaceAll('\n', '<br>')}
+              ${esc.convert(_messageController.text.trim()).replaceAll('\n', '<br>')}
             </p>
 
             <hr style="border: 1px solid #E2E8F0; margin-top: 20px;">
@@ -92,8 +105,8 @@ class _ContactPageState extends ConsumerState<ContactPage> {
 
         await FirebaseFirestore.instance.collection('mail').add({
           'to': [
-            'hr@jvalmacis.co.ke',        // ← CHANGE TO HR'S ACTUAL EMAIL
-            'info@jvalmacis.co.ke',      // ← Add your company email here
+            'hr@jvalmacis.co.ke', // ← CHANGE TO HR'S ACTUAL EMAIL
+            'info@jvalmacis.co.ke', // ← Add your company email here
           ],
           'message': {
             'subject': emailSubject,
@@ -102,11 +115,13 @@ class _ContactPageState extends ConsumerState<ContactPage> {
           'replyTo': _emailController.text.trim(), // Allows HR to reply directly
         });
 
-        // Success feedback
+        // Success feedback. Both writes succeeded, which confirms the
+        // enquiry was received — not that the notification email arrived.
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Message sent successfully! We will get back to you soon.'),
+              content:
+                  Text('Thank you. Your enquiry has been received and our team will be in touch.'),
               backgroundColor: Palette.success,
             ),
           );
@@ -117,13 +132,18 @@ class _ContactPageState extends ConsumerState<ContactPage> {
           _phoneController.clear();
           _subjectController.clear();
           _messageController.clear();
+          setState(() {
+            _businessUnit = null;
+            _formGeneration++;
+          });
         }
       } catch (e) {
         developer.log('ContactPage: Form submission error: $e', name: 'ContactPage');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Failed to send message. Please try again later.'),
+              content:
+                  Text('Your enquiry could not be sent. Please try again, or email us directly.'),
               backgroundColor: Palette.danger,
             ),
           );
@@ -215,11 +235,29 @@ class _ContactPageState extends ConsumerState<ContactPage> {
     }
   }
 
+  Future<void> _openMap(String address) async {
+    final query = Uri.encodeComponent(address);
+    final googleUrl = "https://www.google.com/maps/search/?api=1&query=$query";
+    _launchURL(googleUrl);
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(siteSettingsProvider).valueOrNull ?? defaultSiteSettings;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final gutter = EdgeInsets.symmetric(horizontal: isMobile ? 20 : Space.lg);
+
+    Widget column(Widget child, EdgeInsets padding) => Container(
+          width: double.infinity,
+          color: Palette.n0,
+          padding: padding.add(gutter),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1080),
+              child: child,
+            ),
+          ),
+        );
 
     return AppScaffold(
       body: SingleChildScrollView(
@@ -227,43 +265,54 @@ class _ContactPageState extends ConsumerState<ContactPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Hero Header
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(gradient: Palette.heroSurface),
-              padding: Space.sectionPad(isMobile),
-              child: Center(
-                child: Text(
-                  'Contact Us',
-                  style: (isMobile
-                          ? Theme.of(context).textTheme.headlineLarge
-                          : Theme.of(context).textTheme.displaySmall)
-                      ?.copyWith(color: Colors.white),
-                  textAlign: TextAlign.center,
-                ),
+            // 01 — Introduction: neutral ground, hierarchy from type alone.
+            column(
+              const _Intro(),
+              EdgeInsets.only(
+                top: isMobile ? Space.xxl : Space.section - Space.lg,
+                bottom: isMobile ? Space.xl : Space.xxl,
               ),
             ),
 
-            // Main Content
-            SectionWrapper(
-              background: Palette.n0,
-              child: isMobile
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildForm(context, isMobile),
-                        const SizedBox(height: Space.lg),
-                        _buildContactInfo(context, isMobile, settings),
-                      ],
-                    )
-                  : Row(
+            // 02 — Contact details beside the enquiry form; stacked on phones.
+            column(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final details = _ContactDetails(
+                    settings: settings,
+                    onEmail: _launchEmail,
+                    onPhone: _launchPhone,
+                    onMap: _openMap,
+                    onLinkedIn: () => _launchURL(settings.linkedinUrl),
+                    onInstagram: () => _launchURL(settings.instagramUrl),
+                  );
+                  final form = _buildForm(context, constraints.maxWidth < 600);
+
+                  if (constraints.maxWidth >= 900) {
+                    return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: _buildForm(context, isMobile)),
-                        const SizedBox(width: Space.xl),
-                        Expanded(child: _buildContactInfo(context, isMobile, settings)),
+                        // Inset to the form panel's padding + border so the
+                        // two column headings share a baseline.
+                        Expanded(
+                          flex: 5,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: Space.xl + 1),
+                            child: details,
+                          ),
+                        ),
+                        const SizedBox(width: Space.xxxl),
+                        Expanded(flex: 7, child: form),
                       ],
-                    ),
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [details, const SizedBox(height: Space.xxl), form],
+                  );
+                },
+              ),
+              EdgeInsets.only(bottom: isMobile ? Space.xxxl : Space.section),
             ),
 
             const Footer(),
@@ -273,222 +322,325 @@ class _ContactPageState extends ConsumerState<ContactPage> {
     );
   }
 
-  // ====================== Contact Info Section ======================
-  Widget _buildContactInfo(BuildContext context, bool isMobile, SiteSettings settings) {
+  // ======================== Enquiry form ========================
+  Widget _buildForm(BuildContext context, bool narrow) {
+    final text = Theme.of(context).textTheme;
+
+    InputDecoration decoration(String label, {String? hint}) => InputDecoration(
+          labelText: label,
+          hintText: hint,
+          // Labels stay above the field at all times, filled or not; neutral
+          // at rest so the focused field is the only one in brand blue.
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          floatingLabelStyle: WidgetStateTextStyle.resolveWith(
+            (states) => text.labelLarge!.copyWith(
+              color: states.contains(WidgetState.error)
+                  ? Palette.danger
+                  : states.contains(WidgetState.focused)
+                      ? Palette.primary
+                      : Palette.n600,
+            ),
+          ),
+          errorMaxLines: 3,
+        );
+
+    final email = TextFormField(
+      controller: _emailController,
+      decoration: decoration('Email address'),
+      keyboardType: TextInputType.emailAddress,
+      autofillHints: const [AutofillHints.email],
+      textInputAction: TextInputAction.next,
+      validator: (value) {
+        if (value == null || value.isEmpty) return 'Please enter your email address';
+        if (!value.contains('@')) return 'Please enter a valid email address';
+        return null;
+      },
+    );
+
+    final phone = TextFormField(
+      controller: _phoneController,
+      decoration: decoration('Telephone number'),
+      keyboardType: TextInputType.phone,
+      autofillHints: const [AutofillHints.telephoneNumber],
+      textInputAction: TextInputAction.next,
+      validator: (value) =>
+          value == null || value.isEmpty ? 'Please enter your telephone number' : null,
+    );
+
+    return Container(
+      padding: EdgeInsets.all(narrow ? Space.md : Space.xl),
+      decoration: BoxDecoration(
+        color: Palette.n0,
+        borderRadius: BorderRadius.circular(Radii.md),
+        border: Border.all(color: Palette.n200),
+      ),
+      child: AutofillGroup(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Send an enquiry', style: text.headlineMedium),
+              const SizedBox(height: Space.xs),
+              Text(
+                'All fields are required unless marked optional.',
+                style: text.bodySmall,
+              ),
+              const SizedBox(height: Space.xl),
+
+              TextFormField(
+                controller: _nameController,
+                decoration: decoration('Your name'),
+                autofillHints: const [AutofillHints.name],
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Please enter your name' : null,
+              ),
+              const SizedBox(height: Space.lg),
+
+              // Email and telephone share a row when there is room.
+              if (narrow) ...[
+                email,
+                const SizedBox(height: Space.lg),
+                phone,
+              ] else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: email),
+                    const SizedBox(width: Space.md),
+                    Expanded(child: phone),
+                  ],
+                ),
+              const SizedBox(height: Space.lg),
+
+              DropdownButtonFormField<String>(
+                key: ValueKey('business-unit-$_formGeneration'),
+                initialValue: _businessUnit,
+                decoration: decoration('Business unit (optional)', hint: 'Select business unit'),
+                isExpanded: true,
+                icon: const Icon(LucideIcons.chevronDown, size: 18, color: Palette.n500),
+                borderRadius: Radii.button,
+                items: [
+                  for (final unit in businessUnitOptions)
+                    DropdownMenuItem(value: unit, child: Text(unit)),
+                ],
+                onChanged: (value) => setState(() => _businessUnit = value),
+              ),
+              const SizedBox(height: Space.lg),
+
+              TextFormField(
+                controller: _subjectController,
+                decoration: decoration('Subject'),
+                textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.next,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Please enter a subject' : null,
+              ),
+              const SizedBox(height: Space.lg),
+
+              TextFormField(
+                controller: _messageController,
+                decoration: decoration('Your message', hint: 'Your message…'),
+                minLines: 5,
+                maxLines: 10,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Please enter your message' : null,
+              ),
+              const SizedBox(height: Space.xl),
+
+              PrimaryButton(
+                text: _isSubmitting ? 'Submitting…' : 'Submit enquiry',
+                icon: LucideIcons.arrowRight,
+                onPressed: _isSubmitting ? null : _submitForm,
+                loading: _isSubmitting,
+                large: true,
+                expand: narrow,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Intro extends StatelessWidget {
+  const _Intro();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Let's discuss your requirements.",
+          style: AppType.theme.displayMedium?.copyWith(
+            fontSize: AppType.fluid(context, min: 32, max: 46),
+          ),
+        ),
+        const SizedBox(height: Space.md),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: Space.proseMax),
+          child: Text(
+            'Whether you are exploring a project, seeking a specialised service, or interested in '
+            'working with us, contact our team and we will direct your enquiry to the appropriate '
+            'business unit.',
+            style: AppType.theme.bodyLarge,
+          ),
+        ),
+        SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? Space.xl : Space.xxl),
+        const Divider(height: 1, thickness: 1, color: Palette.ink),
+      ],
+    );
+  }
+}
+
+/// Email, telephone, offices and social accounts — all from site settings,
+/// the same source the footer uses.
+class _ContactDetails extends StatelessWidget {
+  const _ContactDetails({
+    required this.settings,
+    required this.onEmail,
+    required this.onPhone,
+    required this.onMap,
+    required this.onLinkedIn,
+    required this.onInstagram,
+  });
+
+  final SiteSettings settings;
+  final VoidCallback onEmail;
+  final VoidCallback onPhone;
+  final void Function(String query) onMap;
+  final VoidCallback onLinkedIn;
+  final VoidCallback onInstagram;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
     final offices = List<OfficeLocation>.of(settings.officeLocations)
       ..sort((a, b) => a.order.compareTo(b.order));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Contact Information',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: Space.md),
-
-        for (final office in offices) ...[
-          _buildContactInfoCard(
-            context,
-            icon: LucideIcons.mapPin,
-            title: office.label,
-            content: office.address,
-            onTap: () => _openMap(office.mapQuery),
-          ),
-          const SizedBox(height: Space.sm),
-        ],
-
-        _buildContactInfoCard(
-          context,
-          icon: LucideIcons.phone,
-          title: 'Phone',
-          content: settings.companyPhone,
-          onTap: _launchPhone,
-        ),
-        const SizedBox(height: Space.sm),
-
-        _buildContactInfoCard(
-          context,
+        Text('Contact details', style: text.headlineMedium),
+        const SizedBox(height: Space.lg),
+        _DetailRow(
           icon: LucideIcons.mail,
-          title: 'Email',
-          content: settings.companyEmail,
-          onTap: _launchEmail,
+          label: 'Email',
+          value: settings.companyEmail,
+          action: 'Email ${settings.companyEmail}',
+          onTap: onEmail,
         ),
+        _DetailRow(
+          icon: LucideIcons.phone,
+          label: 'Telephone',
+          value: settings.companyPhone,
+          action: 'Call ${settings.companyPhone}',
+          onTap: onPhone,
+        ),
+        for (final office in offices)
+          _DetailRow(
+            icon: LucideIcons.mapPin,
+            label: office.label,
+            value: office.address,
+            action: 'View ${office.label} on Google Maps',
+            linkText: 'View on map',
+            onTap: () => onMap(office.mapQuery),
+          ),
         const SizedBox(height: Space.xl),
-
-        Text(
-          'Follow Us',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text('Follow us', style: text.titleMedium),
         const SizedBox(height: Space.sm),
-
         Wrap(
-          spacing: Space.md,
+          spacing: Space.sm,
+          runSpacing: Space.sm,
           children: [
-            _buildSocialButton(icon: BrandIcons.linkedin, onTap: () => _launchURL(settings.linkedinUrl)),
-            _buildSocialButton(icon: BrandIcons.instagram, onTap: () => _launchURL(settings.instagramUrl)),
+            SecondaryButton(text: 'LinkedIn', icon: BrandIcons.linkedin, onPressed: onLinkedIn),
+            SecondaryButton(text: 'Instagram', icon: BrandIcons.instagram, onPressed: onInstagram),
           ],
         ),
       ],
     );
   }
+}
 
-  Widget _buildContactInfoCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String content,
-    required VoidCallback? onTap,
-  }) {
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(Space.md),
-      child: Row(
-        children: [
-          IconChip(icon: icon, color: Palette.ink, size: 20),
-          const SizedBox(width: Space.md),
-          Expanded(
-            child: Column(
+/// Label above a value. The whole row is the link; when [linkText] is set,
+/// the value stays plain text and a separate link sits below it.
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.action,
+    required this.onTap,
+    this.linkText,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final String action;
+  final VoidCallback onTap;
+  final String? linkText;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Palette.n200)),
+      ),
+      child: Hoverable(
+        onTap: onTap,
+        scale: 1.0,
+        lift: 0,
+        semanticLabel: action,
+        builder: (hovered) {
+          final link = TextStyle(
+            color: Palette.primary,
+            decoration: hovered ? TextDecoration.underline : null,
+            decorationColor: Palette.primary,
+          );
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: Space.md),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelMedium
-                      ?.copyWith(color: Palette.n500),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(icon, size: 18, color: Palette.n500),
                 ),
-                const SizedBox(height: Space.xxs),
-                Text(
-                  content,
-                  style: Theme.of(context).textTheme.bodyLarge,
+                const SizedBox(width: Space.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label.toUpperCase(), style: AppType.eyebrow(Palette.n500)),
+                      const SizedBox(height: Space.xs),
+                      Text(
+                        value,
+                        style: linkText == null
+                            ? text.titleMedium?.merge(link)
+                            : text.bodyMedium?.copyWith(color: Palette.ink),
+                      ),
+                      if (linkText != null) ...[
+                        const SizedBox(height: Space.xxs),
+                        Text(linkText!, style: text.labelLarge?.merge(link)),
+                      ],
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-          if (onTap != null)
-            const Icon(LucideIcons.externalLink, size: 16, color: Palette.n500),
-        ],
+          );
+        },
       ),
     );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Hoverable(
-      onTap: onTap,
-      builder: (hovered) => AnimatedContainer(
-        duration: Motion.fast,
-        curve: Motion.hover,
-        padding: const EdgeInsets.all(Space.sm),
-        decoration: BoxDecoration(
-          color: hovered ? Palette.primaryHover : Palette.ink,
-          borderRadius: Radii.chip,
-        ),
-        child: Icon(icon, color: Colors.white, size: 20),
-      ),
-    );
-  }
-
-  Widget _buildForm(BuildContext context, bool isMobile) {
-    return AppCard(
-      interactive: false,
-      padding: EdgeInsets.all(isMobile ? Space.lg : Space.xl),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Send us a message',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: Space.xl),
-
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Full Name',
-                hintText: 'Enter your full name',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(Radii.sm)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.sm),
-              ),
-              validator: (value) => value == null || value.isEmpty ? 'Please enter your full name' : null,
-            ),
-            const SizedBox(height: Space.md),
-
-            TextFormField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email Address',
-                hintText: 'Enter your email address',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(Radii.sm)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.sm),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'Please enter your email address';
-                if (!value.contains('@')) return 'Please enter a valid email address';
-                return null;
-              },
-            ),
-            const SizedBox(height: Space.md),
-
-            TextFormField(
-              controller: _phoneController,
-              decoration: InputDecoration(
-                labelText: 'Phone Number',
-                hintText: 'Enter your phone number',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(Radii.sm)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.sm),
-              ),
-              validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
-            ),
-            const SizedBox(height: Space.md),
-
-            TextFormField(
-              controller: _subjectController,
-              decoration: InputDecoration(
-                labelText: 'Subject',
-                hintText: 'Enter the subject',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(Radii.sm)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.sm),
-              ),
-              validator: (value) => value == null || value.isEmpty ? 'Please enter a subject' : null,
-            ),
-            const SizedBox(height: Space.md),
-
-            TextFormField(
-              controller: _messageController,
-              maxLines: 5,
-              decoration: InputDecoration(
-                labelText: 'Message',
-                hintText: 'Enter your message',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(Radii.sm)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: Space.md, vertical: Space.sm),
-              ),
-              validator: (value) => value == null || value.isEmpty ? 'Please enter your message' : null,
-            ),
-            const SizedBox(height: Space.xl),
-
-            PrimaryButton(
-              text: _isSubmitting ? 'Sending...' : 'Send Message',
-              onPressed: _isSubmitting ? () {} : _submitForm,
-              loading: _isSubmitting,
-              large: true,
-              expand: true,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openMap(String address) async {
-    final query = Uri.encodeComponent(address);
-    final googleUrl = "https://www.google.com/maps/search/?api=1&query=$query";
-    _launchURL(googleUrl);
   }
 }

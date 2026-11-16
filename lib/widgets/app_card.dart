@@ -43,9 +43,7 @@ class AppCard extends StatelessWidget {
             color: Palette.n0,
             borderRadius: Radii.card,
             border: Border.all(
-              color: hovered
-                  ? (accent ?? Palette.primary).withValues(alpha: 0.45)
-                  : Palette.n200,
+              color: hovered ? (accent ?? Palette.primary).withValues(alpha: 0.45) : Palette.n200,
             ),
             boxShadow: hovered ? Elevation.cardHover : Elevation.card,
           ),
@@ -104,7 +102,10 @@ class Eyebrow extends StatelessWidget {
       children: [
         Container(width: 20, height: 2, color: color),
         const SizedBox(width: Space.xs),
-        Text(text.toUpperCase(), style: AppType.eyebrow(color)),
+        // Flexible: long eyebrows wrap on narrow screens instead of overflowing.
+        Flexible(
+          child: Text(text.toUpperCase(), style: AppType.eyebrow(color).copyWith(height: 1.5)),
+        ),
       ],
     );
   }

@@ -39,7 +39,8 @@ class _SiteSettingsEditorPageState extends ConsumerState<SiteSettingsEditorPage>
     _footerTagline = TextEditingController(text: s.footerTagline);
     _copyright = TextEditingController(text: s.copyrightText);
     _offices = List.of(s.officeLocations);
-    _navItems = List.of(s.navigation);
+    // Listed in the order the site shows them; saved with that order.
+    _navItems = List.of(s.navigation)..sort((a, b) => a.order.compareTo(b.order));
     _logoImageUrl = s.logoImageUrl;
     _initialized = true;
   }
@@ -72,7 +73,7 @@ class _SiteSettingsEditorPageState extends ConsumerState<SiteSettingsEditorPage>
       linkedinUrl: _linkedin.text.trim(),
       instagramUrl: _instagram.text.trim(),
       twitterUrl: _twitter.text.trim(),
-      navigation: _navItems,
+      navigation: [for (final (i, item) in _navItems.indexed) item.copyWith(order: i)],
       footerTagline: _footerTagline.text.trim(),
       copyrightText: _copyright.text.trim(),
       logoImageUrl: _logoImageUrl,
@@ -203,17 +204,48 @@ class _SiteSettingsEditorPageState extends ConsumerState<SiteSettingsEditorPage>
     );
   }
 
+  /// Moves the item at [index] by [by] places; the list order is the order
+  /// saved and shown on the site.
+  void _moveNavItem(int index, int by) {
+    final to = index + by;
+    if (to < 0 || to >= _navItems.length) return;
+    setState(() => _navItems.insert(to, _navItems.removeAt(index)));
+  }
+
   Widget _navRow(int index, NavItem item) {
+    // Edits read the item's current value, so one field's change does not
+    // undo another's made since the last rebuild.
+    void update(NavItem Function(NavItem current) change) =>
+        _navItems[index] = change(_navItems[index]);
+
     return Padding(
+      // Keyed by id so a moved row keeps its own field contents.
+      key: ValueKey(item.id),
       padding: const EdgeInsets.only(bottom: Space.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Column(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_upward, size: 18),
+                tooltip: 'Move up',
+                visualDensity: VisualDensity.compact,
+                onPressed: index > 0 ? () => _moveNavItem(index, -1) : null,
+              ),
+              IconButton(
+                icon: const Icon(Icons.arrow_downward, size: 18),
+                tooltip: 'Move down',
+                visualDensity: VisualDensity.compact,
+                onPressed: index < _navItems.length - 1 ? () => _moveNavItem(index, 1) : null,
+              ),
+            ],
+          ),
           Expanded(
             child: TextFormField(
               initialValue: item.label,
               decoration: const InputDecoration(labelText: 'Label'),
-              onChanged: (v) => _navItems[index] = item.copyWith(label: v),
+              onChanged: (v) => update((n) => n.copyWith(label: v)),
             ),
           ),
           const SizedBox(width: Space.sm),
@@ -221,14 +253,15 @@ class _SiteSettingsEditorPageState extends ConsumerState<SiteSettingsEditorPage>
             child: TextFormField(
               initialValue: item.route,
               decoration: const InputDecoration(labelText: 'Route'),
-              onChanged: (v) => _navItems[index] = item.copyWith(route: v),
+              onChanged: (v) => update((n) => n.copyWith(route: v)),
             ),
           ),
           Column(
             children: [
               Checkbox(
                 value: item.showInHeader,
-                onChanged: (v) => setState(() => _navItems[index] = item.copyWith(showInHeader: v ?? false)),
+                onChanged: (v) =>
+                    setState(() => update((n) => n.copyWith(showInHeader: v ?? false))),
               ),
               const Text('Header', style: TextStyle(fontSize: 10)),
             ],
@@ -237,7 +270,8 @@ class _SiteSettingsEditorPageState extends ConsumerState<SiteSettingsEditorPage>
             children: [
               Checkbox(
                 value: item.showInDrawer,
-                onChanged: (v) => setState(() => _navItems[index] = item.copyWith(showInDrawer: v ?? false)),
+                onChanged: (v) =>
+                    setState(() => update((n) => n.copyWith(showInDrawer: v ?? false))),
               ),
               const Text('Menu', style: TextStyle(fontSize: 10)),
             ],

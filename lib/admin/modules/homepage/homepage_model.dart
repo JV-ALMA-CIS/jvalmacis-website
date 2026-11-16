@@ -89,25 +89,30 @@ class HomepageContent {
       };
 }
 
-/// The site's original hardcoded homepage content — hero, CTA band and
-/// client logo strip. Used as seed content and as the fallback while
-/// Firestore is loading, empty, or unreachable.
+/// The homepage's default content: hero, closing call to action and the
+/// client logo list (stored, but no longer shown on the homepage). Used as
+/// seed content and as the fallback while Firestore is loading, empty, or
+/// unreachable.
 const defaultHomepageContent = HomepageContent(
-  heroTitle: 'For Construction, Agribusiness, Oil & Gas Services, and IT Solutions',
-  heroCtaText: 'Contact Us',
-  heroCtaRoute: '/contact',
-  heroBackgroundImageUrl: 'assets/images/company_background.jpg',
-  ctaBandTitle: 'Ready to Collaborate?',
-  ctaBandSubtitle: "Let's build a sustainable future together.",
-  ctaBandButtonText: 'Contact Us',
+  heroTitle: 'Specialised services. Integrated solutions.',
+  heroCtaText: 'Explore our business units',
+  heroCtaRoute: '/business-units',
+  // Same picture as company_background.jpg, re-encoded as JPEG (115 KB vs 2.6 MB).
+  heroBackgroundImageUrl: 'assets/images/company_background_web.jpg',
+  ctaBandTitle: 'Looking for a specialised solution?',
+  ctaBandSubtitle: 'Contact our team to discuss your organisation’s needs.',
+  ctaBandButtonText: 'Contact JV ALMA C.I.S',
   ctaBandButtonRoute: '/contact',
   clientLogos: [
     ClientLogo(id: 'kvda', imageUrl: 'assets/images/clients/kvda.jpg', name: 'KVDA', order: 0),
-    ClientLogo(id: 'sweden', imageUrl: 'assets/images/clients/sweden.jpg', name: 'Sweden', order: 1),
+    ClientLogo(
+        id: 'sweden', imageUrl: 'assets/images/clients/sweden.jpg', name: 'Sweden', order: 1),
     ClientLogo(id: 'italy', imageUrl: 'assets/images/clients/italy.jpg', name: 'Italy', order: 2),
     ClientLogo(id: 'usa', imageUrl: 'assets/images/clients/usa.jpg', name: 'USA', order: 3),
-    ClientLogo(id: 'navfac', imageUrl: 'assets/images/clients/navfac.jpg', name: 'NAVFAC', order: 4),
-    ClientLogo(id: 'portugal', imageUrl: 'assets/images/clients/portugal.jpg', name: 'Portugal', order: 5),
+    ClientLogo(
+        id: 'navfac', imageUrl: 'assets/images/clients/navfac.jpg', name: 'NAVFAC', order: 4),
+    ClientLogo(
+        id: 'portugal', imageUrl: 'assets/images/clients/portugal.jpg', name: 'Portugal', order: 5),
     ClientLogo(id: 'iadc', imageUrl: 'assets/images/clients/iadc.jpg', name: 'IADC', order: 6),
     ClientLogo(id: 'total', imageUrl: 'assets/images/clients/total.jpg', name: 'Total', order: 7),
     ClientLogo(id: 'eni', imageUrl: 'assets/images/clients/eni.jpg', name: 'ENI', order: 8),

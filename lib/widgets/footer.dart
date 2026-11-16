@@ -1,541 +1,461 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:developer' as developer;
+import '../admin/modules/business_units/business_unit_model.dart';
+import '../admin/modules/business_units/business_units_provider.dart';
 import '../admin/modules/site_settings/site_settings_model.dart';
 import '../admin/modules/site_settings/site_settings_provider.dart';
+import '../design/palette.dart';
+import '../design/tokens.dart';
+import '../design/typography.dart';
 import 'brand_icons.dart';
 import 'cms_image.dart';
+import 'header.dart' show siteContentMax, siteGutter;
+import 'hoverable.dart';
 
-class Footer extends ConsumerStatefulWidget {
+/// Footer text colours on the dark ground (contrast on Palette.ink:
+/// n300 12.3:1, n400 7.4:1).
+const _text = Palette.n300;
+const _muted = Palette.n400;
+
+/// Site footer: a brand row (logo, tagline, social links), link columns
+/// (Explore, Business units, Contact), then copyright, legal links and
+/// Back to top. Contact details, offices, social links and the copyright
+/// come from site settings; the unit links from the business-unit data.
+class Footer extends ConsumerWidget {
   const Footer({super.key});
 
-  @override
-  ConsumerState<Footer> createState() => _FooterState();
-}
-
-class _FooterState extends ConsumerState<Footer> {
-  final Map<String, bool> _isClicked = {};
-  final Map<String, bool> _isHovered = {};
-  String? _hoveredUrl;
-
-  void _toggleClick(String buttonKey) {
-    if (mounted) {
-      setState(() {
-        _isClicked.updateAll((key, value) => false);
-        _isClicked[buttonKey] = true;
-      });
-    }
-  }
-
-  Future<void> _handleNavigation(BuildContext context, String route, {String? url}) async {
-    _toggleClick(route);
-    if (url != null) {
-      try {
-        final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Could not launch $url')),
-            );
-          }
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
-        }
-      }
-    } else {
-      if (context.mounted) {
-        Navigator.pushNamed(context, route).catchError((e) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Navigation error: $e')),
-            );
-          }
-          return null;
-        });
-      }
-    }
-  }
-
-  void _handleHover(String buttonKey, bool isHovering, {String? url}) {
-    if (mounted) {
-      setState(() {
-        _isHovered[buttonKey] = isHovering;
-        _hoveredUrl = isHovering ? url : null;
-      });
-    }
-  }
+  /// Clear space under the last row so the chat button (fixed to the
+  /// bottom-right corner) never covers a footer link at the end of a page.
+  static const double chatButtonClearance = 80;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(siteSettingsProvider).valueOrNull ?? defaultSiteSettings;
     final offices = List<OfficeLocation>.of(settings.officeLocations)
       ..sort((a, b) => a.order.compareTo(b.order));
 
-    final screenWidth = MediaQuery.of(context).size.width.clamp(300.0, double.infinity);
-    final isLargeScreen = screenWidth >= 768;
-    final isMobile = screenWidth < 600;
+    // Same fallback, publication and ordering rules as the Business Units page.
+    final liveUnits = ref.watch(businessUnitsProvider).valueOrNull;
+    final units = List<BusinessUnit>.of(
+      (liveUnits == null || liveUnits.isEmpty) ? defaultBusinessUnits : liveUnits,
+    )
+      ..removeWhere((u) => !u.published)
+      ..sort((a, b) => a.order.compareTo(b.order));
+
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+
+    Future<void> launch(String url) async {
+      try {
+        if (!await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication) &&
+            context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('The link could not be opened.')),
+          );
+        }
+      } catch (e) {
+        developer.log('Footer link error for $url: $e', name: 'Footer');
+      }
+    }
+
+    void go(String route) {
+      if (ModalRoute.of(context)?.settings.name == route) return;
+      Navigator.pushNamed(context, route);
+    }
+
+    // ---- Brand row ---------------------------------------------------------
+    final logo = Hoverable(
+      onTap: () => go('/'),
+      scale: 1.0,
+      lift: 0,
+      semanticLabel: 'JV ALMA C.I.S home',
+      // The logo is a JPEG on white, so it sits on a white tile by design.
+      builder: (_) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xs),
+        decoration: BoxDecoration(
+          color: Palette.n0,
+          borderRadius: BorderRadius.circular(Radii.sm),
+        ),
+        child: SizedBox(
+          width: 128,
+          height: 40,
+          child: CmsImage(
+            source: settings.logoImageUrl.isNotEmpty
+                ? settings.logoImageUrl
+                : 'assets/images/clients/jv.jpg',
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Center(
+              child: Text('JV ALMA C.I.S', style: AppType.theme.titleSmall),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final social = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _SocialIcon(
+          icon: BrandIcons.linkedin,
+          label: 'JV ALMA C.I.S on LinkedIn',
+          onTap: () => launch(settings.linkedinUrl),
+        ),
+        const SizedBox(width: Space.xs),
+        _SocialIcon(
+          icon: BrandIcons.instagram,
+          label: 'JV ALMA C.I.S on Instagram',
+          onTap: () => launch(settings.instagramUrl),
+        ),
+      ],
+    );
+
+    final tagline = Text(
+      settings.footerTagline,
+      style: AppType.theme.bodySmall?.copyWith(color: _text, height: 1.6),
+    );
+
+    final brandRow = LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 760) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              logo,
+              const SizedBox(width: Space.xl),
+              Expanded(
+                  child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 440), child: tagline)),
+              const SizedBox(width: Space.xl),
+              social,
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            logo,
+            const SizedBox(height: Space.md),
+            tagline,
+            const SizedBox(height: Space.md),
+            social,
+          ],
+        );
+      },
+    );
+
+    // ---- Link columns ------------------------------------------------------
+    final explore = _Column(
+      title: 'Explore',
+      children: [
+        for (final (label, route) in const [
+          ('About Us', '/about'),
+          ('Business Units', '/business-units'),
+          ('News & Updates', '/news'),
+          ('Certificates', '/certificates'),
+          ('Careers', '/careers'),
+          ('Community & Impact', '/community-impact'),
+        ])
+          _FooterLink(label: label, onTap: () => go(route)),
+      ],
+    );
+
+    final businessUnits = _Column(
+      title: 'Business units',
+      children: [
+        for (final unit in units) _FooterLink(label: unit.title, onTap: () => go(unit.route)),
+      ],
+    );
+
+    final contact = _Column(
+      title: 'Contact',
+      children: [
+        _FooterLink(
+          label: settings.companyEmail,
+          icon: LucideIcons.mail,
+          semanticLabel: 'Email ${settings.companyEmail}',
+          onTap: () => launch('mailto:${settings.companyEmail}'),
+        ),
+        _FooterLink(
+          label: settings.companyPhone,
+          icon: LucideIcons.phone,
+          semanticLabel: 'Call ${settings.companyPhone}',
+          onTap: () => launch('tel:${settings.companyPhone.replaceAll(' ', '')}'),
+        ),
+        for (final office in offices)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 3),
+                child: Icon(LucideIcons.mapPin, size: 14, color: _muted),
+              ),
+              const SizedBox(width: Space.xs),
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                          text: '${office.label}\n', style: const TextStyle(color: Palette.n0)),
+                      TextSpan(text: office.address),
+                    ],
+                  ),
+                  style: AppType.theme.bodySmall?.copyWith(color: _text, height: 1.5),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+
+    final columns = LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 760) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 3, child: explore),
+              const SizedBox(width: Space.xl),
+              Expanded(flex: 3, child: businessUnits),
+              const SizedBox(width: Space.xl),
+              Expanded(flex: 4, child: contact),
+            ],
+          );
+        }
+        if (constraints.maxWidth >= 440) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: explore),
+                  const SizedBox(width: Space.lg),
+                  Expanded(child: businessUnits),
+                ],
+              ),
+              const SizedBox(height: Space.xl),
+              contact,
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            explore,
+            const SizedBox(height: Space.xl),
+            businessUnits,
+            const SizedBox(height: Space.xl),
+            contact,
+          ],
+        );
+      },
+    );
+
+    // ---- Bottom row --------------------------------------------------------
+    final legal = Wrap(
+      spacing: Space.lg,
+      runSpacing: Space.xs,
+      children: [
+        for (final (label, route) in const [
+          ('Privacy Policy', '/privacy-policy'),
+          ('Cookies Policy', '/cookies'),
+          ('Terms and Conditions', '/terms'),
+          ('Delete Account', '/delete-account'),
+        ])
+          _FooterLink(label: label, small: true, onTap: () => go(route)),
+      ],
+    );
 
     return Material(
-      color: const Color(0xFF0F172A),
-      child: Stack(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(
-              vertical: isMobile ? 32 : 48,
-              horizontal: isMobile ? 16 : 24,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1200),
-                child: Column(
+      color: Palette.ink,
+      // Gutter outside the content width, as on every page, so the footer
+      // lines up with page content.
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: siteGutter(context),
+          right: siteGutter(context),
+          top: isMobile ? Space.xxl : Space.xxxl,
+          bottom: chatButtonClearance,
+        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: siteContentMax),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                brandRow,
+                const SizedBox(height: Space.xl),
+                const Divider(height: 1, thickness: 1, color: Palette.n700),
+                const SizedBox(height: Space.xl),
+                columns,
+                const SizedBox(height: Space.xxl),
+                const Divider(height: 1, thickness: 1, color: Palette.n700),
+                const SizedBox(height: Space.lg),
+                Wrap(
+                  spacing: Space.lg,
+                  runSpacing: Space.md,
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Wrap(
-                      spacing: isMobile ? 24 : 48,
-                      runSpacing: 32,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        // Company Info
-                        SizedBox(
-                          width: isLargeScreen ? 300 : screenWidth,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  if (context.mounted) {
-                                    Navigator.pushNamed(context, '/').catchError((e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Navigation error: $e')),
-                                        );
-                                      }
-                                      return null;
-                                    });
-                                  }
-                                },
-                                child: Container(
-                                  width: 150,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: CmsImage(
-                                    source: settings.logoImageUrl.isNotEmpty
-                                        ? settings.logoImageUrl
-                                        : 'assets/images/clients/jv.jpg',
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF1E293B),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Center(
-                                          child: Text(
-                                            'JV ALMA C.I.S',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                settings.footerTagline,
-                                style: TextStyle(
-                                  color: const Color(0xFF94A3B8),
-                                  fontSize: isMobile ? 14 : 16,
-                                  height: 1.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Quick Links
-                        SizedBox(
-                          width: isLargeScreen ? 200 : screenWidth,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Quick Links',
-                                style: GoogleFonts.poppins(
-                                  fontSize: isMobile ? 20 : 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildFooterLink(
-                                context,
-                                text: 'Business Units',
-                                route: '/business-units',
-                                isMobile: isMobile,
-                                buttonKey: 'businessUnits',
-                              ),
-                              const SizedBox(height: 12),
-                              _buildFooterLink(
-                                context,
-                                text: 'Certificates',
-                                route: '/certificates',
-                                isMobile: isMobile,
-                                buttonKey: 'certificates',
-                              ),
-                              const SizedBox(height: 12),
-                              _buildFooterLink(
-                                context,
-                                text: 'Careers',
-                                route: '/careers',
-                                isMobile: isMobile,
-                                buttonKey: 'careersQuickLink',
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Contact Details and Social Media
-                        SizedBox(
-                          width: isLargeScreen ? 300 : screenWidth,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Contact Us',
-                                style: GoogleFonts.poppins(
-                                  fontSize: isMobile ? 20 : 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              _buildContactInfo(
-                                icon: LucideIcons.phone,
-                                text: 'Call us on\n${settings.companyPhone}',
-                                uri: 'tel:${settings.companyPhone.replaceAll(' ', '')}',
-                                isMobile: isMobile,
-                                buttonKey: 'phone',
-                              ),
-                              const SizedBox(height: 12),
-                              _buildContactInfo(
-                                icon: LucideIcons.mail,
-                                text: 'Email us on\n${settings.companyEmail}',
-                                uri: 'mailto:${settings.companyEmail}',
-                                isMobile: isMobile,
-                                buttonKey: 'email',
-                              ),
-                              const SizedBox(height: 12),
-                              _buildContactInfo(
-                                icon: LucideIcons.mapPin,
-                                isMobile: isMobile,
-                                buttonKey: 'address',
-                                customContent: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    for (final office in offices)
-                                      Padding(
-                                        padding: const EdgeInsets.only(bottom: 4),
-                                        child: Text(
-                                          '${office.label}: ${office.address}',
-                                          style: TextStyle(
-                                            color: _isHovered['address'] ?? false
-                                                ? Colors.white
-                                                : const Color(0xFF94A3B8),
-                                            fontSize: isMobile ? 14 : 16,
-                                            height: 1.5,
-                                          ),
-                                          softWrap: true,
-                                          maxLines: null,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Follow Us',
-                                style: GoogleFonts.poppins(
-                                  fontSize: isMobile ? 20 : 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Wrap(
-                                spacing: 8,
-                                children: [
-                                  _buildSocialLink(
-                                    context,
-                                    icon: BrandIcons.linkedin,
-                                    url: settings.linkedinUrl,
-                                    buttonKey: 'linkedin',
-                                  ),
-                                  _buildSocialLink(
-                                    context,
-                                    icon: BrandIcons.instagram,
-                                    url: settings.instagramUrl,
-                                    buttonKey: 'instagram',
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    Text(
+                      settings.copyrightText,
+                      style: AppType.theme.bodySmall?.copyWith(color: _muted),
                     ),
-                    // Bottom Section
-                    Container(
-                      margin: const EdgeInsets.only(top: 32),
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: Color(0xFF334155)),
-                        ),
-                      ),
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Column(
-                        children: [
-                          if (isMobile) ...[
-                            Text(
-                              settings.copyrightText,
-                              style: TextStyle(
-                                color: const Color(0xFF94A3B8),
-                                fontSize: isMobile ? 12 : 14,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              alignment: WrapAlignment.center,
-                              children: [
-                                _buildFooterLink(
-                                  context,
-                                  text: 'Privacy Policy',
-                                  route: '/privacy-policy',
-                                  isMobile: isMobile,
-                                  buttonKey: 'privacyPolicy',
-                                ),
-                                _buildFooterLink(
-                                  context,
-                                  text: 'Cookies Policy',
-                                  route: '/cookies',
-                                  isMobile: isMobile,
-                                  buttonKey: 'cookiesPolicy',
-                                ),
-                                _buildFooterLink(
-                                  context,
-                                  text: 'Terms of Service',
-                                  route: '/terms',
-                                  isMobile: isMobile,
-                                  buttonKey: 'termsOfService',
-                                ),
-                                _buildFooterLink(
-                                  context,
-                                  text: 'Delete Account',
-                                  route: '/delete-account',
-                                  isMobile: isMobile,
-                                  buttonKey: 'deleteAccount',
-                                ),
-                              ],
-                            ),
-                          ] else
-                            Wrap(
-                              spacing: 16,
-                              runSpacing: 16,
-                              alignment: WrapAlignment.center,
-                              children: [
-                                Text(
-                                  settings.copyrightText,
-                                  style: TextStyle(
-                                    color: const Color(0xFF94A3B8),
-                                    fontSize: isMobile ? 12 : 14,
-                                  ),
-                                ),
-                                _buildFooterLink(
-                                  context,
-                                  text: 'Privacy Policy',
-                                  route: '/privacy-policy',
-                                  isMobile: isMobile,
-                                  buttonKey: 'privacyPolicy',
-                                ),
-                                _buildFooterLink(
-                                  context,
-                                  text: 'Cookies Policy',
-                                  route: '/cookies',
-                                  isMobile: isMobile,
-                                  buttonKey: 'cookiesPolicy',
-                                ),
-                                _buildFooterLink(
-                                  context,
-                                  text: 'Terms of Service',
-                                  route: '/terms',
-                                  isMobile: isMobile,
-                                  buttonKey: 'termsOfService',
-                                ),
-                                _buildFooterLink(
-                                   context,
-                                   text: 'Delete Account',
-                                   route: '/delete-account',
-                                   isMobile: isMobile,
-                                   buttonKey: 'deleteAccount',
-                            ),
-                                IconButton(
-                                  icon: const Icon(LucideIcons.arrowUp, color: Colors.white, size: 20),
-                                  onPressed: () {
-                                    Scrollable.of(context).position.animateTo(
-                                      0.0,
-                                      duration: const Duration(milliseconds: 500),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  },
-                                  tooltip: 'Back to Top',
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
+                    legal,
+                    const _BackToTop(),
                   ],
                 ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Column extends StatelessWidget {
+  const _Column({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title.toUpperCase(), style: AppType.eyebrow(_muted)),
+        const SizedBox(height: Space.md),
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) const SizedBox(height: Space.sm),
+          children[i],
+        ],
+      ],
+    );
+  }
+}
+
+/// Footer link: light text that turns white and underlines on hover or
+/// keyboard focus.
+class _FooterLink extends StatelessWidget {
+  const _FooterLink({
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.small = false,
+    this.semanticLabel,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final IconData? icon;
+  final bool small;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final base = (small ? AppType.theme.bodySmall : AppType.theme.bodyMedium)!;
+    return Hoverable(
+      onTap: onTap,
+      scale: 1.0,
+      lift: 0,
+      semanticLabel: semanticLabel ?? label,
+      builder: (hovered) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: hovered ? Palette.n0 : _muted),
+            const SizedBox(width: Space.xs),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              style: base.copyWith(
+                color: hovered ? Palette.n0 : _text,
+                decoration: hovered ? TextDecoration.underline : null,
+                decorationColor: Palette.n0,
               ),
             ),
           ),
-          // URL Display in Bottom-Left Corner
-          if (_hoveredUrl != null)
-            Positioned(
-              bottom: 10,
-              left: 10,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xE51E293B),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  _hoveredUrl!,
-                  style: TextStyle(
-                    color: const Color(0xFFBFDBFE),
-                    fontSize: isMobile ? 12 : 14,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildContactInfo({
-    required IconData icon,
-    required bool isMobile,
-    required String buttonKey,
-    String? text,
-    String? uri,
-    Widget? customContent,
-  }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      transform: Matrix4.translationValues(0, _isHovered[buttonKey] ?? false ? -2.0 : 0, 0),
-      child: MouseRegion(
-        onEnter: (_) => _handleHover(buttonKey, true, url: uri),
-        onExit: (_) => _handleHover(buttonKey, false),
-        child: InkWell(
-          onTap: uri != null
-              ? () => _handleNavigation(context, buttonKey, url: uri)
-              : null,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, size: 16, color: _isHovered[buttonKey] ?? false ? Colors.white : const Color(0xFF64748B)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: customContent ??
-                    Text(
-                      text!,
-                      style: TextStyle(
-                        color: _isHovered[buttonKey] ?? false ? Colors.white : const Color(0xFF94A3B8),
-                        fontSize: isMobile ? 14 : 16,
-                        height: 1.5,
-                      ),
-                      softWrap: true,
-                      maxLines: null,
-                    ),
-              ),
-            ],
+class _SocialIcon extends StatelessWidget {
+  const _SocialIcon({required this.icon, required this.label, required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: label,
+      child: Hoverable(
+        onTap: onTap,
+        scale: 1.0,
+        lift: 0,
+        semanticLabel: label,
+        builder: (hovered) => AnimatedContainer(
+          duration: Motion.fast,
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(Radii.sm),
+            color: hovered ? Palette.n700 : Colors.transparent,
+            border: Border.all(color: hovered ? Palette.n400 : Palette.n600),
           ),
+          child: Icon(icon, size: 18, color: hovered ? Palette.n0 : _text),
         ),
       ),
     );
   }
+}
 
-  Widget _buildFooterLink(
-    BuildContext context, {
-    required String text,
-    required String route,
-    required bool isMobile,
-    required String buttonKey,
-  }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      transform: Matrix4.translationValues(0, _isHovered[buttonKey] ?? false ? -2.0 : 0, 0),
-      child: MouseRegion(
-        onEnter: (_) => _handleHover(buttonKey, true),
-        onExit: (_) => _handleHover(buttonKey, false),
-        child: InkWell(
-          onTap: () => _handleNavigation(context, route),
-          child: Text(
-            text,
-            style: GoogleFonts.poppins(
-              color: _isHovered[buttonKey] ?? false ? Colors.white : const Color(0xFF94A3B8),
-              fontSize: isMobile ? 14 : 16,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+/// Scrolls the page containing the footer back to the top. Uses the nearest
+/// scrollable ancestor (every page's scroll view), falling back to the
+/// primary scroll controller; jumps instead of animating under reduced
+/// motion.
+class _BackToTop extends StatelessWidget {
+  const _BackToTop();
 
-  Widget _buildSocialLink(
-    BuildContext context, {
-    required IconData icon,
-    required String url,
-    required String buttonKey,
-  }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      transform: Matrix4.translationValues(0, _isHovered[buttonKey] ?? false ? -2.0 : 0, 0),
-      child: MouseRegion(
-        onEnter: (_) => _handleHover(buttonKey, true, url: url),
-        onExit: (_) => _handleHover(buttonKey, false),
-        child: InkWell(
-          onTap: () => _handleNavigation(context, buttonKey, url: url),
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: _isHovered[buttonKey] ?? false ? const Color(0xFF1E293B) : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: _isHovered[buttonKey] ?? false ? Colors.white : const Color(0xFF64748B),
-            ),
+  @override
+  Widget build(BuildContext context) {
+    void toTop() {
+      final position = Scrollable.maybeOf(context)?.position ??
+          (PrimaryScrollController.maybeOf(context)?.hasClients ?? false
+              ? PrimaryScrollController.of(context).position
+              : null);
+      if (position == null) return;
+      if (Motion.reduced(context)) {
+        position.jumpTo(0);
+      } else {
+        position.animateTo(0, duration: Motion.base, curve: Motion.enter);
+      }
+    }
+
+    return Hoverable(
+      onTap: toTop,
+      scale: 1.0,
+      lift: 0,
+      semanticLabel: 'Back to top',
+      builder: (hovered) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Back to top',
+            style: AppType.theme.bodySmall?.copyWith(color: hovered ? Palette.n0 : _text),
           ),
-        ),
+          const SizedBox(width: Space.xs),
+          Icon(LucideIcons.arrowUp, size: 14, color: hovered ? Palette.n0 : _text),
+        ],
       ),
     );
   }
