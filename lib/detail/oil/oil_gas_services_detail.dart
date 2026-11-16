@@ -1,578 +1,362 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../../widgets/footer.dart';
-import '../../widgets/header.dart';
+
 import '../../design/palette.dart';
 import '../../design/tokens.dart';
-import '../../widgets/app_card.dart';
-import '../../widgets/section.dart';
-import '../../widgets/reveal_on_scroll.dart';
-import 'dart:developer' as developer;
+import '../../design/typography.dart';
+import '../../widgets/cms_image.dart';
+import '../../widgets/footer.dart';
+import '../../widgets/header.dart';
+import '../../widgets/hoverable.dart';
+import '../../widgets/legal_document.dart';
+import '../portfolio/portfolio_project.dart';
+import '../portfolio/project_widgets.dart';
+import 'oil_gas_content.dart';
+import '../unit_intro.dart';
 
+/// Oil & Gas Services: introduction, the services, the partnership with
+/// Brisma Africa and TIC East Africa, and the TIC Group behind it.
 class OilAndGasServicesDetail extends StatelessWidget {
   const OilAndGasServicesDetail({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final isMobile = screenWidth < 600;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
-        return AppScaffold(
-          body: SingleChildScrollView(
-            child: Column(
+    return AppScaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _Column(
+              padding: EdgeInsets.only(
+                top: isMobile ? Space.xl : Space.xxl,
+                bottom: isMobile ? Space.xxl : Space.xxxl,
+              ),
+              child: const UnitIntro(title: 'Oil & Gas Services', description: oilGasIntro),
+            ),
+            _Column(
+              padding: EdgeInsets.only(bottom: isMobile ? Space.xxxl : Space.section),
+              child: const _Services(),
+            ),
+            _Column(
+              color: Palette.n50,
+              padding: EdgeInsets.symmetric(vertical: isMobile ? Space.xxxl : Space.section),
+              child: const _Partnership(),
+            ),
+            _Column(
+              padding: EdgeInsets.symmetric(vertical: isMobile ? Space.xxxl : Space.section),
+              child: const _TicGroup(),
+            ),
+            const Footer(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Centres [child] in the shared content column.
+class _Column extends StatelessWidget {
+  const _Column({required this.child, this.padding = EdgeInsets.zero, this.color});
+
+  final Widget child;
+  final EdgeInsets padding;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: color ?? Palette.n0,
+      padding: padding.add(EdgeInsets.symmetric(horizontal: siteGutter(context))),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: siteContentMax),
+          child: SizedBox(width: double.infinity, child: child),
+        ),
+      ),
+    );
+  }
+}
+
+/// A heading announced as such to screen readers.
+Widget _heading(String text, TextStyle? style) =>
+    Semantics(header: true, child: Text(text, style: style));
+
+/// Eyebrow, title and optional introduction for a section.
+class _SectionHead extends StatelessWidget {
+  const _SectionHead({required this.eyebrow, required this.title, this.intro});
+
+  final String eyebrow;
+  final String title;
+  final String? intro;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(eyebrow, style: AppType.eyebrow(Palette.n500)),
+        const SizedBox(height: Space.sm),
+        _heading(
+          title,
+          AppType.theme.headlineLarge?.copyWith(fontSize: AppType.fluid(context, min: 26, max: 34)),
+        ),
+        if (intro case final text?) ...[
+          const SizedBox(height: Space.md),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: Space.proseMax),
+            child: Text(text, style: AppType.theme.bodyLarge),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// A photograph that opens enlarged; logos and diagrams are shown whole.
+class _Photo extends StatelessWidget {
+  const _Photo({required this.image, required this.aspectRatio, this.gallery});
+
+  final ProjectImage image;
+  final double aspectRatio;
+
+  /// The images the viewer can step through; just this one by default.
+  final List<ProjectImage>? gallery;
+
+  @override
+  Widget build(BuildContext context) {
+    final images = gallery ?? [image];
+    return Hoverable(
+      onTap: () => showProjectImageViewer(
+        context,
+        images: images,
+        initial: images.indexOf(image),
+        title: 'Oil & Gas Services',
+      ),
+      scale: 1.0,
+      lift: 0,
+      semanticLabel: 'Enlarge image: ${image.caption ?? ''}',
+      builder: (hovered) => ClipRRect(
+        borderRadius: BorderRadius.circular(Radii.md),
+        child: AspectRatio(
+          aspectRatio: aspectRatio,
+          child: ProjectPhoto(image, zoom: hovered ? 1.03 : 1.0),
+        ),
+      ),
+    );
+  }
+}
+
+/// One numbered row per service: photograph beside the description on wide
+/// screens (sides alternating), above it on narrow ones.
+class _Services extends StatelessWidget {
+  const _Services();
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 900;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHead(eyebrow: 'SERVICES', title: 'Inspection and Regulatory Compliance'),
+        const SizedBox(height: Space.lg),
+        for (final (i, service) in oilGasServices.indexed)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: Space.xl),
+            decoration: const BoxDecoration(border: Border(top: BorderSide(color: Palette.n200))),
+            child: _ServiceRow(service: service, number: i + 1, wide: wide, imageFirst: i.isEven),
+          ),
+      ],
+    );
+  }
+}
+
+class _ServiceRow extends StatelessWidget {
+  const _ServiceRow({
+    required this.service,
+    required this.number,
+    required this.wide,
+    required this.imageFirst,
+  });
+
+  final OilGasService service;
+  final int number;
+  final bool wide;
+  final bool imageFirst;
+
+  @override
+  Widget build(BuildContext context) {
+    final photo = _Photo(image: service.image, aspectRatio: 4 / 3);
+    final text = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          number.toString().padLeft(2, '0'),
+          style: AppType.theme.labelMedium?.copyWith(
+            color: Palette.n500,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: Space.xs),
+        _heading(service.title, AppType.theme.headlineMedium),
+        for (final paragraph in service.paragraphs) ...[
+          const SizedBox(height: Space.md),
+          Text(paragraph, style: AppType.theme.bodyMedium),
+        ],
+      ],
+    );
+    if (!wide) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [photo, const SizedBox(height: Space.lg), text],
+      );
+    }
+    final children = imageFirst
+        ? [
+            Expanded(flex: 5, child: photo),
+            const SizedBox(width: Space.xxl),
+            Expanded(flex: 4, child: text)
+          ]
+        : [
+            Expanded(flex: 4, child: text),
+            const SizedBox(width: Space.xxl),
+            Expanded(flex: 5, child: photo)
+          ];
+    return Row(crossAxisAlignment: CrossAxisAlignment.center, children: children);
+  }
+}
+
+/// The partnership, with TIC East Africa's contact details.
+class _Partnership extends StatelessWidget {
+  const _Partnership();
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final text = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHead(
+          eyebrow: 'PARTNERSHIP',
+          title: 'Working with Brisma Africa and TIC Group',
+        ),
+        for (final paragraph in oilGasPartnership) ...[
+          const SizedBox(height: Space.md),
+          Text(paragraph, style: AppType.theme.bodyLarge),
+        ],
+        const SizedBox(height: Space.xl),
+        const _CompanyCard(company: ticGroup, logo: ticGroupLogo),
+      ],
+    );
+    const photo = _Photo(image: oilGasPartnershipImage, aspectRatio: 4 / 3);
+    if (!wide) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [text, const SizedBox(height: Space.xl), photo],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: 5, child: text),
+        const SizedBox(width: Space.xxl),
+        const Expanded(flex: 4, child: photo),
+      ],
+    );
+  }
+}
+
+/// A company's name, origin and published contact details.
+class _CompanyCard extends StatelessWidget {
+  const _CompanyCard({required this.company, this.logo});
+
+  final TicCompany company;
+  final String? logo;
+
+  @override
+  Widget build(BuildContext context) {
+    final detail = AppType.theme.bodySmall?.copyWith(color: Palette.n600);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: Space.md),
+      decoration:
+          const BoxDecoration(border: Border(top: BorderSide(color: Palette.ink, width: 2))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (logo case final path?) ...[
+            Semantics(
+              image: true,
+              label: '${company.name} logo',
+              child: SizedBox(
+                height: 48,
+                child: CmsImage(
+                  source: path,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.centerLeft,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            ),
+            const SizedBox(height: Space.sm),
+          ],
+          Text(company.name, style: AppType.theme.titleLarge),
+          Text(company.origin, style: AppType.theme.bodyMedium?.copyWith(color: Palette.n500)),
+          const SizedBox(height: Space.xs),
+          if (company.address case final address?) Text(address, style: detail),
+          if (company.phone case final phone?) Text(phone, style: detail),
+          if (company.email case final email?)
+            LinkedText(email, style: detail ?? const TextStyle()),
+        ],
+      ),
+    );
+  }
+}
+
+/// The TIC Group: its certifications and references (labelled as the group's own).
+class _TicGroup extends StatelessWidget {
+  const _TicGroup();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHead(
+          eyebrow: 'TIC GROUP',
+          title: 'Certifications and References',
+          intro:
+              'The TIC Group is a global network of independent companies providing inspection, testing, certification and verification services. TIC Group companies are accredited by national and international bodies to provide these services in accordance with the highest standards.',
+        ),
+        const SizedBox(height: Space.xxl),
+        Text('TIC GROUP CERTIFICATIONS AND REFERENCES', style: AppType.eyebrow(Palette.n500)),
+        const SizedBox(height: Space.md),
+        LayoutBuilder(
+          builder: (context, box) {
+            final two = box.maxWidth >= 600;
+            const gap = Space.lg;
+            final cell = two ? (box.maxWidth - gap) / 2 : box.maxWidth;
+            return Wrap(
+              spacing: gap,
+              runSpacing: Space.lg,
               children: [
-                Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(gradient: Palette.heroSurface),
-                  padding: Space.sectionPad(isMobile),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                for (final image in ticGroupCredentials)
+                  SizedBox(
+                    width: cell,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        IconButton(
-                          icon: Icon(
-                            LucideIcons.arrowLeft,
-                            color: Palette.n0,
-                            size: isMobile ? 20 : 24,
-                          ),
-                          onPressed: () {
-                            developer.log('OilAndGasServicesDetail: Navigating back to /business-units', name: 'OilAndGasServicesDetail');
-                            Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/business-units',
-                              (route) => false,
-                            );
-                          },
-                          tooltip: 'Back to Business Units',
-                        ),
-                        Expanded(
-                          child: Container(
-                            constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 896),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Oil & Gas Services',
-                                  style: (isMobile
-                                          ? Theme.of(context).textTheme.headlineLarge
-                                          : Theme.of(context).textTheme.displaySmall)
-                                      ?.copyWith(color: Palette.n0),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: Space.md),
-                                Text(
-                                  'Comprehensive solution across the oil & gas services sector, powered by partnerships and decades of expertise.',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                        color: Colors.white70,
-                                      ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        _Photo(image: image, aspectRatio: 4 / 3, gallery: ticGroupCredentials),
+                        const SizedBox(height: Space.xs),
+                        Text(image.caption!, style: AppType.theme.bodySmall),
                       ],
                     ),
                   ),
-                ),
-                _buildAboutAndSubsidiariesSection(context, isMobile, screenWidth),
-                _buildServicesSection(context, isMobile),
-                _buildCertificationsAndClientsSection(context, isMobile),
-                const Footer(),
               ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAboutAndSubsidiariesSection(BuildContext context, bool isMobile, double screenWidth) {
-    return SectionWrapper(
-      background: Palette.n0,
-      topRule: Palette.oilGas,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'About Us',
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: Space.sm),
-          RichText(
-            textAlign: TextAlign.left,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'JV ALMA C.I.S',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Palette.ink,
-                        fontWeight: FontWeight.bold,
-                        height: 1.6,
-                      ),
-                ),
-                TextSpan(
-                  text: ' based on the experience in construction of oil and gas pipelines ventured as shareholders together with ',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Palette.n600,
-                        height: 1.6,
-                      ),
-                ),
-                TextSpan(
-                  text: 'BRISMA AFRICA',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Palette.ink,
-                        fontWeight: FontWeight.bold,
-                        height: 1.6,
-                      ),
-                ),
-                TextSpan(
-                  text: ' and ',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Palette.n600,
-                        height: 1.6,
-                      ),
-                ),
-                TextSpan(
-                  text: 'TIC GROUP',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Palette.ink,
-                        fontWeight: FontWeight.bold,
-                        height: 1.6,
-                      ),
-                ),
-                TextSpan(
-                  text: ' to create ',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Palette.n600,
-                        height: 1.6,
-                      ),
-                ),
-                TextSpan(
-                  text: 'TIC East Africa',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Palette.ink,
-                        fontWeight: FontWeight.bold,
-                        height: 1.6,
-                      ),
-                ),
-                TextSpan(
-                  text: '. TIC EA is a company specializing in inspection services, built on the extensive experience of the TIC Group a global organization with a presence in multiple countries and a workforce of over 500 employees, 70% of whom are specialized technicians.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Palette.n600,
-                        height: 1.6,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: isMobile ? 300 : 400),
-              child: Semantics(
-                label: 'TIC East Africa overview image',
-                child: Image.asset(
-                  'assets/images/tic/tic_1.jpg',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: Space.xl),
-          Text(
-            'Subsidiaries',
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: Space.md),
-          // Featured Subsidiary and Other Subsidiaries
-          isMobile
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Featured Subsidiary',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: Space.sm),
-                    _buildFeaturedSubsidiary(context, isMobile, screenWidth),
-                    const SizedBox(height: Space.lg),
-                    Text(
-                      'Other Subsidiaries',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: Space.sm),
-                    Semantics(
-                      label: 'Other subsidiaries list',
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: _buildOtherSubsidiariesList(context, isMobile),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Featured Subsidiary',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: Space.sm),
-                          _buildFeaturedSubsidiary(context, isMobile, screenWidth),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: Space.md),
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Other Subsidiaries',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: Space.sm),
-                          Semantics(
-                            label: 'Other subsidiaries list',
-                            child: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: _buildOtherSubsidiariesList(context, isMobile),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-          const SizedBox(height: Space.lg),
-          // Map of All Subsidiaries
-          Text(
-            'Our Global Presence',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: Space.sm),
-          Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 500),
-              child: Semantics(
-                label: 'Map of all TIC subsidiaries',
-                child: Image.asset(
-                  'assets/images/tic/tic_2.jpg',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildServicesSection(BuildContext context, bool isMobile) {
-    return SectionWrapper(
-      background: Palette.n50,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Our Services',
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: Space.sm),
-          Text(
-            'a. Inspection and integrity management',
-            style: Theme.of(context).textTheme.titleSmall,
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: Space.sm),
-          Text(
-            "• TIC EA guarantees the information and resources needed to ensure the safety of customers' activities and products. • TIC EA is a leader in facility integrity and risk management for the oil and gas industry.",
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Palette.n600,
-                  height: 1.6,
-                ),
-            textAlign: TextAlign.left,
-          ),
-          Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: isMobile ? 300 : 400),
-              child: Semantics(
-                label: 'Inspection and integrity management',
-                child: Image.asset(
-                  'assets/images/tic/tic_3.jpg',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: Space.md),
-          Text(
-            'b. Non-Destructive Examination',
-            style: Theme.of(context).textTheme.titleSmall,
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: Space.sm),
-          Text(
-            '• TIC EA specializes in non-destructive testing of materials and metal structures. Customers trust us for. Characterize the state of integrity of their equipment, without damaging it, either during production, use or maintenance.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Palette.n600,
-                  height: 1.6,
-                ),
-            textAlign: TextAlign.left,
-          ),
-          Text(
-            '• Our inspectors are certified, empowered and qualified to international standards. Thanks to a wide range of conventional and advanced control methods, we offer a high value-added service that helps to control risks and reduce lead times and costs.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Palette.n600,
-                  height: 1.6,
-                ),
-            textAlign: TextAlign.left,
-          ),
-          Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: isMobile ? 300 : 400),
-              child: Semantics(
-                label: 'Non-Destructive Examination',
-                child: Image.asset(
-                  'assets/images/tic/tic_4.jpg',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: Space.md),
-          Text(
-            'c. Regulatory Compliance Services',
-            style: Theme.of(context).textTheme.titleSmall,
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: Space.sm),
-          Text(
-            '• Regulatory auditing and inspection at TIC EA is a service-focused process that goes beyond routine compliance checks. Its purpose is to identify and address a range of risks that can directly impact operational safety, integrity, and continuity.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Palette.n600,
-                  height: 1.6,
-                ),
-            textAlign: TextAlign.left,
-          ),
-          Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: isMobile ? 300 : 400),
-              child: Semantics(
-                label: 'Regulatory Compliance Services',
-                child: Image.asset(
-                  'assets/images/tic/tic_5.jpg',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCertificationsAndClientsSection(BuildContext context, bool isMobile) {
-    return SectionWrapper(
-      background: Palette.n0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Certifications',
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: Space.sm),
-          Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: isMobile ? 300 : 400),
-              child: Semantics(
-                label: 'Certifications',
-                child: Image.asset(
-                  'assets/images/tic/tic_6.jpg',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: Space.xl),
-          Text(
-            'Clients',
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: Space.sm),
-          Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: isMobile ? 500 : 700),
-              child: Semantics(
-                label: 'Clients',
-                child: Image.asset(
-                  'assets/images/tic/tic_7.jpg',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeaturedSubsidiary(BuildContext context, bool isMobile, double screenWidth) {
-    return RevealOnScroll(
-      child: AppCard(
-        interactive: false,
-        accent: Palette.oilGas,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 400),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Semantics(
-                  label: 'TIC East Africa',
-                  child: Image.asset(
-                    'assets/images/subsidiaries/TIC-ea.jpg',
-                    fit: BoxFit.contain,
-                    height: isMobile ? 150 : 200,
-                    width: double.infinity,
-                  ),
-                ),
-              ),
-              const SizedBox(height: Space.md),
-              Row(
-                children: [
-                  const Icon(LucideIcons.mapPin, size: 16, color: Palette.n600),
-                  const SizedBox(width: Space.xs),
-                  Expanded(
-                    child: Text(
-                      'TIC East Africa - Kenya/2022',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: Space.sm),
-              Text(
-                'Address: 5th-floor Brisma Towers, Off Magadi 74429-00200 Nairobi, Kenya',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
-              ),
-              const SizedBox(height: Space.xxs),
-              Text(
-                'Phone: +254 72 28 46 458',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
-              ),
-              const SizedBox(height: Space.xxs),
-              Text(
-                'Email: tic@tic-inspectiongroup.com',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
-              ),
-            ],
-          ),
+            );
+          },
         ),
-      ),
+      ],
     );
-  }
-
-  List<Widget> _buildOtherSubsidiariesList(BuildContext context, bool isMobile) {
-    final otherSubsidiaries = [
-      {
-        'title': 'Technique Inspection & Contrôle - Tunisia/1993',
-        'phone': '+216 71 180 140',
-        'email': 'tic@tic-inspectiongroup.com',
-      },
-      {
-        'title': 'TIC Gabon - Gabon/2014',
-        'phone': '+241 01 53 08 52',
-        'email': 'contact@tic-ga.com',
-      },
-      {
-        'title': 'TIC JSC - Libya/2003',
-        'phone': '+218 21 44 40 504',
-        'email': 'tic@tic-inspectiongroup.com',
-      },
-      {
-        'title': 'ICT Algeria - Algeria/2023',
-        'phone': '+213 (0) 23 469 808',
-        'email': null,
-      },
-      {
-        'title': 'TIC Gc - Tunisia/2010',
-        'phone': '+216 71 180 029',
-        'email': 'ticgc@tic-inspectiongroup.com',
-      },
-      {
-        'title': 'CETIM International Engineering Services - 2008',
-        'phone': null,
-        'email': null,
-      },
-      {
-        'title': 'Advanced inspection services - KSA/2010',
-        'phone': '+966 (3) 340 1100 (Extn 112)',
-        'email': 'info@ais-ksa.com',
-      },
-    ];
-
-    return otherSubsidiaries.asMap().entries.map((entry) {
-      final index = entry.key;
-      final subsidiary = entry.value;
-      return RevealOnScroll(
-        delayMs: 60 * index,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: Space.sm),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(LucideIcons.mapPin, size: 14, color: Palette.n600),
-              const SizedBox(width: Space.xs),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      subsidiary['title'] as String,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: Space.xxs),
-                    if (subsidiary['phone'] != null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: Space.md, bottom: 2.0),
-                        child: Text(
-                          '• Phone: ${subsidiary['phone']}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.5),
-                        ),
-                      ),
-                    if (subsidiary['email'] != null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: Space.md, bottom: 2.0),
-                        child: Text(
-                          '• Email: ${subsidiary['email']}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.5),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }).toList();
   }
 }

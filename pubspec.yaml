@@ -46,15 +46,24 @@ flutter:
   assets:
     - assets/videos/company_video.mp4
     - assets/images/company_background.jpg  
+    - assets/images/company_background_web.jpg
+    - assets/images/construction_1.jpg
+    - assets/images/agribusiness_1.jpg
+    - assets/images/oil.jpg
+    - assets/images/it.jpg
        
     - assets/certificates/
     - assets/images/agribusiness/
+    - assets/images/agribusiness/kabete/
+    - assets/images/agribusiness/kapluk/
     - assets/images/construction/
+    - assets/icons/construction/
     - assets/images/tic/
     - assets/images/clients/
     - assets/news/
     - assets/apk/
     - assets/images/subsidiaries/
+    - assets/images/dev/
 
 flutter_icons:
    android: true

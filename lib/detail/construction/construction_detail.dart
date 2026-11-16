@@ -1,464 +1,279 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../../widgets/footer.dart';
-import '../../widgets/header.dart';
+
 import '../../design/palette.dart';
 import '../../design/tokens.dart';
-import '../../widgets/app_card.dart';
-import '../../widgets/section.dart';
-import '../../widgets/reveal_on_scroll.dart';
-import '../it/cmms_page.dart';
+import '../../design/typography.dart';
+import '../../widgets/footer.dart';
+import '../../widgets/header.dart';
+import '../../widgets/hoverable.dart';
+import '../../widgets/logo_marquee.dart';
+import 'construction_projects.dart';
+import '../portfolio/project_carousel.dart';
+import '../portfolio/project_widgets.dart';
+import '../unit_intro.dart';
 
+/// Construction & Facility Management: introduction, a carousel of every
+/// construction project, then facility management and NyumbaSmart.
 class ConstructionDetail extends StatelessWidget {
   const ConstructionDetail({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return AppScaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(gradient: Palette.heroSurface),
-              padding: Space.sectionPad(isMobile),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        LucideIcons.arrowLeft,
-                        color: Palette.n0,
-                        size: isMobile ? 20 : 24,
-                      ),
-                      onPressed: () {
-                        debugPrint('ConstructionDetail: Navigating back to /business-units');
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/business-units',
-                          (route) => false,
-                        );
-                      },
-                      tooltip: 'Back to Business Units',
-                    ),
-                    Expanded(
-                      child: Container(
-                        constraints: BoxConstraints(maxWidth: isMobile ? screenWidth * 0.9 : 896),
-                        child: Column(
-                          children: [
-                            Text(
-                              'Construction & Facility Management',
-                              style: (isMobile
-                                      ? Theme.of(context).textTheme.headlineLarge
-                                      : Theme.of(context).textTheme.displaySmall)
-                                  ?.copyWith(color: Palette.n0),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: Space.md),
-                            Text(
-                              'Comprehensive solutions across construction and facility management sectors, powered by cutting-edge technology and decades of expertise.',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.white70,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            _Column(
+              padding: EdgeInsets.only(
+                top: isMobile ? Space.xl : Space.xxl,
+                bottom: isMobile ? Space.xxl : Space.xxxl,
+              ),
+              child: const UnitIntro(
+                title: 'Construction & Facility Management',
+                description:
+                    'Specialised construction, renovation and facility management services, delivered '
+                    'with attention to quality, functionality and detail.',
               ),
             ),
-            _buildConstructionSection(context, screenWidth, isMobile),
-            _buildFacilitySection(context, screenWidth, isMobile),
+            Padding(
+              padding: EdgeInsets.only(bottom: isMobile ? Space.xxxl : Space.section),
+              child: ProjectCarousel(
+                title: constructionPortfolio.projectsTitle,
+                projects: constructionProjects,
+                onOpen: (project) =>
+                    Navigator.pushNamed(context, project.route, arguments: fromPortfolio),
+              ),
+            ),
+            const _Partners(),
+            const _FacilityManagement(),
             const Footer(),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildConstructionSection(BuildContext context, double screenWidth, bool isMobile) {
-    return SectionWrapper(
-      background: Palette.n0,
-      topRule: Palette.construction,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const IconChip(icon: LucideIcons.building2, color: Palette.construction),
-              const SizedBox(width: Space.sm),
-              Text(
-                'Construction Services',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-            ],
-          ),
-          const SizedBox(height: Space.lg),
-          _buildConstructionContent(context, screenWidth, isMobile),
-        ],
+/// Centres [child] in the shared content column.
+class _Column extends StatelessWidget {
+  const _Column({required this.child, this.padding = EdgeInsets.zero, this.color});
+
+  final Widget child;
+  final EdgeInsets padding;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: color,
+      padding: padding.add(EdgeInsets.symmetric(horizontal: siteGutter(context))),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: siteContentMax),
+          child: SizedBox(width: double.infinity, child: child),
+        ),
       ),
-    );
-  }
-
-  Widget _buildConstructionContent(BuildContext context, double screenWidth, bool isMobile) {
-    const List<Map<String, String>> features = [
-      {
-        'title': 'Construction Projects',
-        'description': 'Specialized upgrades for embassies and infrastructure with a focus on security and precision.',
-      },
-      {
-        'title': 'Facility Management',
-        'description': 'Comprehensive services enhanced by proprietary CMMS software for operational efficiency.',
-      },
-      {
-        'title': 'CMMS Integration',
-        'description': 'Advanced maintenance management with real-time asset tracking and preventive scheduling.',
-      },
-    ];
-
-    final List<Map<String, dynamic>> projects = [
-      {
-        'title': 'United States Embassy - American Center Renov, Nairobi.',
-        'client': 'Embassy of United States in Kenya',
-        'period': 'Sep 2021 – May 2022',
-        'description': 'Comprehensive renovation and interior redesign of the ground floor of the Embassy of the United States in Kenya, transforming it into a modern, multifunctional space. The scope included reconfiguration of key areas such as the Maker Lab, Education USA Workroom, Main Program Space, and Staff Offices.',
-        'testimonial': '"Our team delivered an innovative and adaptable space that reflects American values while embracing local culture—a seamless fusion of design and function." — Piergiorgio Di Carmine JV ALMA C.I.S.',
-        'imagePaths': [
-          'assets/images/construction/american_center_1.jpg',
-          'assets/images/construction/american_center_2.jpg',
-          'assets/images/construction/american_center_3.jpg',
-        ],
-      },
-      {
-        'title': 'United States Embassy - Rosslyn Ridge Renov, Nairobi.',
-        'client': 'Embassy of United States, Nairobi',
-        'period': 'Sep 2018 – Ongoing',
-        'description': 'Multi-phase renovation across more than 50 residential single units including structural upgrades and modern exterior finishes for long-term resilience and performance.',
-        'testimonial': '"JV ALMA C.I.S. performed reliably and professionally, meeting all regulatory standards and delivering a high-quality result we would trust again." — Wencke Jacobsen, Contract Specialist, RPSO Frankfurt (PHASE 2)',
-        'imagePaths': [
-          'assets/images/construction/rosslyn_ridge_1.jpg',
-          'assets/images/construction/rosslyn_ridge_2.jpg',
-          'assets/images/construction/rosslyn_ridge_3.jpg',
-        ],
-      },
-      {
-        'title': 'United States - Medical Research Unit Renov, Kisumu.',
-        'client': 'NAVFAC',
-        'period': 'Sep 2018 – Mar 2021',
-        'description': 'Comprehensive renovation of a medical research facility including removal of the existing roof structure and upgrade of electrical and mechanical systems under challenging pandemic conditions.',
-        'testimonial': '"The contractor exceeded expectations during an extremely challenging period, delivering consistent quality and strong coordination." — Brian Tiu, NAVFAC EURAFCENT',
-        'imagePaths': [
-          'assets/images/construction/medical_research_1.jpg',
-        ],
-      },
-      {
-        'title': 'Italian Ambassador\'s Residence Renov, Nairobi.',
-        'client': 'Italian Embassy Nairobi',
-        'period': 'May 2024 - Ongoing',
-        'description': 'Comprehensive renovation of the Italian Ambassador\'s Residence in Karura Close, with a strong focus on modernizing and optimizing building systems for energy efficiency.',
-        'testimonial': '"JV ALMA C.I.S provided a detailed and professional assessment, they are setting a clear path for renovation tailored to the building\'s age and structural needs." — Paolo Rotilli',
-        'imagePaths': [
-          'assets/images/construction/italian_embassy.jpg',
-        ],
-      },
-      {
-        'title': 'Portuguese Embassy Renov, Nairobi.',
-        'client': 'Embassy of Portugal',
-        'period': 'Mar 2025 – Aug 2025',
-        'description': 'Adaptive renovation to transform an existing structure into a modern consular section for the Portuguese Embassy. The project involves full conversion of former spaces into biometric enrollment, visa production, and reception offices.',
-        'testimonial': '"Thank you for all the thorough documentation and the great partnership throughout. Your support and professionalism have been truly appreciated, and it’s been a pleasure working with you." — Miguel Antonio Luis ',
-        'imagePaths': [
-          'assets/images/construction/portugese_embassy_1.jpg',
-          'assets/images/construction/portugese_embassy_2.jpg',
-        ],
-      },
-      {
-        'title': 'Swedish Ambassador\'s Residence Renov, Nairobi.',
-        'client': 'Embassy of Sweden',
-        'period': 'May 2025 – October 2025',
-        'description': 'Overhaul of the electrical systems at the Swedish Ambassador’s residence, including upgrades to key electrical infrastructure to enhance system performance, improve energy efficiency, and ensure the reliability of the residence’s electrical operations.',
-        'testimonial': '',
-        'imagePaths': [
-          'assets/images/construction/swedish_embassy.jpg',
-        ],
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Our construction services deliver large-scale infrastructure and specialized diplomatic missions across Kenya, ensuring precision, sustainability, and compliance with international standards.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: Space.lg),
-        Text(
-          'Key Features',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: Space.sm),
-        Column(
-          children: features.asMap().entries.map((entry) {
-            final index = entry.key;
-            final feature = entry.value;
-            return RevealOnScroll(
-              delayMs: 60 * index,
-              child: Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: Space.sm),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      LucideIcons.check,
-                      size: 14,
-                      color: Palette.success,
-                    ),
-                    const SizedBox(width: Space.xs),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            feature['title']!,
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: Space.xxs),
-                          Text(
-                            feature['description']!,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: Space.sm),
-        Text(
-          'Projects',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: Space.sm),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: projects.length,
-          itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(bottom: Space.sm),
-            child: RevealOnScroll(
-              delayMs: 60 * index,
-              child: _ProjectCard(
-                project: projects[index],
-                isMobile: isMobile,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFacilitySection(BuildContext context, double screenWidth, bool isMobile) {
-    return SectionWrapper(
-      background: Palette.n50,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const IconChip(icon: LucideIcons.database, color: Palette.construction),
-              const SizedBox(width: Space.sm),
-              Text(
-                'Facility Management Services',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-            ],
-          ),
-          const SizedBox(height: Space.lg),
-          _buildFacilityContent(context, screenWidth, isMobile),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFacilityContent(BuildContext context, double screenWidth, bool isMobile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Facility management (FM) involves the coordination of space, infrastructure, and services to ensure that buildings and facilities operate efficiently and safely. It encompasses maintenance, operations, and strategic planning to support the core functions of an organization.\n\nOur approach integrates our proprietary NyumbaSmart - Computerized Maintenance Management System (CMMS), developed by our IT Division, to streamline these processes.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: Space.sm),
-        AppCard(
-          onTap: () {
-            debugPrint('FacilityManagementPage: Navigating to CMMSPage');
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const CmmsPage()));
-          },
-          semanticLabel: 'NyumbaSmart - Computerized Maintenance Management System',
-          child: Row(
-            children: [
-              const IconChip(icon: LucideIcons.database, color: Palette.construction),
-              const SizedBox(width: Space.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'NyumbaSmart - Computerized Maintenance Management System (CMMS)',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: Space.xxs),
-                    Text(
-                      'Automate work orders, track assets, and schedule maintenance\nEnhance efficiency with our CMMS solution.',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                LucideIcons.chevronRight,
-                color: Palette.n500,
-                size: isMobile ? 16 : 20,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
 
-class _ProjectCard extends StatelessWidget {
-  final Map<String, dynamic> project;
-  final bool isMobile;
-
-  const _ProjectCard({
-    required this.project,
-    required this.isMobile,
-  });
+/// Firms worked with on construction projects, as a slowly scrolling strip
+/// of their logos (still, for visitors who reduce motion).
+class _Partners extends StatelessWidget {
+  const _Partners();
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      interactive: false,
-      padding: EdgeInsets.zero,
-      accent: Palette.construction,
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          title: Text(
-            project['title'],
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Palette.primary,
-                ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 2,
-          ),
-          tilePadding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xs),
-          childrenPadding: const EdgeInsets.all(Space.sm),
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 600;
+
+    return _Column(
+      padding: EdgeInsets.only(bottom: isMobile ? Space.xxxl : Space.section),
+      child: Container(
+        padding: EdgeInsets.only(top: isMobile ? Space.xl : Space.xxl),
+        decoration: const BoxDecoration(border: Border(top: BorderSide(color: Palette.n200))),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.9,
+            Text('PARTNERS', style: AppType.eyebrow(Palette.n500)),
+            const SizedBox(height: Space.sm),
+            Text(
+              'Construction Partners',
+              style: AppType.theme.headlineLarge?.copyWith(
+                fontSize: AppType.fluid(context, min: 26, max: 34),
               ),
+            ),
+            const SizedBox(height: Space.md),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: Space.proseMax),
+              child: Text(
+                'Specialist firms we have worked with on our construction projects.',
+                style: AppType.theme.bodyLarge,
+              ),
+            ),
+            SizedBox(height: isMobile ? Space.lg : Space.xl),
+            // Read out as one list: the logos themselves carry no text.
+            Semantics(
+              container: true,
+              label: 'Construction partners: ${[
+                for (final p in constructionPartners) p.name
+              ].join(', ')}',
+              child: ExcludeSemantics(
+                child: LogoMarquee(
+                  assetPaths: [
+                    for (final p in constructionPartners)
+                      if (p.logo case final logo?) logo,
+                  ],
+                  logoHeight: isMobile ? 40 : 52,
+                  gap: isMobile ? 48 : 80,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Facility management, with NyumbaSmart as the platform behind it.
+class _FacilityManagement extends StatelessWidget {
+  const _FacilityManagement();
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 600;
+    final wide = width >= 960;
+
+    final intro = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('SERVICES', style: AppType.eyebrow(Palette.n500)),
+        const SizedBox(height: Space.sm),
+        Text(
+          'Facility Management',
+          style: AppType.theme.headlineLarge?.copyWith(
+            fontSize: AppType.fluid(context, min: 26, max: 34),
+          ),
+        ),
+        const SizedBox(height: Space.md),
+        Text(
+          'Facility management involves coordinating building operations, maintenance, '
+          'infrastructure and supporting services to help facilities operate efficiently and '
+          'reliably.',
+          style: AppType.theme.bodyLarge,
+        ),
+        const SizedBox(height: Space.md),
+        Text(
+          'Our approach integrates NyumbaSmart, the Computerized Maintenance Management System '
+          '(CMMS) developed by our IT Division, to streamline these processes.',
+          style: AppType.theme.bodyMedium,
+        ),
+      ],
+    );
+
+    return _Column(
+      color: Palette.n50,
+      padding: EdgeInsets.symmetric(vertical: isMobile ? Space.xxxl : Space.section),
+      child: wide
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 5, child: intro),
+                const SizedBox(width: Space.xxl),
+                const Expanded(flex: 6, child: _NyumbaSmartPanel()),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [intro, const SizedBox(height: Space.xl), const _NyumbaSmartPanel()],
+            ),
+    );
+  }
+}
+
+class _NyumbaSmartPanel extends StatelessWidget {
+  const _NyumbaSmartPanel();
+
+  static const _uses = [
+    'Maintenance management',
+    'Work orders',
+    'Asset tracking',
+    'Maintenance scheduling'
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    void open() => Navigator.pushNamed(context, '/cmms');
+
+    return Hoverable(
+      onTap: open,
+      scale: 1.0,
+      lift: -2,
+      semanticLabel: 'NyumbaSmart – Computerized Maintenance Management System (CMMS)',
+      builder: (hovered) => AnimatedContainer(
+        duration: Motion.fast,
+        decoration: BoxDecoration(
+          color: Palette.n0,
+          borderRadius: BorderRadius.circular(Radii.md),
+          border: Border.all(color: hovered ? Palette.n300 : Palette.n200),
+          boxShadow: hovered ? Elevation.card : null,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // A real NyumbaSmart screen: the maintenance task board.
+            AspectRatio(
+              aspectRatio: 1915 / 891,
+              child: ProjectPhoto(
+                const ProjectImage('assets/apk/nyumbasmart.jpg'),
+                zoom: hovered ? 1.02 : 1.0,
+              ),
+            ),
+            Container(height: 1, color: Palette.n200),
+            Padding(
+              padding: const EdgeInsets.all(Space.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_shouldCenterImage(project))
-                    Center(
-                      child: ClipRRect(
-                        borderRadius: Radii.card,
-                        child: Image.asset(
-                          (project['imagePaths'] as List<String>)[0],
-                          height: isMobile ? 200 : 300,
-                          width: isMobile ? 320 : 480,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            height: isMobile ? 200 : 300,
-                            width: isMobile ? 320 : 480,
-                            color: Palette.n200,
-                            child: const Center(
-                              child: Icon(LucideIcons.imageOff, color: Palette.n500),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      height: isMobile ? 200 : 300,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: (project['imagePaths'] as List<String>).map((imagePath) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: Space.xs),
-                              child: ClipRRect(
-                                borderRadius: Radii.card,
-                                child: Image.asset(
-                                  imagePath,
-                                  height: isMobile ? 200 : 300,
-                                  width: isMobile ? 320 : 480,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => Container(
-                                    height: isMobile ? 200 : 300,
-                                    width: isMobile ? 320 : 480,
-                                    color: Palette.n200,
-                                    child: const Center(
-                                      child: Icon(LucideIcons.imageOff, color: Palette.n500),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
+                  Text('PLATFORM', style: AppType.eyebrow(Palette.construction)),
                   const SizedBox(height: Space.sm),
-                  Text(
-                    'Client: ${project['client']}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
+                  Text('NyumbaSmart', style: AppType.theme.headlineMedium),
                   const SizedBox(height: Space.xxs),
                   Text(
-                    'Period: ${project['period']}',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    'Computerized Maintenance Management System (CMMS)',
+                    style: AppType.theme.titleMedium?.copyWith(color: Palette.n600),
                   ),
-                  const SizedBox(height: Space.xs),
+                  const SizedBox(height: Space.md),
                   Text(
-                    project['description'],
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    'A digital platform designed to support maintenance management, work orders, '
+                    'asset tracking and maintenance scheduling.',
+                    style: AppType.theme.bodyMedium,
                   ),
-                  if (project['testimonial'] != '') ...[
-                    const SizedBox(height: Space.sm),
-                    Text(
-                      'Testimonial',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: Space.xxs),
-                    Text(
-                      project['testimonial'],
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontStyle: FontStyle.italic,
+                  const SizedBox(height: Space.md),
+                  Wrap(
+                    spacing: Space.xs,
+                    runSpacing: Space.xs,
+                    children: [
+                      for (final use in _uses)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: 6),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Palette.n200),
+                            borderRadius: BorderRadius.circular(Radii.pill),
                           ),
-                    ),
-                  ],
+                          child: Text(use,
+                              style: AppType.theme.labelMedium?.copyWith(color: Palette.n600)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: Space.lg),
+                  ArrowLink(label: 'Explore NyumbaSmart', onTap: open),
                 ],
               ),
             ),
@@ -466,9 +281,5 @@ class _ProjectCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  bool _shouldCenterImage(Map<String, dynamic> project) {
-    return (project['imagePaths'] as List<String>).length == 1;
   }
 }
