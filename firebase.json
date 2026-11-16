@@ -8,10 +8,28 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "emulators": {
+    "firestore": { "port": 8085 },
+    "functions": { "port": 5011 },
+    "hosting": { "port": 5015 },
+    "ui": { "enabled": false }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "website",
+      "runtime": "nodejs22",
+      "ignore": ["node_modules", "test", "*.log"]
+    }
+  ],
   "hosting": {
     "public": "build/web",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "**/*.apk"],
     "rewrites": [
+      {
+        "source": "/api/chat",
+        "function": { "functionId": "askAlma", "region": "us-central1" }
+      },
       {
         "source": "**",
         "destination": "/index.html"
@@ -19,13 +37,13 @@
     ],
     "redirects": [
       {
-        "source": "/:path*\\?fbclid=:fbclid",
-        "destination": "https://www.jvalmacis.com/:path*",
+        "source": "/community-development{,/}",
+        "destination": "/community-impact",
         "type": 301
       },
       {
-        "source": "https://jvalmacis.com{,/**}",
-        "destination": "https://www.jvalmacis.com",
+        "source": "/:path*\\?fbclid=:fbclid",
+        "destination": "https://jvalmacis.com/:path*",
         "type": 301
       }
     ],

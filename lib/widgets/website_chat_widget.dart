@@ -1,30 +1,28 @@
 // lib/widgets/website_chat_widget.dart
-// ignore_for_file: deprecated_member_use, avoid_print
+//
+// The "Ask ALMA" AI assistant: a compact button fixed to the bottom-right of
+// every page, and the chat panel it opens. Conversation state lives in
+// chatControllerProvider; replies come from WebsiteChatService.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'website_chat_service.dart';
+import '../design/palette.dart';
+import '../design/tokens.dart';
+import '../design/typography.dart';
 import '../providers/chat_provider.dart';
 
-// ─── Colours ───────────────────────────────────────────────────────────────
-const Color _brandDark   = Color(0xFF1E293B);
-const Color _brandAccent = Color(0xFF0F766E);
-const Color _brandLight  = Color(0xFFF1F5F9);
+const _suggestions = [
+  'What services do you offer?',
+  'Tell me about your software platforms',
+  'How can I contact you?',
+  'Are there any job openings?',
+];
 
-const Color _bubbleUser  = Color(0xFF1E293B);
-const Color _bubbleBot   = Color(0xFFF8FAFC);
-const Color _textUser    = Colors.white;
-const Color _textBot     = Color(0xFF1E293B);
-
-// FAB specific
-const Color _fabBackground = Colors.white;
-const Color _fabTextColor  = Color(0xFF1E293B);
-const Color _fabBorderColor = Color(0xFFE2E8F0);
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  WebsiteChatFab — Visible on ALL screen sizes
-// ═══════════════════════════════════════════════════════════════════════════
-
+/// The button that opens and closes the chat panel. A labelled pill on
+/// tablet and desktop, a round icon button on phones.
 class WebsiteChatFab extends StatefulWidget {
   const WebsiteChatFab({super.key});
 
@@ -32,356 +30,137 @@ class WebsiteChatFab extends StatefulWidget {
   State<WebsiteChatFab> createState() => _WebsiteChatFabState();
 }
 
-class _WebsiteChatFabState extends State<WebsiteChatFab>
-    with SingleTickerProviderStateMixin {
-  bool _chatOpen = false;
-  OverlayEntry? _overlayEntry;
+class _WebsiteChatFabState extends State<WebsiteChatFab> {
+  OverlayEntry? _panel;
 
-  late final AnimationController _pulseCtrl;
-  bool _hasPulsed = false;
-
-  Offset _offset = const Offset(20, 100);
-  bool _isDragging = false;
-  bool _hovered = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted && !_hasPulsed) {
-        _pulseCtrl.repeat(reverse: true);
-        Future.delayed(const Duration(seconds: 4), () {
-          if (mounted) {
-            _pulseCtrl.stop();
-            setState(() => _hasPulsed = true);
-          }
-        });
-      }
-    });
-  }
+  bool get _open => _panel != null;
 
   @override
   void dispose() {
-    _removeOverlay();
-    _pulseCtrl.dispose();
+    _panel?.remove();
     super.dispose();
   }
 
-  void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-  }
-
-  void _toggleChat() {
-    if (_chatOpen) {
-      _removeOverlay();
-      setState(() => _chatOpen = false);
+  void _toggle() {
+    if (_open) {
+      _close();
     } else {
-      _showOverlay();
-      setState(() => _chatOpen = true);
+      _panel = OverlayEntry(builder: (_) => _ChatOverlay(onClose: _close));
+      Overlay.of(context).insert(_panel!);
+      setState(() {});
     }
   }
 
-  void _showOverlay() {
-    final overlay = Overlay.of(context);
-
-    _overlayEntry = OverlayEntry(
-      builder: (ctx) => _ChatOverlay(
-        onClose: () {
-          _removeOverlay();
-          if (mounted) setState(() => _chatOpen = false);
-        },
-      ),
-    );
-    overlay.insert(_overlayEntry!);
+  void _close() {
+    _panel?.remove();
+    _panel = null;
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final compact = MediaQuery.sizeOf(context).width < 600;
+    final label = _open ? 'Close chat' : 'Ask ALMA, our AI assistant';
 
-    if (!isMobile) {
-      // Desktop & Tablet - Fixed position
-      return Align(
-        alignment: Alignment.bottomRight,
-        child: Padding(
-          padding: const EdgeInsets.only(right: 24, bottom: 80),
-          child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            onEnter: (_) => setState(() => _hovered = true),
-            onExit: (_) => setState(() => _hovered = false),
-            child: GestureDetector(
-              onTap: _toggleChat,
-              child: AnimatedScale(
-                scale: _hovered ? 1.06 : 1.0,
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                child: _buildFabContent(),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Mobile - Draggable
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: Padding(
-        padding: const EdgeInsets.only(right: 16, bottom: 80),
-        child: Transform.translate(
-          offset: _offset,
-          child: GestureDetector(
-            onPanStart: (_) => setState(() => _isDragging = true),
-            onPanUpdate: (details) {
-              setState(() {
-                _offset += details.delta;
-                final size = MediaQuery.of(context).size;
-                _offset = Offset(
-                  _offset.dx.clamp(10.0, size.width - 170),
-                  _offset.dy.clamp(20.0, size.height - 100),
-                );
-              });
-            },
-            onPanEnd: (_) => setState(() => _isDragging = false),
-            child: AbsorbPointer(
-              absorbing: _isDragging,
-              child: GestureDetector(
-                onTap: _toggleChat,
-                child: _buildFabContent(),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFabContent() {
-    return AnimatedBuilder(
-      animation: _pulseCtrl,
-      builder: (context, child) {
-        final pulse = _pulseCtrl.value;
-        return Stack(
-          alignment: Alignment.bottomCenter,
-          clipBehavior: Clip.none,
-          children: [
-            if (!_hasPulsed && pulse > 0 && !_isDragging)
-              Positioned(
-                bottom: 0,
-                child: Container(
-                  width: 70 + pulse * 18,
-                  height: 70 + pulse * 18,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _brandAccent.withOpacity((1 - pulse) * 0.22),
-                  ),
-                ),
-              ),
-            child!,
-          ],
-        );
-      },
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.bottomCenter,
-        children: [
-          Material(
-            color: _fabBackground,
-            elevation: 6,
-            shadowColor: Colors.black26,
-            borderRadius: BorderRadius.circular(30),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: _fabBorderColor, width: 1.5),
-              ),
-              child: const Row(
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        label: label,
+        excludeSemantics: true,
+        child: Material(
+          color: Palette.ink,
+          elevation: 4,
+          shadowColor: const Color(0x400B1220),
+          shape: const StadiumBorder(),
+          child: InkWell(
+            onTap: _toggle,
+            customBorder: const StadiumBorder(),
+            child: Padding(
+              padding: compact
+                  ? const EdgeInsets.all(16)
+                  : const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(width: 4),
-                  Text(
-                    "Chat with us",
-                    style: TextStyle(
-                      fontSize: 14.8,
-                      fontWeight: FontWeight.w600,
-                      color: _fabTextColor,
-                    ),
+                  Icon(
+                    _open ? LucideIcons.x : LucideIcons.messageCircle,
+                    color: Palette.n0,
+                    size: 20,
                   ),
-                  SizedBox(width: 5),
-                  Text("👋", style: TextStyle(fontSize: 16)),
-                  SizedBox(width: 34),
+                  if (!compact) ...[
+                    const SizedBox(width: Space.xs),
+                    Text(
+                      _open ? 'Close' : 'Ask ALMA',
+                      style: AppType.theme.labelLarge?.copyWith(color: Palette.n0),
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
-          const Positioned(
-            top: -18,
-            right: 10,
-            child: _SpeechBubbleIcon(),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// Speech Bubble Icon
-class _SpeechBubbleIcon extends StatelessWidget {
-  const _SpeechBubbleIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(44, 44),
-      painter: _SpeechBubblePainter(),
-    );
-  }
-}
-
-class _SpeechBubblePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final cx = w / 2;
-    final cy = h / 2 - 3;
-
-    const outerR = 21.0;
-    const innerR = 16.0;
-    const earW = 6.0;
-    const earH = 7.0;
-
-    final shadowPath = _buildFullPath(cx, cy, innerR, earW, earH);
-    canvas.drawShadow(shadowPath, Colors.black45, 4, false);
-
-    final ringPaint = Paint()
-      ..color = const Color(0xFFCBD5E1)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(cx, cy), outerR, ringPaint);
-
-    final fillPaint = Paint()
-      ..color = const Color(0xFF1E293B)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(_buildFullPath(cx, cy, innerR, earW, earH), fillPaint);
-
-    final dotPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    const dotR = 2.5;
-    const gap = 5.6;
-
-    canvas.drawCircle(Offset(cx - gap, cy), dotR, dotPaint);
-    canvas.drawCircle(Offset(cx, cy), dotR, dotPaint);
-    canvas.drawCircle(Offset(cx + gap, cy), dotR, dotPaint);
-  }
-
-  Path _buildFullPath(double cx, double cy, double r, double earW, double earH) {
-    final circle = Path()..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r));
-
-    final ear = Path()
-      ..moveTo(cx - earW, cy + r * 0.55)
-      ..lineTo(cx - earW - earW * 0.4, cy + r + earH)
-      ..lineTo(cx + earW * 0.2, cy + r * 0.85)
-      ..close();
-
-    return Path.combine(PathOperation.union, circle, ear);
-  }
-
-  @override
-  bool shouldRepaint(_SpeechBubblePainter old) => false;
-}
-
-// Chat Overlay & Panel (unchanged)
+/// Positions the panel above the chat button.
 class _ChatOverlay extends StatelessWidget {
-  final VoidCallback onClose;
   const _ChatOverlay({required this.onClose});
 
+  final VoidCallback onClose;
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
-    final panelW = isMobile ? size.width - 32.0 : 360.0;
-    final panelH = isMobile ? 460.0 : 500.0;
-    final right = isMobile ? 16.0 : 24.0;
-    const bottom = 80.0 + 16.0;
+    final size = MediaQuery.sizeOf(context);
+    final compact = size.width < 600;
+    final width = compact ? size.width - 24 : 380.0;
+    final height = (size.height - 120).clamp(320.0, 560.0);
 
     return Positioned(
-      right: right,
-      bottom: bottom,
-      child: Material(
-        color: Colors.transparent,
-        child: SizedBox(
-          width: panelW,
-          height: panelH,
-          child: _ChatPanel(onClose: onClose),
-        ),
+      right: compact ? 12 : 16,
+      // Clear of the chat button (16 margin + 56 button + 12 gap).
+      bottom: 84,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: _ChatPanel(onClose: onClose),
       ),
     );
   }
 }
 
 class _ChatPanel extends ConsumerStatefulWidget {
-  final VoidCallback onClose;
   const _ChatPanel({required this.onClose});
+
+  final VoidCallback onClose;
 
   @override
   ConsumerState<_ChatPanel> createState() => _ChatPanelState();
 }
 
-class _ChatPanelState extends ConsumerState<_ChatPanel> with SingleTickerProviderStateMixin {
-  final _inputCtrl = TextEditingController();
-  final _scrollCtrl = ScrollController();
-  final _focusNode = FocusNode();
-
-  late final AnimationController _slideCtrl;
-  late final Animation<Offset> _slideAnim;
-
-  final List<String> _suggestions = [
-    'What services do you offer?',
-    'Tell me about your IT products',
-    'How can I contact you?',
-    'Are there any job openings?',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _slideCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 280),
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.12),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutCubic));
-    _slideCtrl.forward();
-  }
+class _ChatPanelState extends ConsumerState<_ChatPanel> {
+  final _input = TextEditingController();
+  final _scroll = ScrollController();
+  final _focus = FocusNode();
 
   @override
   void dispose() {
-    _inputCtrl.dispose();
-    _scrollCtrl.dispose();
-    _focusNode.dispose();
-    _slideCtrl.dispose();
+    _input.dispose();
+    _scroll.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
-  void _scrollToBottom() {
+  void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollCtrl.hasClients) {
-        _scrollCtrl.animateTo(
-          _scrollCtrl.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+      if (!_scroll.hasClients) return;
+      final end = _scroll.position.maxScrollExtent;
+      if (Motion.reduced(context)) {
+        _scroll.jumpTo(end);
+      } else {
+        _scroll.animateTo(end, duration: Motion.base, curve: Motion.enter);
       }
     });
   }
@@ -389,305 +168,286 @@ class _ChatPanelState extends ConsumerState<_ChatPanel> with SingleTickerProvide
   Future<void> _send(String text) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty || ref.read(chatControllerProvider).isTyping) return;
-
-    _inputCtrl.clear();
-    _focusNode.requestFocus();
+    _input.clear();
+    _focus.requestFocus();
     await ref.read(chatControllerProvider.notifier).send(trimmed);
   }
 
   @override
   Widget build(BuildContext context) {
-    final chatState = ref.watch(chatControllerProvider);
+    final chat = ref.watch(chatControllerProvider);
     ref.listen(chatControllerProvider, (previous, next) {
-      if (previous == null || next.history.length != previous.history.length) {
-        _scrollToBottom();
+      if (previous == null ||
+          next.history.length != previous.history.length ||
+          next.isTyping != previous.isTyping) {
+        _scrollToEnd();
       }
     });
 
-    return SlideTransition(
-      position: _slideAnim,
-      child: Material(
-        elevation: 16,
-        borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
-        shadowColor: Colors.black26,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+    return CallbackShortcuts(
+      bindings: {const SingleActivator(LogicalKeyboardKey.escape): widget.onClose},
+      child: FocusScope(
+        child: Material(
+          color: Palette.n0,
+          elevation: 12,
+          shadowColor: const Color(0x400B1220),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Radii.md),
+            side: const BorderSide(color: Palette.n200),
+          ),
+          clipBehavior: Clip.antiAlias,
           child: Column(
             children: [
-              _buildHeader(),
-              Expanded(child: _buildMessages(chatState)),
-              if (chatState.showSuggestions) _buildSuggestions(),
-              _buildInput(chatState.isTyping),
+              _Header(onClose: widget.onClose),
+              const Divider(height: 1, thickness: 1, color: Palette.n200),
+              Expanded(
+                child: chat.history.isEmpty
+                    ? _Welcome(onPick: _send)
+                    : ListView.builder(
+                        controller: _scroll,
+                        padding: const EdgeInsets.fromLTRB(Space.md, Space.md, Space.md, Space.xs),
+                        itemCount: chat.history.length + (chat.isTyping ? 1 : 0),
+                        itemBuilder: (context, i) => i == chat.history.length
+                            ? const _TypingBubble()
+                            : _Bubble(message: chat.history[i]),
+                      ),
+              ),
+              _Composer(
+                controller: _input,
+                focusNode: _focus,
+                busy: chat.isTyping,
+                onSend: _send,
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [_brandDark, Color(0xFF334155)]),
-      ),
+class _Header extends StatelessWidget {
+  const _Header({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Space.md, Space.sm, Space.xs, Space.sm),
       child: Row(
         children: [
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(
-              color: _brandAccent,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.support_agent_rounded, color: Colors.white, size: 20),
+            decoration:
+                BoxDecoration(color: Palette.ink, borderRadius: BorderRadius.circular(Radii.sm)),
+            child: const Icon(LucideIcons.sparkles, color: Palette.n0, size: 18),
           ),
-          const SizedBox(width: 10),
-          const Expanded(
+          const SizedBox(width: Space.sm),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'ALMA Assistant',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                Text(
-                  'JV ALMA C.I.S · Online',
-                  style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 11),
-                ),
+                Text('ALMA', style: AppType.theme.titleMedium),
+                Text('AI assistant for JV ALMA C.I.S', style: AppType.theme.bodySmall),
               ],
             ),
           ),
-          Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(color: Color(0xFF4ADE80), shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: widget.onClose,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Icon(Icons.close, color: Colors.white, size: 16),
-            ),
+          IconButton(
+            tooltip: 'Close chat',
+            onPressed: onClose,
+            icon: const Icon(LucideIcons.x, size: 20, color: Palette.ink),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildMessages(ChatState chatState) {
-    if (chatState.history.isEmpty) return _buildWelcome();
+class _Welcome extends StatelessWidget {
+  const _Welcome({required this.onPick});
 
-    return ListView.builder(
-      controller: _scrollCtrl,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-      itemCount: chatState.history.length + (chatState.isTyping ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (chatState.isTyping && index == chatState.history.length) return _buildTypingIndicator();
-        return _buildBubble(chatState.history[index]);
-      },
+  final void Function(String) onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(Space.md),
+      children: [
+        Text('How can I help?', style: AppType.theme.titleLarge),
+        const SizedBox(height: Space.xs),
+        Text(
+          'Ask about our business units, software platforms or how to get in touch. '
+          'I am an AI assistant, so for enquiries please use the Contact page.',
+          style: AppType.theme.bodySmall,
+        ),
+        const SizedBox(height: Space.lg),
+        Text('SUGGESTED QUESTIONS', style: AppType.eyebrow(Palette.n500)),
+        const SizedBox(height: Space.sm),
+        for (final s in _suggestions)
+          Padding(
+            padding: const EdgeInsets.only(bottom: Space.xs),
+            child: _Suggestion(text: s, onTap: () => onPick(s)),
+          ),
+      ],
     );
   }
+}
 
-  Widget _buildWelcome() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _brandLight,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.waving_hand_rounded, color: _brandAccent, size: 32),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Hi there! I\'m ALMA',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _brandDark),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Ask me anything about JV ALMA C.I.S — our services, products, or how to get in touch.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[600], height: 1.4),
-            ),
-          ],
+class _Suggestion extends StatelessWidget {
+  const _Suggestion({required this.text, required this.onTap});
+
+  final String text;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Palette.n50,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Radii.sm),
+        side: const BorderSide(color: Palette.n200),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(Radii.sm),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.sm),
+          child: Row(
+            children: [
+              Expanded(
+                  child: Text(text, style: AppType.theme.bodySmall?.copyWith(color: Palette.ink))),
+              const Icon(LucideIcons.arrowRight, size: 14, color: Palette.n500),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildBubble(ChatMessage msg) {
-    final isUser = msg.role == 'user';
-    final displayText = isUser ? msg.text : cleanAiResponse(msg.text);
+class _Bubble extends StatelessWidget {
+  const _Bubble({required this.message});
+
+  final ChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUser = message.role == 'user';
+    final text = isUser ? message.text : cleanAiResponse(message.text);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isUser) ...[
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(color: _brandAccent, borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.support_agent_rounded, color: Colors.white, size: 16),
-            ),
-            const SizedBox(width: 6),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-              decoration: BoxDecoration(
-                color: isUser ? _bubbleUser : _bubbleBot,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(14),
-                  topRight: const Radius.circular(14),
-                  bottomLeft: Radius.circular(isUser ? 14 : 3),
-                  bottomRight: Radius.circular(isUser ? 3 : 14),
-                ),
+      padding: const EdgeInsets.only(bottom: Space.sm),
+      child: Align(
+        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 300),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.xs + 2),
+            decoration: BoxDecoration(
+              color: isUser ? Palette.primary : Palette.n50,
+              border: isUser ? null : Border.all(color: Palette.n200),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(Radii.md),
+                topRight: const Radius.circular(Radii.md),
+                bottomLeft: Radius.circular(isUser ? Radii.md : 4),
+                bottomRight: Radius.circular(isUser ? 4 : Radii.md),
               ),
-              child: Text(
-                displayText,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isUser ? _textUser : _textBot,
-                  height: 1.45,
-                ),
+            ),
+            // Selectable so visitors can copy an email address or phone number.
+            child: SelectableText(
+              text,
+              style: AppType.theme.bodySmall?.copyWith(
+                color: isUser ? Palette.n0 : Palette.ink,
+                height: 1.5,
               ),
             ),
           ),
-          if (isUser) const SizedBox(width: 4),
-        ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildTypingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(color: _brandAccent, borderRadius: BorderRadius.circular(8)),
-            child: const Icon(Icons.support_agent_rounded, color: Colors.white, size: 16),
-          ),
-          const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(color: _bubbleBot, borderRadius: BorderRadius.circular(14)),
-            child: const _TypingDots(),
-          ),
-        ],
+class _TypingBubble extends StatelessWidget {
+  const _TypingBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: Space.sm),
+        padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.sm),
+        decoration: BoxDecoration(
+          color: Palette.n50,
+          border: Border.all(color: Palette.n200),
+          borderRadius: BorderRadius.circular(Radii.md),
+        ),
+        child: Semantics(label: 'ALMA is typing', child: const _TypingDots()),
       ),
     );
   }
+}
 
-  Widget _buildSuggestions() {
+class _Composer extends StatelessWidget {
+  const _Composer({
+    required this.controller,
+    required this.focusNode,
+    required this.busy,
+    required this.onSend,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool busy;
+  final void Function(String) onSend;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
-      child: Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: _suggestions.map((s) {
-          return InkWell(
-            onTap: () => _send(s),
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: _brandLight,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _brandAccent.withOpacity(0.35)),
-              ),
-              child: Text(
-                s,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: _brandAccent,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildInput(bool isTyping) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(Space.sm, Space.xs, Space.sm, Space.sm),
+      decoration: const BoxDecoration(border: Border(top: BorderSide(color: Palette.n200))),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: TextField(
-              controller: _inputCtrl,
-              focusNode: _focusNode,
-              onSubmitted: _send,
-              enabled: !isTyping,
-              textInputAction: TextInputAction.send,
-              style: const TextStyle(fontSize: 13),
-              decoration: InputDecoration(
-                hintText: 'Ask me anything…',
-                hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  autofocus: true,
+                  enabled: !busy,
+                  onSubmitted: onSend,
+                  textInputAction: TextInputAction.send,
+                  style: AppType.theme.bodySmall?.copyWith(color: Palette.ink),
+                  decoration: const InputDecoration(
+                    hintText: 'Type your question…',
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: Space.sm, vertical: Space.sm),
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: _brandAccent, width: 1.5),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
               ),
-            ),
+              const SizedBox(width: Space.xs),
+              IconButton.filled(
+                tooltip: 'Send',
+                onPressed: busy ? null : () => onSend(controller.text),
+                style: IconButton.styleFrom(
+                  backgroundColor: Palette.primary,
+                  disabledBackgroundColor: Palette.n200,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.sm)),
+                ),
+                icon: const Icon(LucideIcons.send, size: 18, color: Palette.n0),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: isTyping ? null : () => _send(_inputCtrl.text),
-              borderRadius: BorderRadius.circular(12),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isTyping ? Colors.grey.shade300 : _brandAccent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.send_rounded,
-                  color: isTyping ? Colors.grey : Colors.white,
-                  size: 18,
-                ),
-              ),
-            ),
+          const SizedBox(height: Space.xs),
+          Text(
+            'AI-generated answers can be wrong. For enquiries, contact support@jvalmacis.co.ke.',
+            textAlign: TextAlign.center,
+            style: AppType.theme.bodySmall?.copyWith(fontSize: 11, color: Palette.n500),
           ),
         ],
       ),
@@ -702,55 +462,47 @@ class _TypingDots extends StatefulWidget {
   State<_TypingDots> createState() => _TypingDotsState();
 }
 
-class _TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin {
-  late final List<AnimationController> _ctrls;
-  late final List<Animation<double>> _anims;
+class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
 
   @override
-  void initState() {
-    super.initState();
-    _ctrls = List.generate(3, (i) => AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    ));
-    _anims = _ctrls.map((c) => Tween<double>(begin: 0, end: -5).animate(
-      CurvedAnimation(parent: c, curve: Curves.easeInOut),
-    )).toList();
-
-    for (int i = 0; i < 3; i++) {
-      Future.delayed(Duration(milliseconds: i * 160), () {
-        if (mounted) _ctrls[i].repeat(reverse: true);
-      });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (Motion.reduced(context)) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat();
     }
   }
 
   @override
   void dispose() {
-    for (final c in _ctrls) {
-      c.dispose();
-    }
+    _c.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(3, (i) => AnimatedBuilder(
-        animation: _anims[i],
-        builder: (_, __) => Transform.translate(
-          offset: Offset(0, _anims[i].value),
-          child: Container(
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, __) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(3, (i) {
+          // Each dot brightens in turn.
+          final phase = ((_c.value * 3) - i).abs();
+          final active = phase < 1 ? 1 - phase : 0.0;
+          return Container(
             width: 6,
             height: 6,
             margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
-            decoration: const BoxDecoration(
-              color: Color(0xFF94A3B8),
+            decoration: BoxDecoration(
+              color: Color.lerp(Palette.n300, Palette.n600, active),
               shape: BoxShape.circle,
             ),
-          ),
-        ),
-      )),
+          );
+        }),
+      ),
     );
   }
 }

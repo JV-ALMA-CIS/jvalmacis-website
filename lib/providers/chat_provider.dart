@@ -26,11 +26,10 @@ class ChatState {
 }
 
 final chatServiceProvider = Provider<WebsiteChatService>((ref) {
-  return const WebsiteChatService();
+  return WebsiteChatService();
 });
 
-final chatControllerProvider =
-    StateNotifierProvider<ChatController, ChatState>((ref) {
+final chatControllerProvider = StateNotifierProvider<ChatController, ChatState>((ref) {
   return ChatController(ref.read(chatServiceProvider));
 });
 
@@ -59,9 +58,7 @@ class ChatController extends StateNotifier<ChatState> {
       history: historySnapshot,
     );
 
-    final cleanReply = cleanAiResponse(
-      reply ?? "I'm having trouble connecting right now. Please email us at support@jvalmacis.co.ke.",
-    );
+    final cleanReply = cleanAiResponse(reply);
 
     state = state.copyWith(
       isTyping: false,

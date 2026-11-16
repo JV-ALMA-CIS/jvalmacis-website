@@ -51,5 +51,11 @@ service cloud.firestore {
       allow create: if true;
       allow read, update, delete: if false;
     }
+
+    // Rate-limit counters for the website chat (functions/index.js). Written
+    // only by the askAlma function through the Admin SDK; never by clients.
+    match /chatRateLimits/{docId} {
+      allow read, write: if false;
+    }
   }
 }
