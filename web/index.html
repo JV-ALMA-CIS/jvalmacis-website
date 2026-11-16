@@ -1,13 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Est. 2017, JV ALMA C.I.S (11–50 employees) drives agritech, CMMS, and construction across four business units, with HQ in Nairobi and a Mombasa branch.">
-  <meta name="keywords" content="jv alma cis, agritech, facility maintenance management system, small construction companies in Kenya, smart farming, construction, agribusiness, Nairobi, Mombasa, digital agriculture, CMMS, kilimomkononi, nyumbasmart">
+
+  <!-- What search engines and link previews show. -->
+  <title>JV ALMA C.I.S | Construction, Agribusiness, Oil &amp; Gas and IT in Kenya</title>
+  <meta name="description" content="JV ALMA C.I.S is a Kenyan multi-sector group founded in 2017, with four business units: Construction, Agribusiness, Oil &amp; Gas Services and IT Division. Offices in Nairobi and Mombasa.">
   <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://jvalmacis.com/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="JV ALMA C.I.S">
+  <meta property="og:locale" content="en_KE">
+  <meta property="og:url" content="https://jvalmacis.com/">
+  <meta property="og:title" content="JV ALMA C.I.S | Specialised services. Integrated solutions.">
+  <meta property="og:description" content="A Kenyan multi-sector group delivering facility services, agricultural solutions, oil and gas inspection, and digital technology.">
+  <meta property="og:image" content="https://jvalmacis.com/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="JV ALMA C.I.S: Specialised services. Integrated solutions.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="JV ALMA C.I.S | Specialised services. Integrated solutions.">
+  <meta name="twitter:description" content="A Kenyan multi-sector group delivering facility services, agricultural solutions, oil and gas inspection, and digital technology.">
+  <meta name="twitter:image" content="https://jvalmacis.com/og-image.jpg">
+
+  <!-- The company as Google understands it: names people search for, logo and social profiles. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://jvalmacis.com/#organization",
+        "name": "JV ALMA C.I.S",
+        "legalName": "Joint Venture Alma C.I.S S.C.A.R.L",
+        "alternateName": ["JV ALMA", "JV Alma CIS", "JV Almacis", "Almacis", "Joint Venture ALMA C.I.S"],
+        "url": "https://jvalmacis.com/",
+        "logo": "https://jvalmacis.com/logo.png",
+        "image": "https://jvalmacis.com/og-image.jpg",
+        "description": "A Kenyan multi-sector group founded in 2017, with four business units: Construction, Agribusiness, Oil & Gas Services and IT Division.",
+        "foundingDate": "2017",
+        "areaServed": "KE",
+        "telephone": "+254795802020",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "King'ara Heights",
+          "addressLocality": "Nairobi",
+          "addressCountry": "KE"
+        },
+        "location": [
+          { "@type": "Place", "name": "HQ Office", "address": { "@type": "PostalAddress", "streetAddress": "King'ara Heights", "addressLocality": "Nairobi", "addressCountry": "KE" } },
+          { "@type": "Place", "name": "Branch Office", "address": { "@type": "PostalAddress", "streetAddress": "Manipur Plaza", "addressLocality": "Mombasa", "addressCountry": "KE" } }
+        ],
+        "sameAs": [
+          "https://www.linkedin.com/company/jvalmacis/",
+          "https://www.instagram.com/jvalmacis/"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://jvalmacis.com/#website",
+        "name": "JV ALMA C.I.S",
+        "alternateName": ["JV ALMA", "Almacis"],
+        "url": "https://jvalmacis.com/",
+        "publisher": { "@id": "https://jvalmacis.com/#organization" }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Each route is served this same file, so point canonical and og:url at the page being viewed,
+       and keep unknown paths out of search results. -->
+  <script>
+    (function () {
+      var ORIGIN = 'https://jvalmacis.com';
+      var PAGES = ['/', '/about', '/business-units', '/contact', '/news', '/careers', '/certificates',
+        '/privacy-policy', '/cookies', '/terms', '/delete-account', '/map', '/construction-detail',
+        '/construction-detail/american-center', '/construction-detail/rosslyn-ridge', '/construction-detail/lonetree-compound', '/construction-detail/medical-research-unit-kisumu', '/construction-detail/mtongwe-naval-base', '/construction-detail/italian-ambassadors-residence', '/construction-detail/portuguese-embassy', '/construction-detail/swedish-ambassadors-residence',
+        '/agribusiness', '/agribusiness/sigor-wei-wei', '/agribusiness/kapluk-solar-irrigation', '/agribusiness/makueni-irrigation', '/agribusiness/eni-technical-services', '/agribusiness/kalro-kabete-pilot', '/community-impact', '/oil-gas', '/it-division', '/cmms', '/alma-works', '/alma-safety', '/alma-hub', '/coffee-core',
+        '/kilimo-mkononi', '/kilimo-mkononi-enterprise', '/kilimo-mkononi-education', '/portal-mgmt'];
+      var NOINDEX = ['/map', '/portal-mgmt'];
+      function sync() {
+        var path = location.pathname.replace(/\/+$/, '') || '/';
+        var url = ORIGIN + (path === '/' ? '/' : path);
+        document.querySelector('link[rel="canonical"]').href = url;
+        document.querySelector('meta[property="og:url"]').content = url;
+        var index = PAGES.indexOf(path) !== -1 && NOINDEX.indexOf(path) === -1;
+        document.querySelector('meta[name="robots"]').content = index ? 'index, follow' : 'noindex, follow';
+      }
+      ['pushState', 'replaceState'].forEach(function (name) {
+        var original = history[name];
+        history[name] = function () { var r = original.apply(this, arguments); sync(); return r; };
+      });
+      window.addEventListener('popstate', sync);
+      sync();
+    })();
+  </script>
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GPRBLNS48K"></script>
@@ -18,19 +109,91 @@
     gtag('config', 'G-GPRBLNS48K');
   </script>
 
-  <!-- Custom favicon -->
-  <link rel="icon" href="/jv.png" type="image/png">
-  <link rel="icon" href="/favicon.ico" type="image/x-icon"> <!-- optional -->
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/icons/Icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/icons/Icon-192.png">
 
   <!-- PWA support -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="JV ALMA C.I.S">
+  <meta name="theme-color" content="#0B1220">
   <link rel="manifest" href="/manifest.json">
 
-  <title>JV ALMA C.I.S</title>
+  <!-- Start connections early to the hosts the app loads from at startup. -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="preload" as="image" href="assets/assets/images/company_background_web.jpg">
+
+  <!-- Loading screen: the company logo centred on white, with a thin progress bar, until Flutter
+       draws its first frame. -->
+  <style>
+    html, body { margin: 0; background: #FFFFFF; }
+    #app-loading {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+      background: #FFFFFF; transition: opacity 240ms ease;
+    }
+    #app-loading img { width: 160px; height: auto; }
+    #app-loading .bar { width: 160px; height: 2px; background: #E2E6EC; overflow: hidden; border-radius: 2px; }
+    #app-loading .bar::after {
+      content: ""; display: block; width: 40%; height: 100%; background: #1D4ED8;
+      animation: app-loading-slide 1.1s ease-in-out infinite;
+    }
+    @keyframes app-loading-slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+    @media (prefers-reduced-motion: reduce) {
+      #app-loading { transition: none; }
+      #app-loading .bar::after { animation: none; width: 100%; }
+    }
+    /* A plain-HTML outline of the site for search engines and for visitors without JavaScript;
+       it is in the page but never drawn over the app. */
+    #site-shell { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  </style>
 </head>
 <body>
+  <div id="app-loading" role="status" aria-label="Loading JV ALMA C.I.S">
+    <img src="assets/assets/images/clients/jv.jpg" alt="JV ALMA C.I.S">
+    <div class="bar"></div>
+  </div>
+  <div id="site-shell">
+    <header>
+      <a href="/">JV ALMA C.I.S</a>
+      <nav aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/about">About Us</a>
+        <a href="/business-units">Business Units</a>
+        <a href="/news">News</a>
+        <a href="/contact">Contact Us</a>
+      </nav>
+    </header>
+    <main>
+      <h1>JV ALMA C.I.S: Specialised services. Integrated solutions.</h1>
+      <p>A multi-sector group delivering facility services, agricultural solutions, oil and gas inspection, and digital technology.</p>
+      <h2>About JV ALMA C.I.S</h2>
+      <p>Founded in 2017, JV ALMA C.I.S is a multi-sector group based in Kenya, with its head office at King'ara Heights, Nairobi, and a branch office at Manipur Plaza, Mombasa.</p>
+      <h2>Business units</h2>
+      <ul>
+        <li><a href="/construction-detail">Construction</a>: facility management and renovations.</li>
+        <li><a href="/agribusiness">Agribusiness</a>: infrastructure, training and digitization, including <a href="/kilimo-mkononi">Kilimo Mkononi</a> and <a href="/coffee-core">CoffeeCore</a>.</li>
+        <li><a href="/oil-gas">Oil &amp; Gas Services</a>: inspection and regulatory compliance.</li>
+        <li><a href="/it-division">IT Division</a>: software development and digital platforms, including <a href="/alma-works">AlmaWorks</a>, <a href="/cmms">NyumbaSmart</a>, <a href="/alma-safety">AlmaSafety</a> and <a href="/alma-hub">AlmaHub</a>.</li>
+      </ul>
+      <p><a href="/certificates">Certificates &amp; Compliance</a> · <a href="/news">News &amp; Updates</a> · <a href="/careers">Careers</a> · <a href="/community-impact">Community &amp; Impact</a> · <a href="/contact">Contact</a></p>
+      <p>Follow JV ALMA C.I.S on <a href="https://www.linkedin.com/company/jvalmacis/">LinkedIn</a> and <a href="https://www.instagram.com/jvalmacis/">Instagram</a>.</p>
+    </main>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var shell = document.getElementById('site-shell');
+      if (shell) shell.setAttribute('aria-hidden', 'true');
+      var el = document.getElementById('app-loading');
+      if (!el) return;
+      el.style.opacity = '0';
+      setTimeout(function () { el.remove(); }, 260);
+    });
+  </script>
+
   <!-- Firebase is initialized by the Dart firebase_core plugin (see lib/main.dart + lib/firebase_options.dart) -->
 
   <!-- Flutter bootstrap – THIS LINE IS CRITICAL -->
